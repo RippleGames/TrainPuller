@@ -55,74 +55,74 @@ namespace TemplateProject.Scripts.Runtime.Managers
 
         private void TrySelectStickman(RaycastHit hitInfo)
         {
-            if (!hitInfo.transform.TryGetComponent(out Stickman stickman)) return;
-
-            if (!stickman.GetBelongedGrid()) return;
-            if (stickman.GetIsMoving() && stickman.GetBelongedGrid() as MatchArea) return;
-
-            if (AudioManager.instance)
-            {
-                AudioManager.instance.PlaySound(popSound);
-
-            }
-
-            if (!stickman.GetHasPath() && stickman.GetBelongedGrid().GetYAxis() != 0)
-            {
-                stickman.WrongSelection();
-                if (VibrationManager.instance)
-                {
-                    VibrationManager.instance.Medium();
-                }
-
-                return;
-            }
-
-            var currentGoal = GameplayManager.instance.GetCurrentBus();
-            var path = stickman.GetBelongedGrid().GetClosestPath();
-
-            if (VibrationManager.instance)
-            {
-                VibrationManager.instance.Light();
-            }
-
-            if (stickman.GetColor() == currentGoal.GetColor() &&
-                currentGoal.GetComingStickmanCount() + 1 <= 3)
-            {
-                if (stickman.GetIsReserved())
-                {
-                    if (currentGoal.GetReservedCount() != 0)
-                    {
-                        currentGoal.DecreaseReservedCount();
-                        GoToGoal(currentGoal, stickman, path);
-                    }
-                    else
-                    {
-                        GoToMatchArea(stickman, path);
-                    }
-                }
-                else
-                {
-                    if (currentGoal.GetReservedCount() > 0)
-                    {
-                        if (!currentGoal.IsLastSeat())
-                        {
-                            GoToGoal(currentGoal, stickman, path);
-                        }
-                        else
-                        {
-                            GoToMatchArea(stickman, path);
-                        }
-                    }
-                    else
-                    {
-                        GoToGoal(currentGoal, stickman, path);
-                    }
-                }
-            }
-            else
-            {
-                GoToMatchArea(stickman, path);
-            }
+            // if (!hitInfo.transform.TryGetComponent(out Stickman stickman)) return;
+            //
+            // if (!stickman.GetBelongedGrid()) return;
+            // if (stickman.GetIsMoving() && stickman.GetBelongedGrid() as MatchArea) return;
+            //
+            // if (AudioManager.instance)
+            // {
+            //     AudioManager.instance.PlaySound(popSound);
+            //
+            // }
+            //
+            // if (!stickman.GetHasPath() && stickman.GetBelongedGrid().GetYAxis() != 0)
+            // {
+            //     stickman.WrongSelection();
+            //     if (VibrationManager.instance)
+            //     {
+            //         VibrationManager.instance.Medium();
+            //     }
+            //
+            //     return;
+            // }
+            //
+            // var currentGoal = GameplayManager.instance.GetCurrentBus();
+            // var path = stickman.GetBelongedGrid().GetClosestPath();
+            //
+            // if (VibrationManager.instance)
+            // {
+            //     VibrationManager.instance.Light();
+            // }
+            //
+            // if (stickman.GetColor() == currentGoal.GetColor() &&
+            //     currentGoal.GetComingStickmanCount() + 1 <= 3)
+            // {
+            //     if (stickman.GetIsReserved())
+            //     {
+            //         if (currentGoal.GetReservedCount() != 0)
+            //         {
+            //             currentGoal.DecreaseReservedCount();
+            //             GoToGoal(currentGoal, stickman, path);
+            //         }
+            //         else
+            //         {
+            //             GoToMatchArea(stickman, path);
+            //         }
+            //     }
+            //     else
+            //     {
+            //         if (currentGoal.GetReservedCount() > 0)
+            //         {
+            //             if (!currentGoal.IsLastSeat())
+            //             {
+            //                 GoToGoal(currentGoal, stickman, path);
+            //             }
+            //             else
+            //             {
+            //                 GoToMatchArea(stickman, path);
+            //             }
+            //         }
+            //         else
+            //         {
+            //             GoToGoal(currentGoal, stickman, path);
+            //         }
+            //     }
+            // }
+            // else
+            // {
+            //     GoToMatchArea(stickman, path);
+            // }
         }
 
         private void GoToGoal(GoalScript currentGoal, Stickman stickman, List<GridBase> path)

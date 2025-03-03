@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Serialization;
 using static TemplateProject.Scripts.Data.LevelData;
 
 namespace TemplateProject.Scripts.Data
@@ -8,8 +11,8 @@ namespace TemplateProject.Scripts.Data
     {
         public int x;
         public int y;
-        public StickmanData stackData;
-        
+        public GridData stackData;
+        public List<GridCell> adjacentCells;
     }
 
     [Serializable]
@@ -25,13 +28,14 @@ namespace TemplateProject.Scripts.Data
             Purple = 5,
             Orange = 6,
             Pink = 7,
-            Close = 8
+            Trail = 8,
+            Close = 9
         }
 
         [Serializable]
-        public struct StickmanData
+        public struct GridData
         {
-            public GridColorType stickmanColorType;
+            public GridColorType gridColorType;
             public bool isSecret;
             public bool isReserved;
         }
@@ -59,16 +63,17 @@ namespace TemplateProject.Scripts.Data
         public GridCell[,] GetGrid() => gridCells;
         public GridCell GetGridCell(int x, int y) => gridCells[x, y];
 
-        public void SetCellSettings(int x, int y, GridColorType stickmanColor, bool isSecretStickman, bool isReservedStickman)
+        public void SetCellSettings(int x, int y, GridColorType stickmanColor, bool isSecretStickman,
+            bool isReservedStickman)
         {
-            gridCells[x, y].stackData.stickmanColorType = stickmanColor;
+            gridCells[x, y].stackData.gridColorType = stickmanColor;
             gridCells[x, y].stackData.isSecret = isSecretStickman;
             gridCells[x, y].stackData.isReserved = isReservedStickman;
         }
 
         public void RemoveCellSettings(int x, int y)
         {
-            gridCells[x, y].stackData.stickmanColorType = 0;
+            gridCells[x, y].stackData.gridColorType = 0;
             gridCells[x, y].stackData.isSecret = false;
             gridCells[x, y].stackData.isReserved = false;
         }

@@ -33,7 +33,8 @@ namespace TemplateProject.Scripts.Editor
             }
 
             DrawGrid(); 
-            DrawSaveLoadButtons(DisplayColorStatus());
+            // DrawSaveLoadButtons(DisplayColorStatus());
+            DrawSaveLoadButtons(true);
             DrawTestButton();
             if (EditorGUI.EndChangeCheck())
             {
@@ -52,8 +53,8 @@ namespace TemplateProject.Scripts.Editor
                 return false;
 
             var isLevelGridExist = _levelCreator.GetLevelData().GetGrid() != null;
-            var isGridBoundsCorrect = isLevelGridExist ? (_levelCreator.gridWidth * _levelCreator.gridHeight) ==
-                                      _levelCreator.GetLevelData().GetGrid().Length : false;
+            var isGridBoundsCorrect = isLevelGridExist && (_levelCreator.gridWidth * _levelCreator.gridHeight) ==
+                _levelCreator.GetLevelData().GetGrid().Length;
             return isLevelGridExist && isGridBoundsCorrect;
         }
 
@@ -115,7 +116,7 @@ namespace TemplateProject.Scripts.Editor
                     var cell = _levelCreator.GetLevelData().GetGridCell(x, y);
 
                     var subColors = new List<Color>
-                        { _levelCreator.GetGameColors().activeColors[(int)cell.stackData.stickmanColorType] };
+                        { _levelCreator.GetGameColors().activeColors[(int)cell.stackData.gridColorType] };
                     var text = "";
 
                     if (cell.stackData.isSecret)
@@ -142,8 +143,8 @@ namespace TemplateProject.Scripts.Editor
                         }
                     }
 
-                    var buttonRect = GUILayoutUtility.GetRect(new GUIContent(text), style, GUILayout.Width(75),
-                        GUILayout.Height(75));
+                    var buttonRect = GUILayoutUtility.GetRect(new GUIContent(text), style, GUILayout.Width(50),
+                        GUILayout.Height(50));
 
                     var textStyle = new GUIStyle
                     {
@@ -246,9 +247,9 @@ namespace TemplateProject.Scripts.Editor
                 if (colorType is LevelData.GridColorType.None or LevelData.GridColorType.Close)
                     continue;
 
-                var colorCount = grid.Cast<GridCell>().Count(cell => cell.stackData.stickmanColorType == colorType);
+                var colorCount = grid.Cast<GridCell>().Count(cell => cell.stackData.gridColorType == colorType);
                 var reservedColorCount = grid.Cast<GridCell>().Count(cell =>
-                    cell.stackData.stickmanColorType == colorType && cell.stackData.isReserved);
+                    cell.stackData.gridColorType == colorType && cell.stackData.isReserved);
                 if (colorCount == 0)
                     continue;
 

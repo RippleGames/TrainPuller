@@ -21,6 +21,7 @@ MonoBehaviour:
   - {r: 0.6965084, g: 0, b: 1, a: 1}
   - {r: 1, g: 0.46728808, b: 0, a: 1}
   - {r: 1, g: 0, b: 0.79692554, a: 1}
+  - {r: 0.3490566, g: 0.3490566, b: 0.3490566, a: 1}
   - {r: 0, g: 0, b: 0, a: 1}
   activeMaterials:
   - {fileID: 2100000, guid: 7b5ca7aff05cce148bba5c85e32ac387, type: 2}
@@ -31,5 +32,4 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 19300a93bddf58a499b187d5da5935b3, type: 2}
   - {fileID: 2100000, guid: 41c1adb122c4b414bb8abba2c1d0207f, type: 2}
   - {fileID: 2100000, guid: 77b93ab2e2ebd6b428b259854a778383, type: 2}
-  shadowMaterials: []
-  trailMaterials: []
+  - {fileID: 0}
