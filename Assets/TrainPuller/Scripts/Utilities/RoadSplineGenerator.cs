@@ -11,14 +11,15 @@ namespace TemplateProject.Scripts.Utilities
         public int width, height;
         public GridBase[,] grid;
         private HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
+        private Transform splineParent;
 
-        public void GenerateSplines(GridBase[,] gridBases, float modifier)
+        public void GenerateSplines(GridBase[,] gridBases,Transform parent)
         {
             visited = new HashSet<Vector2Int>();
             grid = gridBases;
             width = gridBases.GetLength(0);
             height = gridBases.GetLength(1);
-
+            splineParent = parent;
             Vector2Int start = FindStartPoint();
             if (start == Vector2Int.one * -1) return;
 
@@ -63,9 +64,9 @@ namespace TemplateProject.Scripts.Utilities
                         }
                     }
 
-
+                    
                     // Ensure the segment is not already in a connection
-                    if (segment && !segment.Connection)
+                    if (segment && !segment.Connection && (segment.IsFirstControlPoint || segment.IsLastControlPoint))
                     {
                         splineSegments.Add(segment);
                     }
@@ -82,6 +83,30 @@ namespace TemplateProject.Scripts.Utilities
                     newConnection.AutoSetFollowUp();
                 }
             }
+
+            CurvySplineSegment unconnectedFirstSegment = null;
+            CurvySplineSegment unconnectedLastSegment = null;
+            
+            foreach (var spline in splines)
+            {
+                if (!spline.ControlPointsList[0].Connection)
+                {
+                    unconnectedFirstSegment = spline.ControlPointsList[0];
+                    Debug.Log($"Segment Name = {unconnectedFirstSegment.transform.parent.name}.{unconnectedFirstSegment.transform.name}");
+                }
+            
+                if (!spline.ControlPointsList[^1].Connection)
+                {
+                    unconnectedLastSegment = spline.ControlPointsList[^1];
+                    Debug.Log($"Segment Name = {unconnectedLastSegment.transform.parent.name}.{unconnectedLastSegment.transform.name}");
+                }
+            
+            }
+            
+            var newConnectionSegments = new []{unconnectedFirstSegment,unconnectedLastSegment};
+            var con = CurvyConnection.Create(newConnectionSegments);
+            SyncCurvyConnection(con);
+            con.AutoSetFollowUp();
         }
 
         private void SyncCurvyConnection(CurvyConnection connection)
@@ -106,13 +131,12 @@ namespace TemplateProject.Scripts.Utilities
             Dictionary<int, List<Vector2Int>> connections)
         {
             CurvySpline spline = new GameObject($"Spline_{splines.Count}").AddComponent<CurvySpline>();
-
             if (!splines.Contains(spline))
             {
                 splines.Add(spline);
             }
 
-            spline.gameObject.transform.SetParent(grid[start.x, start.y].gameObject.transform.parent);
+            spline.transform.SetParent(splineParent);
             List<Vector2Int> path = new List<Vector2Int>();
             Vector2Int current = start;
             var connectionPoint = new Vector2Int();
@@ -141,6 +165,15 @@ namespace TemplateProject.Scripts.Utilities
             foreach (Vector2Int pos in path)
             {
                 spline.Add(grid[pos.x, pos.y].gameObject.transform.transform.position);
+            }
+
+            if (spline.ControlPointsList.Count > 2)
+            {
+                spline.Interpolation = CurvyInterpolation.BSpline;
+            }
+            else
+            {
+                spline.Interpolation = CurvyInterpolation.Bezier;
             }
 
             var connectionPoints = new List<Vector2Int>();

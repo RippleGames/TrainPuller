@@ -14,6 +14,7 @@ namespace TemplateProject.Scripts.Runtime.Models
         [SerializeField] private GameObject wallObject;
         [SerializeField] private GridBase parent;
         [SerializeField] private List<GridBase> adjacentCells;
+        [SerializeField] private GameObject associatedRoadPrefab;
 
         [Header("Parameters")] [SerializeField]
         private int x, y;
@@ -25,6 +26,7 @@ namespace TemplateProject.Scripts.Runtime.Models
         [SerializeField] private bool visited;
         [SerializeField] private bool isControlPoint;
         public bool isTrail;
+        public bool isForward;
         public HashSet<Vector2Int> connections = new HashSet<Vector2Int>();
 
         public void HandlePath()
@@ -176,6 +178,18 @@ namespace TemplateProject.Scripts.Runtime.Models
         public List<GridBase> GetNeighbors()
         {
             return adjacentCells;
+        }
+
+        public void SetRoadPrefab(GameObject prefab, bool flag)
+        {
+            isForward = flag;
+            associatedRoadPrefab = prefab;
+        }
+
+        public void DeleteRoadPrefab()
+        {
+            if(!isForward) return;
+            DestroyImmediate(associatedRoadPrefab);
         }
     }
 }

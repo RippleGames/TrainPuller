@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using FluffyUnderware.Curvy;
 using FluffyUnderware.Curvy.Generator;
 using TemplateProject.Scripts.Data;
@@ -25,6 +27,11 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
         private GameObject _currentParentObject;
         private GameObject _loadedLevel;
         [SerializeField] private RoadSplineGenerator splineGenerator;
+        [SerializeField] private GameObject roadPrefabForward;
+        [SerializeField] private GameObject roadPrefabRight;
+        [SerializeField] private GameObject roadPrefabLeft;
+        [SerializeField] private GameObject roadPrefabTri;
+        [SerializeField] private GameObject roadPrefabFour;
 
         [Header("Level Settings")] [HideInInspector]
         public int gridWidth;
@@ -137,7 +144,6 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
             var newParentObject = new GameObject("Level_" + levelIndex);
             var levelContainer = newParentObject.AddComponent<LevelContainer>();
             newParentObject.transform.tag = "LevelParent";
-            var spline = newParentObject.AddComponent<CurvySpline>();
             var gridParentObject = new GameObject("GridParent");
             gridParentObject.transform.SetParent(newParentObject.transform);
 
@@ -181,7 +187,12 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
             }
 
             HandleAdjacentSet(gridBases);
-            splineGenerator.GenerateSplines(gridBases,spaceModifier);
+            var splineParent = new GameObject("Spline Parent");
+            splineParent.transform.SetParent(newParentObject.transform);
+            splineGenerator.GenerateSplines(gridBases, splineParent.transform);
+            var trailParent = new GameObject("Trail Parent");
+            trailParent.transform.SetParent(newParentObject.transform);
+            HandleRoadPrefabs(gridBases, trailParent.transform);
             //AddSplinePoints(spline, roadPositions);
 
             var currentGoals = SpawnLevelGoals(newParentObject.transform);
@@ -189,6 +200,171 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
             levelContainer.Init(gridWidth, gridHeight, levelTime, gridBases, currentGoals, levelGoals);
             EditorUtility.SetDirty(levelContainer);
             _currentParentObject = newParentObject;
+        }
+
+        private void HandleRoadPrefabs(GridBase[,] gridBases, Transform parent)
+        {
+            var forwardsDone = false;
+            for (var x = 0; x < 2; x++)
+            {
+                for (var i = 0; i < gridBases.GetLength(0); i++)
+                {
+                    for (var j = 0; j < gridBases.GetLength(1); j++)
+                    {
+                        if (gridBases[i, j].isTrail)
+                        {
+                            var neighbors = gridBases[i, j].GetNeighbors();
+                            if (!forwardsDone)
+                            {
+                                if (neighbors.Count == 2)
+                                {
+                                    if (neighbors[0].GetXAxis() == neighbors[1].GetXAxis())
+                                    {
+                                        var trailObject = Instantiate(roadPrefabForward,
+                                            gridBases[i, j].transform.position,
+                                            Quaternion.identity);
+                                        trailObject.transform.eulerAngles = new Vector3(0, 90f, 0);
+                                        trailObject.transform.SetParent(parent);
+                                        gridBases[i, j].SetRoadPrefab(trailObject,true);
+                                    }
+                                    else if (neighbors[0].GetYAxis() == neighbors[1].GetYAxis())
+                                    {
+                                        var trailObject = Instantiate(roadPrefabForward,
+                                            gridBases[i, j].transform.position,
+                                            Quaternion.identity);
+                                        trailObject.transform.SetParent(parent);
+                                        gridBases[i, j].SetRoadPrefab(trailObject,true);
+                                    }
+                                }
+
+                                continue;
+                            }
+
+                            if (neighbors.Count == 2)
+                            {
+                                if (neighbors[0].GetXAxis() < i || neighbors[1].GetXAxis() < i)
+                                {
+                                    if ((neighbors[0].GetYAxis() == j && neighbors[1].GetYAxis() < j) ||
+                                        (neighbors[0].GetYAxis() < j && neighbors[1].GetYAxis() == j))
+                                    {
+                                        var trailObject = Instantiate(roadPrefabLeft,
+                                            gridBases[i, j].transform.position,
+                                            Quaternion.identity);
+                                        trailObject.transform.eulerAngles = new Vector3(0, 180f, 0);
+                                        trailObject.transform.SetParent(parent);
+                                        gridBases[i, j].SetRoadPrefab(trailObject,false);
+                                        foreach (var neighbor in neighbors)
+                                        {
+                                            neighbor.DeleteRoadPrefab();
+                                        }
+                                    }
+                                    else if ((neighbors[0].GetYAxis() == j && neighbors[1].GetYAxis() > j) ||
+                                             (neighbors[0].GetYAxis() > j && neighbors[1].GetYAxis() == j))
+                                    {
+                                        var trailObject = Instantiate(roadPrefabRight,
+                                            gridBases[i, j].transform.position,
+                                            Quaternion.identity);
+                                        trailObject.transform.SetParent(parent);
+                                        gridBases[i, j].SetRoadPrefab(trailObject,false);
+                                        foreach (var neighbor in neighbors)
+                                        {
+                                            neighbor.DeleteRoadPrefab();
+                                        }
+                                    }
+                                }
+                                else if (neighbors[0].GetXAxis() > i || neighbors[1].GetXAxis() > i)
+                                {
+                                    if ((neighbors[0].GetYAxis() == j && neighbors[1].GetYAxis() < j) ||
+                                        (neighbors[0].GetYAxis() < j && neighbors[1].GetYAxis() == j))
+                                    {
+                                        var trailObject = Instantiate(roadPrefabRight,
+                                            gridBases[i, j].transform.position,
+                                            Quaternion.identity);
+                                        trailObject.transform.eulerAngles = new Vector3(0, 180f, 0);
+                                        trailObject.transform.SetParent(parent);
+                                        gridBases[i, j].SetRoadPrefab(trailObject,false);
+                                        foreach (var neighbor in neighbors)
+                                        {
+                                            neighbor.DeleteRoadPrefab();
+                                        }
+                                    }
+                                    else if ((neighbors[0].GetYAxis() == j && neighbors[1].GetYAxis() > j) ||
+                                             (neighbors[0].GetYAxis() > j && neighbors[1].GetYAxis() == j))
+                                    {
+                                        var trailObject = Instantiate(roadPrefabLeft,
+                                            gridBases[i, j].transform.position,
+                                            Quaternion.identity);
+                                        trailObject.transform.SetParent(parent);
+                                        gridBases[i, j].SetRoadPrefab(trailObject,false);
+                                        foreach (var neighbor in neighbors)
+                                        {
+                                            neighbor.DeleteRoadPrefab();
+                                        }
+                                    }
+                                   
+                                }
+
+                                
+                            }
+                            else if (neighbors.Count == 3)
+                            {
+                                var trailObject = Instantiate(roadPrefabTri, gridBases[i, j].transform.position,
+                                    Quaternion.identity);
+                                gridBases[i, j].SetRoadPrefab(trailObject,false);
+                                var xMatchingNeighbors = new List<GridBase>();
+                                foreach (var neighbor in neighbors)
+                                {
+                                    if (i == neighbor.GetXAxis())
+                                    {
+                                        xMatchingNeighbors.Add(neighbor);
+                                    }
+                                }
+
+                                if (xMatchingNeighbors.Count == 1)
+                                {
+                                    if (xMatchingNeighbors[0].GetYAxis() > j)
+                                    {
+                                        trailObject.transform.eulerAngles = new Vector3(0, 180f, 0);
+                                    }
+                                }
+                                else
+                                {
+                                    var uniqueNeighbor = neighbors.Except(xMatchingNeighbors).FirstOrDefault();
+                                    if (uniqueNeighbor && uniqueNeighbor.GetXAxis() > i)
+                                    {
+                                        trailObject.transform.eulerAngles = new Vector3(0, 270f, 0);
+                                    }
+                                    else
+                                    {
+                                        trailObject.transform.eulerAngles = new Vector3(0, 90f, 0);
+                                    }
+                                }
+
+                                trailObject.transform.SetParent(parent);
+
+                                foreach (var neighbor in neighbors)
+                                {
+                                    neighbor.DeleteRoadPrefab();
+                                }
+                            }
+                            else if (neighbors.Count == 4)
+                            {
+                                var trailObject = Instantiate(roadPrefabFour, gridBases[i, j].transform.position,
+                                    Quaternion.identity);
+                                trailObject.transform.SetParent(parent);
+                                foreach (var neighbor in neighbors)
+                                {
+                                    neighbor.DeleteRoadPrefab();
+                                }
+
+                                gridBases[i, j].SetRoadPrefab(trailObject,false);
+                            }
+                        }
+                    }
+                }
+
+                forwardsDone = true;
+            }
         }
 
         private List<Vector2> FindClosedPath(GridBase[,] gridBases)
@@ -207,11 +383,11 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
             {
                 Vector2Int current = queue.Dequeue();
                 if (visited.Contains(current)) continue;
-            
+
                 visited.Add(current);
                 roadPath.Add((Vector2)current);
 
-                foreach (Vector2Int neighbor in GetValidNeighbors(current, visited,gridBases))
+                foreach (Vector2Int neighbor in GetValidNeighbors(current, visited, gridBases))
                 {
                     if (!parentMap.ContainsKey(neighbor))
                     {
@@ -220,6 +396,7 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
                     }
                 }
             }
+
             return roadPath;
         }
 
@@ -277,11 +454,13 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
             foreach (var dir in directions)
             {
                 Vector2Int next = pos + dir;
-                if (IsValid(next,gridBases) && gridBases[next.x, next.y].isTrail && !visited.Contains(next) && AreDirectlyConnected(pos, next,gridBases))
+                if (IsValid(next, gridBases) && gridBases[next.x, next.y].isTrail && !visited.Contains(next) &&
+                    AreDirectlyConnected(pos, next, gridBases))
                 {
                     neighbors.Add(next);
                 }
             }
+
             return neighbors;
         }
 
@@ -298,30 +477,6 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
             // Prevent indirect connections (e.g., skipping diagonally or linking distant points)
             return gridBases[a.x, a.y].connections.Contains(b) && gridBases[b.x, b.y].connections.Contains(a);
         }
-
-        private void HandleSplineCreation(GridBase[,] gridBases)
-        {
-            for (var y = 0; y < _levelData.height; y++)
-            {
-                for (var x = 0; x < _levelData.width; x++)
-                {
-                    var cell = _levelData.GetGridCell(x, y);
-                    var gridBaseScript = gridBases[x, y];
-                    if (cell.stackData.gridColorType == LevelData.GridColorType.Trail)
-                    {
-                    }
-                }
-            }
-        }
-
-        private void AddSplinePoints(CurvySpline spline, List<Vector2> splinePoints)
-        {
-            foreach (var splinePoint in splinePoints)
-            {
-                spline.Add(transform.position + GridSpaceToWorldSpace((int)splinePoint.x, (int)splinePoint.y));
-            }
-        }
-
 
         private void HandleAdjacentSet(GridBase[,] gridBases)
         {
