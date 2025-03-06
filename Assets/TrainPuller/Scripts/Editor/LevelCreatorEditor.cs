@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using TemplateProject.Scripts.Data;
@@ -6,7 +5,7 @@ using TemplateProject.Scripts.Runtime.LevelCreation;
 using UnityEditor;
 using UnityEngine;
 
-namespace TemplateProject.Scripts.Editor
+namespace TrainPuller.Scripts.Editor
 {
     [CustomEditor(typeof(LevelCreator))]
     public class LevelCreatorEditor : UnityEditor.Editor
@@ -21,7 +20,8 @@ namespace TemplateProject.Scripts.Editor
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-            serializedObject.Update();
+            serializedObject.Update(); // ✅ Ensure serialized data is up-to-date
+
             EditorGUI.BeginChangeCheck();
             _levelCreator.GenerateLevel();
             DrawGridProperties();
@@ -32,19 +32,19 @@ namespace TemplateProject.Scripts.Editor
                 return;
             }
 
-            DrawGrid(); 
-            // DrawSaveLoadButtons(DisplayColorStatus());
+            DrawGrid();
             DrawSaveLoadButtons(true);
             DrawTestButton();
+
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(_levelCreator, "Change Level Goals");
+                Undo.RecordObject(_levelCreator, "Change Level");
                 EditorUtility.SetDirty(_levelCreator);
-                Repaint();
+                serializedObject.ApplyModifiedProperties();
+                Repaint(); 
             }
-
-            serializedObject.ApplyModifiedProperties();
         }
+
 
         private bool IsLevelDataAvailable()
         {
@@ -115,32 +115,39 @@ namespace TemplateProject.Scripts.Editor
 
                     var cell = _levelCreator.GetLevelData().GetGridCell(x, y);
 
-                    var subColors = new List<Color>
-                        { _levelCreator.GetGameColors().activeColors[(int)cell.stackData.gridColorType] };
-                    var text = "";
+                    List<Color> subColors = new List<Color>();
 
-                    if (cell.stackData.isSecret)
+                    if (cell.stackData.colorTypes == null || cell.stackData.colorTypes.Count == 0)
                     {
-                        if (text == "")
+                        cell.stackData.colorTypes = new List<LevelData.GridColorType>();
+                    }
+
+
+                    foreach (var stackColorType in cell.stackData.colorTypes)
+                    {
+                        if (_levelCreator.GetGameColors().activeColors.Length > (int)stackColorType)
                         {
-                            text += "S";
+                            subColors.Add(_levelCreator.GetGameColors().activeColors[(int)stackColorType]);
                         }
                         else
                         {
-                            text += "," + "S";
+                            subColors.Add(Color.black); // Fallback color if out of range
                         }
                     }
 
-                    if (cell.stackData.isReserved)
+
+                    var text = "";
+                    // Debug.Log($"Cell ({x}, {y}) - isExit: {cell.stackData.isExit}");
+                    if (cell.stackData.isExit)
                     {
                         if (text == "")
                         {
-                            text += "R";
+                            text += "E";
                         }
                         else
                         {
-                            text += "," + "R";
-                        }
+                            text += "," + "E";
+                        } 
                     }
 
                     var buttonRect = GUILayoutUtility.GetRect(new GUIContent(text), style, GUILayout.Width(50),
@@ -151,20 +158,39 @@ namespace TemplateProject.Scripts.Editor
                         fontSize = 16,
                         fontStyle = FontStyle.Bold,
                         normal = { textColor = Color.black },
+                        alignment = TextAnchor.UpperLeft
                     };
 
 
-                    Rect[] subRects =
+                    Rect[] subRects;
+                    if (cell.stackData.colorTypes.Contains(LevelData.GridColorType.Trail))
                     {
-                        new Rect(buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height)
-                    };
+                        // Trail logic: Draw grayed-out rectangle with a small overlay
+                        subRects = new Rect[]
+                        {
+                            new Rect(buttonRect.x, buttonRect.y, buttonRect.width, buttonRect.height), // Full gray
+                            new Rect(buttonRect.x + buttonRect.width / 3, buttonRect.y + buttonRect.height / 3,
+                                buttonRect.width / 3, buttonRect.height / 3) // Small overlay in center
+                        };
+                    }
+                    else
+                    {
+                        // Non-Trail logic: Stack colors from bottom to top
+                        subRects = new Rect[Mathf.Min(10, subColors.Count)]; // Limit to 10 layers max
 
-                    for (var t = 0; t < subRects.Length; t++)
+                        float heightStep = buttonRect.height / Mathf.Max(1, subRects.Length); // Ensure valid height
+
+                        for (int i = 0; i < subRects.Length; i++)
+                        {
+                            subRects[i] = new Rect(buttonRect.x, buttonRect.y + (subRects.Length - 1 - i) * heightStep,
+                                buttonRect.width, heightStep);
+                        }
+
+                    }
+                    
+                    for (int i = 0; i < subRects.Length && i < subColors.Count; i++)
                     {
-                        EditorGUI.DrawRect(subRects[t],
-                            subColors[t] == Color.black
-                                ? Color.black + new Color(0.1f * t, 0.1f * t, 0.1f * t)
-                                : subColors[t]);
+                        EditorGUI.DrawRect(subRects[i], subColors[i]);
                     }
 
                     Handles.Label(
@@ -174,7 +200,7 @@ namespace TemplateProject.Scripts.Editor
 
                     for (var o = subRects.Length - 1; o >= 0; o--)
                     {
-                        if ((Event.current.type != EventType.MouseDrag && Event.current.type != EventType.MouseDown) ||
+                        if (Event.current.type != EventType.MouseDown ||
                             !subRects[o].Contains(Event.current.mousePosition)) continue;
 
                         Event.current.Use();
@@ -182,10 +208,11 @@ namespace TemplateProject.Scripts.Editor
                         switch (Event.current.button)
                         {
                             case 0:
-                                _levelCreator.GridButtonAction(x, y);
+                                _levelCreator.GridButtonAction(x, y, o);
                                 break;
-                            case 1:
-                                _levelCreator.GridRemoveButtonAction(x, y);
+            
+                            case 1: 
+                                _levelCreator.GridRemoveButtonAction(x, y, o);
                                 break;
                         }
                     }
@@ -221,10 +248,9 @@ namespace TemplateProject.Scripts.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        
 
         private void DrawTestButton()
-        { 
+        {
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox("Test Before Forward!", MessageType.Warning);
             EditorGUILayout.LabelField("Testing", EditorStyles.boldLabel);
@@ -236,63 +262,63 @@ namespace TemplateProject.Scripts.Editor
             }
 
             EditorGUILayout.EndHorizontal();
-            
         }
-        private bool DisplayColorStatus()
-        {
-            var grid = _levelCreator.GetLevelData().GetGrid();
-            var errorCount = 0;
-            foreach (LevelData.GridColorType colorType in Enum.GetValues(typeof(LevelData.GridColorType)))
-            {
-                if (colorType is LevelData.GridColorType.None or LevelData.GridColorType.Close)
-                    continue;
 
-                var colorCount = grid.Cast<GridCell>().Count(cell => cell.stackData.gridColorType == colorType);
-                var reservedColorCount = grid.Cast<GridCell>().Count(cell =>
-                    cell.stackData.gridColorType == colorType && cell.stackData.isReserved);
-                if (colorCount == 0)
-                    continue;
-
-                var colorName = colorType.ToString();
-                var goalCount = DisplayGoalStatus(colorType);
-                var reservedGoalCount = DisplayReservedGoalCount(colorType);
-                if (colorCount % 3 == 0)
-                {
-                    if (goalCount == colorCount / 3)
-                    {
-                        if (reservedColorCount == reservedGoalCount)
-                        {
-                            EditorGUILayout.HelpBox(
-                                $"{colorName} Color: OK ({colorCount} {colorName} Color with {goalCount} Goal Count that has {reservedColorCount} reserved.)",
-                                MessageType.Info);
-                        }
-                        else
-                        {
-                            EditorGUILayout.HelpBox(
-                                $"{colorName} Color: NOT OK ({colorCount} {colorName} Color with {goalCount} Goal Count that has {reservedColorCount} reserved.)",
-                                MessageType.Error);
-                            errorCount++;
-                        }
-                    }
-                    else
-                    {
-                        EditorGUILayout.HelpBox(
-                            $"{colorName} Color: NOT OK ({colorCount} {colorName} Color with {goalCount} Goal Count that has {reservedColorCount} reserved.)",
-                            MessageType.Error);
-                        errorCount++;
-                    }
-                }
-                else
-                {
-                    EditorGUILayout.HelpBox(
-                        $"{colorName} Color: NOT OK ({colorCount} {colorName} Color with {goalCount} Goal Count that has {reservedColorCount} reserved.)",
-                        MessageType.Error);
-                    errorCount++;
-                }
-            }
-
-            return errorCount == 0;
-        }
+        // private bool DisplayColorStatus()
+        // {
+        //     var grid = _levelCreator.GetLevelData().GetGrid();
+        //     var errorCount = 0;
+        //     foreach (LevelData.GridColorType colorType in Enum.GetValues(typeof(LevelData.GridColorType)))
+        //     {
+        //         if (colorType is LevelData.GridColorType.None or LevelData.GridColorType.Close)
+        //             continue;
+        //
+        //         var colorCount = grid.Cast<GridCell>().Count(cell => cell.stackData.gridColorType == colorType);
+        //         var reservedColorCount = grid.Cast<GridCell>().Count(cell =>
+        //             cell.stackData.gridColorType == colorType && cell.stackData.isReserved);
+        //         if (colorCount == 0)
+        //             continue;
+        //
+        //         var colorName = colorType.ToString();
+        //         var goalCount = DisplayGoalStatus(colorType);
+        //         var reservedGoalCount = DisplayReservedGoalCount(colorType);
+        //         if (colorCount % 3 == 0)
+        //         {
+        //             if (goalCount == colorCount / 3)
+        //             {
+        //                 if (reservedColorCount == reservedGoalCount)
+        //                 {
+        //                     EditorGUILayout.HelpBox(
+        //                         $"{colorName} Color: OK ({colorCount} {colorName} Color with {goalCount} Goal Count that has {reservedColorCount} reserved.)",
+        //                         MessageType.Info);
+        //                 }
+        //                 else
+        //                 {
+        //                     EditorGUILayout.HelpBox(
+        //                         $"{colorName} Color: NOT OK ({colorCount} {colorName} Color with {goalCount} Goal Count that has {reservedColorCount} reserved.)",
+        //                         MessageType.Error);
+        //                     errorCount++;
+        //                 }
+        //             }
+        //             else
+        //             {
+        //                 EditorGUILayout.HelpBox(
+        //                     $"{colorName} Color: NOT OK ({colorCount} {colorName} Color with {goalCount} Goal Count that has {reservedColorCount} reserved.)",
+        //                     MessageType.Error);
+        //                 errorCount++;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             EditorGUILayout.HelpBox(
+        //                 $"{colorName} Color: NOT OK ({colorCount} {colorName} Color with {goalCount} Goal Count that has {reservedColorCount} reserved.)",
+        //                 MessageType.Error);
+        //             errorCount++;
+        //         }
+        //     }
+        //
+        //     return errorCount == 0;
+        // }
 
         private int DisplayReservedGoalCount(LevelData.GridColorType colorType)
         {

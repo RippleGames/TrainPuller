@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using static TemplateProject.Scripts.Data.LevelData;
@@ -13,6 +15,7 @@ namespace TemplateProject.Scripts.Data
         public int y;
         public GridData stackData;
         public List<GridCell> adjacentCells;
+        public bool isTrainSpawned;
     }
 
     [Serializable]
@@ -35,9 +38,8 @@ namespace TemplateProject.Scripts.Data
         [Serializable]
         public struct GridData
         {
-            public GridColorType gridColorType;
-            public bool isSecret;
-            public bool isReserved;
+            public List<GridColorType> colorTypes;
+            public bool isExit;
         }
 
         public int width => gridCells.GetLength(0);
@@ -54,28 +56,68 @@ namespace TemplateProject.Scripts.Data
                     gridCells[x, y] = new GridCell
                     {
                         x = x,
-                        y = y
+                        y = y,
+                        stackData = new GridData
+                        {
+                            colorTypes = new List<GridColorType>
+                                { GridColorType.None }
+                        }
                     };
                 }
             }
         }
 
+
         public GridCell[,] GetGrid() => gridCells;
         public GridCell GetGridCell(int x, int y) => gridCells[x, y];
 
-        public void SetCellSettings(int x, int y, GridColorType stickmanColor, bool isSecretStickman,
-            bool isReservedStickman)
+        public void SetCellColor(int x, int y, GridColorType stackColor, bool exit, int subIndex)
         {
-            gridCells[x, y].stackData.gridColorType = stickmanColor;
-            gridCells[x, y].stackData.isSecret = isSecretStickman;
-            gridCells[x, y].stackData.isReserved = isReservedStickman;
+            var cell = gridCells[x, y];
+            cell.stackData.isExit = exit;
+            Debug.Log($"{x},{y} Exit = " + exit);
+            if (cell.stackData.colorTypes == null)
+            {
+                cell.stackData.colorTypes = new List<LevelData.GridColorType>();
+            }
+
+            if (cell.stackData.colorTypes.Contains(GridColorType.Trail))
+            {
+                cell.stackData.colorTypes.Clear();
+                cell.stackData.colorTypes.Add(GridColorType.Trail);
+                cell.stackData.colorTypes.Add(stackColor);
+            }
+            else
+            {
+                if (cell.stackData.isExit)
+                {
+                    cell.stackData.colorTypes[0] = stackColor;
+                    return;
+                }
+
+                if (cell.stackData.colorTypes.Count < 10)
+                {
+                    if (cell.stackData.colorTypes.Contains(GridColorType.None))
+                    {
+                        cell.stackData.colorTypes[0] = stackColor;
+                        return;
+                    }
+
+                    cell.stackData.colorTypes.Add(stackColor);
+                }
+            }
         }
 
-        public void RemoveCellSettings(int x, int y)
+        public void RemoveCellColor(int x, int y, int o)
         {
-            gridCells[x, y].stackData.gridColorType = 0;
-            gridCells[x, y].stackData.isSecret = false;
-            gridCells[x, y].stackData.isReserved = false;
+            var cell = GetGridCell(x, y);
+
+            // ✅ Ensure `colorTypes` list is initialized
+            if (cell.stackData.colorTypes == null) return;
+
+            // ✅ Right-click resets the cell
+            cell.stackData.colorTypes.Clear();
+            cell.stackData.colorTypes.Add(LevelData.GridColorType.None); // Reset to default
         }
     }
 }

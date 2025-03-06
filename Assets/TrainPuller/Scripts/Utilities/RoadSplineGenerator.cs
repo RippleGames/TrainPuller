@@ -13,7 +13,7 @@ namespace TemplateProject.Scripts.Utilities
         private HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
         private Transform splineParent;
 
-        public void GenerateSplines(GridBase[,] gridBases,Transform parent)
+        public List<CurvySpline> GenerateSplines(GridBase[,] gridBases,Transform parent)
         {
             visited = new HashSet<Vector2Int>();
             grid = gridBases;
@@ -21,9 +21,9 @@ namespace TemplateProject.Scripts.Utilities
             height = gridBases.GetLength(1);
             splineParent = parent;
             Vector2Int start = FindStartPoint();
-            if (start == Vector2Int.one * -1) return;
+            if (start == Vector2Int.one * -1) return null;
 
-            TraverseAndCreateSplines(start);
+            return TraverseAndCreateSplines(start);
         }
 
         private void TraverseInDirection(Vector2Int start)
@@ -32,7 +32,7 @@ namespace TemplateProject.Scripts.Utilities
                 { Vector2Int.left, Vector2Int.right, Vector2Int.up, Vector2Int.down };
         }
 
-        private void TraverseAndCreateSplines(Vector2Int start)
+        private List<CurvySpline> TraverseAndCreateSplines(Vector2Int start)
         {
             List<Vector2Int> stack = new List<Vector2Int> { start };
             List<CurvySpline> splines = new List<CurvySpline>();
@@ -107,6 +107,7 @@ namespace TemplateProject.Scripts.Utilities
             var con = CurvyConnection.Create(newConnectionSegments);
             SyncCurvyConnection(con);
             con.AutoSetFollowUp();
+            return splines;
         }
 
         private void SyncCurvyConnection(CurvyConnection connection)
