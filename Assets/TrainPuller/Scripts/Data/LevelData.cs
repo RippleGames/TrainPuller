@@ -16,6 +16,7 @@ namespace TemplateProject.Scripts.Data
         public GridData stackData;
         public List<GridCell> adjacentCells;
         public bool isTrainSpawned;
+        public bool isExit;
     }
 
     [Serializable]
@@ -39,7 +40,6 @@ namespace TemplateProject.Scripts.Data
         public struct GridData
         {
             public List<GridColorType> colorTypes;
-            public bool isExit;
         }
 
         public int width => gridCells.GetLength(0);
@@ -74,8 +74,7 @@ namespace TemplateProject.Scripts.Data
         public void SetCellColor(int x, int y, GridColorType stackColor, bool exit, int subIndex)
         {
             var cell = gridCells[x, y];
-            cell.stackData.isExit = exit;
-            Debug.Log($"{x},{y} Exit = " + exit);
+            cell.isExit = exit;
             if (cell.stackData.colorTypes == null)
             {
                 cell.stackData.colorTypes = new List<LevelData.GridColorType>();
@@ -86,12 +85,14 @@ namespace TemplateProject.Scripts.Data
                 cell.stackData.colorTypes.Clear();
                 cell.stackData.colorTypes.Add(GridColorType.Trail);
                 cell.stackData.colorTypes.Add(stackColor);
+                gridCells[x, y] = cell;
             }
             else
             {
-                if (cell.stackData.isExit)
+                if (cell.isExit)
                 {
                     cell.stackData.colorTypes[0] = stackColor;
+                    gridCells[x, y] = cell;
                     return;
                 }
 
@@ -100,10 +101,12 @@ namespace TemplateProject.Scripts.Data
                     if (cell.stackData.colorTypes.Contains(GridColorType.None))
                     {
                         cell.stackData.colorTypes[0] = stackColor;
+                        gridCells[x, y] = cell;
                         return;
                     }
 
                     cell.stackData.colorTypes.Add(stackColor);
+                    gridCells[x, y] = cell;
                 }
             }
         }
@@ -112,12 +115,12 @@ namespace TemplateProject.Scripts.Data
         {
             var cell = GetGridCell(x, y);
 
-            // ✅ Ensure `colorTypes` list is initialized
             if (cell.stackData.colorTypes == null) return;
 
-            // ✅ Right-click resets the cell
             cell.stackData.colorTypes.Clear();
-            cell.stackData.colorTypes.Add(LevelData.GridColorType.None); // Reset to default
+            cell.stackData.colorTypes.Add(LevelData.GridColorType.None);
+            cell.isExit = false;
+            gridCells[x, y] = cell;
         }
     }
 }

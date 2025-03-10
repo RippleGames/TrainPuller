@@ -39,7 +39,6 @@ namespace TemplateProject.Scripts.Utilities
             Dictionary<int, List<Vector2Int>> connections = new Dictionary<int, List<Vector2Int>>();
             while (stack.Count > 0)
             {
-                Debug.Log("Stack Count = " + stack.Count);
                 Vector2Int current = stack[0];
                 stack.RemoveAt(0);
                 if (visited.Contains(current)) continue;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.LevelCreation;
+using TrainPuller.Scripts.Runtime.LevelCreation;
 using UnityEditor;
 using UnityEngine;
 
@@ -114,7 +115,6 @@ namespace TrainPuller.Scripts.Editor
                     EditorGUILayout.BeginVertical();
 
                     var cell = _levelCreator.GetLevelData().GetGridCell(x, y);
-
                     List<Color> subColors = new List<Color>();
 
                     if (cell.stackData.colorTypes == null || cell.stackData.colorTypes.Count == 0)
@@ -137,8 +137,7 @@ namespace TrainPuller.Scripts.Editor
 
 
                     var text = "";
-                    // Debug.Log($"Cell ({x}, {y}) - isExit: {cell.stackData.isExit}");
-                    if (cell.stackData.isExit)
+                    if (cell.isExit)
                     {
                         if (text == "")
                         {

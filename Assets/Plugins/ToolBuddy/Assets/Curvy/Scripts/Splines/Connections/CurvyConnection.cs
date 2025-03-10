@@ -211,8 +211,12 @@ namespace FluffyUnderware.Curvy
             if (controlPoints.Length == 0)
                 return connection;
 
-            connection.transform.position = controlPoints[0].transform.position;
-            connection.AddControlPoints(controlPoints);
+            if (controlPoints[0])
+            {
+                connection.transform.position = controlPoints[0].transform.position;
+                connection.AddControlPoints(controlPoints);
+            }
+
 
             return connection;
         }
@@ -289,7 +293,6 @@ namespace FluffyUnderware.Curvy
             }
             else
             {
-                
             }
         }
 
@@ -442,16 +445,13 @@ namespace FluffyUnderware.Curvy
 
 #if DOCUMENTATION___FORCE_IGNORE___CURVY == false
 
-        [SerializeField, Hide]
-        private List<CurvySplineSegment> m_ControlPoints = new List<CurvySplineSegment>();
+        [SerializeField, Hide] private List<CurvySplineSegment> m_ControlPoints = new List<CurvySplineSegment>();
 
         private ReadOnlyCollection<CurvySplineSegment> readOnlyControlPoints;
 
-        [NotNull]
-        private readonly TransformSynchronizer transformSynchronizer;
+        [NotNull] private readonly TransformSynchronizer transformSynchronizer;
 
-        [NotNull]
-        private readonly UndoFixer undoFixer;
+        [NotNull] private readonly UndoFixer undoFixer;
 
         private void DoUpdate() => transformSynchronizer.OnUpdate();
 

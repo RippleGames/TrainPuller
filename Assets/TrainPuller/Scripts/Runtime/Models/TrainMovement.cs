@@ -1,33 +1,94 @@
 using System.Collections.Generic;
+using FluffyUnderware.Curvy;
 using FluffyUnderware.Curvy.Controllers;
+using TemplateProject.Scripts.Data;
 using UnityEngine;
 
 namespace TrainPuller.Scripts.Runtime.Models
 {
     public class TrainMovement : MonoBehaviour
     {
-        public float cartSpacing = 1f; // Spacing between carts
-
+        public float cartSpacing = 1f;
         public List<SplineController> carts = new List<SplineController>();
+        public LevelData.GridColorType cartsColor;
+        private int movementDirection = 1; // 1 = forward, -1 = backward
 
-        void Update()
+        private Dictionary<CurvySpline, float> splineOffsets = new Dictionary<CurvySpline, float>();
+
+        private void Start()
+        {
+            CalculateSplineOffsets();
+        }
+
+        private void Update()
         {
             if (carts.Count == 0) return;
 
-            for (int i = 1; i < carts.Count; i++)
+            for (var i = 1; i < carts.Count; i++)
             {
-                var leader = carts[i - 1]; // Previous cart
+                var leader = carts[i - 1];
                 var follower = carts[i];
 
-                float leaderAbsPos = leader.AbsolutePosition;
-                float spacingAbs = cartSpacing; // Spacing in world units
+                float leaderAbsPos = GetGlobalPosition(leader);
+                float spacingAbs = cartSpacing;
 
-                // Compute the desired absolute position
-                float desiredAbsPos = (leaderAbsPos - spacingAbs + leader.Spline.Length) % leader.Spline.Length;
+                float desiredAbsPos = leaderAbsPos - (spacingAbs * movementDirection);
 
-                // Set the follower’s absolute position
-                follower.AbsolutePosition = desiredAbsPos;
+                SetGlobalPosition(follower, desiredAbsPos);
             }
+        }
+
+        private void CalculateSplineOffsets()
+        {
+            splineOffsets.Clear();
+            float totalOffset = 0f;
+
+            foreach (CurvySpline spline in FindObjectsOfType<CurvySpline>())
+            {
+                splineOffsets[spline] = totalOffset;
+                totalOffset += spline.Length;
+            }
+        }
+
+        private float GetGlobalPosition(SplineController cart)
+        {
+            if (!splineOffsets.ContainsKey(cart.Spline))
+                CalculateSplineOffsets();
+
+            float splineOffset = splineOffsets[cart.Spline];
+            return cart.AbsolutePosition + splineOffset;
+        }
+
+        private void SetGlobalPosition(SplineController cart, float globalPos)
+        {
+            foreach (var splineEntry in splineOffsets)
+            {
+                CurvySpline spline = splineEntry.Key;
+                float offset = splineEntry.Value;
+
+                if (globalPos >= offset && globalPos < offset + spline.Length)
+                {
+                    cart.Spline = spline;
+                    cart.AbsolutePosition = globalPos - offset;
+                    return;
+                }
+            }
+
+            Debug.LogError("Global position out of bounds!");
+        }
+
+        public void MakeLeader(SplineController selectedCart)
+        {
+            if (carts.Count == 0 || carts[0] == selectedCart) return;
+            if (!carts.Contains(selectedCart)) return;
+
+            // Determine new direction BEFORE reversing the list
+            movementDirection *= -1; // Flip direction
+
+            // Reorder list
+            carts.Remove(selectedCart);
+            carts.Reverse();
+            carts.Insert(0, selectedCart);
         }
     }
 }
