@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluffyUnderware.Curvy;
@@ -52,6 +53,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
         private LevelData _levelData;
         private CurvySpline _curvyGenerator;
+        public GridBase[,] gridBases;
 
         public void GenerateLevel()
         {
@@ -142,7 +144,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
         public void SpawnGrid()
         {
-            var gridBases = new GridBase[gridWidth, gridHeight];
+            gridBases = new GridBase[gridWidth, gridHeight];
             var oldParentObject = GameObject.FindGameObjectWithTag("LevelParent");
             if (oldParentObject)
             {
@@ -189,9 +191,9 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             }
 
             HandleAdjacentSet(gridBases);
-            var splineParent = new GameObject("Spline Parent");
-            splineParent.transform.SetParent(newParentObject.transform);
-            var splines = splineGenerator.GenerateSplines(gridBases, splineParent.transform);
+            // var splineParent = new GameObject("Spline Parent");
+            // splineParent.transform.SetParent(newParentObject.transform);
+            // var splines = splineGenerator.GenerateSplines(gridBases, splineParent.transform);
             var trailParent = new GameObject("Trail Parent");
             trailParent.transform.SetParent(newParentObject.transform);
             HandleRoadPrefabs(gridBases, trailParent.transform);
@@ -199,7 +201,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             cardParent.transform.SetParent(newParentObject.transform);
             var exitParent = new GameObject("Exit Parent");
             exitParent.transform.SetParent(newParentObject.transform);
-            HandleTrainsAndCards(gridBases, cardParent.transform, exitParent.transform, splines);
+            HandleTrainsAndCards(gridBases, cardParent.transform, exitParent.transform);
             var currentGoals = SpawnLevelGoals(newParentObject.transform);
 
             levelContainer.Init(gridWidth, gridHeight, levelTime, gridBases, currentGoals, levelGoals);
@@ -208,8 +210,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         }
 
         private void HandleTrainsAndCards(GridBase[,] gridBases, Transform cardParent,
-            Transform exitParent,
-            List<CurvySpline> splines)
+            Transform exitParent)
         {
             var trainParentList = new List<TrainMovement>();
             for (var i = 0; i < gridBases.GetLength(0); i++)
@@ -234,6 +235,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 trainMovement = trainParent.AddComponent<TrainMovement>();
                                 trainMovement.cartSpacing = 1;
                                 trainMovement.cartsColor = stackDataColorTypes[1];
+                                trainMovement.InitializeCartPositions(gridBases);
                                 trainParentList.Add(trainMovement);
                             }
 
@@ -243,20 +245,20 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             var cartScript = trainCart.GetComponent<CartScript>();
                             var trainController = trainCart.GetComponent<SplineController>();
                             cartScript.SetCartProperties(stackDataColorTypes[1]);
-                            var closestSpline = FindClosestSpline(gridBases[i, j].transform.position, splines);
-                            if (!closestSpline)
-                            {
-                                Debug.LogError("No spline found!");
-                                return;
-                            }
+                            // var closestSpline = FindClosestSpline(gridBases[i, j].transform.position, splines);
+                            // if (!closestSpline)
+                            // {
+                            //     Debug.LogError("No spline found!");
+                            //     return;
+                            // }
 
-                            var closestTF =
-                                closestSpline.GetNearestPointTF(trainController.transform.position, Space.World);
-                            trainController.Spline = closestSpline;
-                            trainController.RelativePosition = closestTF;
-                            if (!trainMovement.carts.Contains(trainController))
+                            // var closestTF =
+                            //     closestSpline.GetNearestPointTF(trainController.transform.position, Space.World);
+                            // trainController.Spline = closestSpline;
+                            // trainController.RelativePosition = closestTF;
+                            if (!trainMovement.carts.Contains(cartScript))
                             {
-                                trainMovement.carts.Add(trainController);
+                                trainMovement.carts.Add(cartScript);
                                 cartScript.SetTrainMovementScript(trainMovement);
                             }
                         }

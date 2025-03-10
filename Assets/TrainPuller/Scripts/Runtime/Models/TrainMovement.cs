@@ -1,91 +1,131 @@
+using System;
 using System.Collections.Generic;
-using FluffyUnderware.Curvy;
-using FluffyUnderware.Curvy.Controllers;
-using TemplateProject.Scripts.Data;
 using UnityEngine;
+using TemplateProject.Scripts.Data;
+using TemplateProject.Scripts.Runtime.Models;
+using TrainPuller.Scripts.Runtime.LevelCreation;
 
 namespace TrainPuller.Scripts.Runtime.Models
 {
     public class TrainMovement : MonoBehaviour
     {
+        public float speed = 2f;
         public float cartSpacing = 1f;
-        public List<SplineController> carts = new List<SplineController>();
+        public List<CartScript> carts = new List<CartScript>();
         public LevelData.GridColorType cartsColor;
         private int movementDirection = 1; // 1 = forward, -1 = backward
-
-        private Dictionary<CurvySpline, float> splineOffsets = new Dictionary<CurvySpline, float>();
+        private Dictionary<CartScript, Vector2> cartGridPositions = new Dictionary<CartScript, Vector2>();
+        private HashSet<Vector2> trailPositions;
 
         private void Start()
         {
-            CalculateSplineOffsets();
+            InitializeCartPositions(FindObjectOfType<LevelContainer>().GetGridBases());
         }
+
 
         private void Update()
         {
-            if (carts.Count == 0) return;
-
-            for (var i = 1; i < carts.Count; i++)
-            {
-                var leader = carts[i - 1];
-                var follower = carts[i];
-
-                float leaderAbsPos = GetGlobalPosition(leader);
-                float spacingAbs = cartSpacing;
-
-                float desiredAbsPos = leaderAbsPos - (spacingAbs * movementDirection);
-
-                SetGlobalPosition(follower, desiredAbsPos);
-            }
+            MoveTrain();
         }
 
-        private void CalculateSplineOffsets()
+        public void InitializeCartPositions(GridBase[,] gridBases)
         {
-            splineOffsets.Clear();
-            float totalOffset = 0f;
-
-            foreach (CurvySpline spline in FindObjectsOfType<CurvySpline>())
+            trailPositions = GetTrailPositions(gridBases);
+            cartGridPositions.Clear();
+            
+            foreach (var cart in carts)
             {
-                splineOffsets[spline] = totalOffset;
-                totalOffset += spline.Length;
-            }
-        }
-
-        private float GetGlobalPosition(SplineController cart)
-        {
-            if (!splineOffsets.ContainsKey(cart.Spline))
-                CalculateSplineOffsets();
-
-            float splineOffset = splineOffsets[cart.Spline];
-            return cart.AbsolutePosition + splineOffset;
-        }
-
-        private void SetGlobalPosition(SplineController cart, float globalPos)
-        {
-            foreach (var splineEntry in splineOffsets)
-            {
-                CurvySpline spline = splineEntry.Key;
-                float offset = splineEntry.Value;
-
-                if (globalPos >= offset && globalPos < offset + spline.Length)
+                Vector2Int gridPos = GetGridPosition(cart.transform.position);
+                if (trailPositions.Contains(gridPos))
                 {
-                    cart.Spline = spline;
-                    cart.AbsolutePosition = globalPos - offset;
-                    return;
+                    cartGridPositions[cart] = gridPos;
+                }
+                else
+                {
+                    Debug.LogWarning($"Cart {cart.name} is not on a Trail! Assigning closest valid position.");
+                    cartGridPositions[cart] = FindClosestTrailPosition(gridPos);
                 }
             }
-
-            Debug.LogError("Global position out of bounds!");
         }
 
-        public void MakeLeader(SplineController selectedCart)
+        private void MoveTrain()
+        {
+            if (carts.Count == 0) return;
+
+            for (int i = 1; i < carts.Count; i++)
+            {
+                CartScript leader = carts[i - 1];
+                CartScript follower = carts[i];
+
+                if (!cartGridPositions.ContainsKey(leader)) continue;
+
+                Vector2 leaderGridPos = cartGridPositions[leader];
+                Vector2 targetPos = GetNextValidPosition(leaderGridPos);
+
+                if (trailPositions.Contains(targetPos))
+                {
+                    cartGridPositions[follower] = targetPos;
+                    MoveCartSmoothly(follower, targetPos);
+                }
+            }
+        }
+
+        private Vector2Int GetGridPosition(Vector3 worldPos)
+        {
+            return new Vector2Int(Mathf.RoundToInt(worldPos.x), Mathf.RoundToInt(worldPos.z));
+        }
+
+        private Vector2 GetNextValidPosition(Vector2 leaderPos)
+        {
+            Vector2 targetPos = leaderPos;
+            return trailPositions.Contains(targetPos) ? targetPos : leaderPos;
+        }
+
+        private void MoveCartSmoothly(CartScript cart, Vector2 targetPos)
+        {
+            Vector3 worldTargetPos = new Vector3(targetPos.x, cart.transform.position.y, targetPos.y);
+            cart.transform.position = Vector3.Lerp(cart.transform.position, worldTargetPos, Time.deltaTime * speed);
+        }
+
+        public HashSet<Vector2> GetTrailPositions(GridBase[,] gridBases)
+        {
+            HashSet<Vector2> trailCells = new HashSet<Vector2>();
+            for (var x = 0; x < gridBases.GetLength(0); x++)
+            {
+                for (var y = 0; y < gridBases.GetLength(1); y++)
+                {
+                    if (gridBases[x, y].isTrail)
+                    {
+                        trailCells.Add(new Vector2(gridBases[x,y].transform.position.x,gridBases[x,y].transform.position.z));
+                    }
+                }
+            }
+            return trailCells;
+        }
+
+        private Vector2 FindClosestTrailPosition(Vector2Int startPos)
+        {
+            Vector2 closest = startPos;
+            float minDistance = float.MaxValue;
+            
+            foreach (var trailPos in trailPositions)
+            {
+                float distance = Vector2.Distance(startPos, trailPos);
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    closest = trailPos;
+                }
+            }
+            return closest;
+        }
+
+        public void MakeLeader(CartScript selectedCart)
         {
             if (carts.Count == 0 || carts[0] == selectedCart) return;
             if (!carts.Contains(selectedCart)) return;
 
-            // Determine new direction BEFORE reversing the list
-            movementDirection *= -1; // Flip direction
-
-            // Reorder list
+            movementDirection *= -1;
             carts.Remove(selectedCart);
             carts.Reverse();
             carts.Insert(0, selectedCart);

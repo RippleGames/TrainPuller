@@ -9,6 +9,7 @@ namespace TemplateProject.Scripts.Data
 {
     public class LevelContainer : MonoBehaviour
     {
+
         [Header("Cached References")]
         [SerializeField] private GridSaveClass[] levelGridBases;
         [SerializeField] private List<GoalScript> levelGoalScripts;
@@ -66,6 +67,12 @@ namespace TemplateProject.Scripts.Data
             HandleGridBasesPathfinding(gridBasesArray);
         }
 
+        public GridBase[,] GetGridBases()
+        {
+            var gridBasesArray = MorphTo2DArray(levelGridBases);
+            return gridBasesArray;
+        }
+        
         public void HandleGridBasesPathfinding(GridBase[,] gridBasesArray)
         {
             for (var i = 0; i < gridBasesArray.GetLength(0); i++)

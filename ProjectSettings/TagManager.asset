@@ -8,6 +8,7 @@ TagManager:
   - LevelParent
   - Missile
   - TrainCart
+  - GridBase
   layers:
   - Default
   - TransparentFX
