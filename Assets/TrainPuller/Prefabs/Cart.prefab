@@ -99,11 +99,11 @@ MonoBehaviour:
   m_PositionMode: 1
   m_Position: 0
   m_MoveMode: 1
-  m_Speed: 5
+  m_Speed: 0
   m_Direction: 1
   m_Clamping: 1
   motionConstraints: 0
-  m_PlayAutomatically: 0
+  m_PlayAutomatically: 1
   m_OrientationMode: 2
   m_LockRotation: 1
   m_OrientationAxis: 2

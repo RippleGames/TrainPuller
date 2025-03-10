@@ -11,7 +11,7 @@ namespace TrainPuller.Scripts.Runtime.Models
       [SerializeField] private SplineController cartSplineController;
       [SerializeField] private List<Renderer> cartRenderers;
       [SerializeField] private GameColors colors;
-
+      public Vector3 DraggingDirection { get; set; }
       private bool isMovingForward = true;
 
       public void SetMovementDirection(bool forward)

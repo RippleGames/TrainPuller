@@ -61,21 +61,36 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void SetGlobalPosition(SplineController cart, float globalPos)
         {
+            // Calculate overall minimum offset and maximum global position.
+            float minOffset = float.MaxValue;
+            float maxGlobal = 0f;
+            foreach (var splineEntry in splineOffsets)
+            {
+                float offset = splineEntry.Value;
+                minOffset = Mathf.Min(minOffset, offset);
+                maxGlobal = Mathf.Max(maxGlobal, offset + splineEntry.Key.Length);
+            }
+    
+            // Clamp globalPos to the valid overall range.
+            globalPos = Mathf.Clamp(globalPos, minOffset, maxGlobal - 0.0001f); // subtract a small epsilon
+    
+            // Find the spline corresponding to the clamped global position.
             foreach (var splineEntry in splineOffsets)
             {
                 CurvySpline spline = splineEntry.Key;
                 float offset = splineEntry.Value;
-
                 if (globalPos >= offset && globalPos < offset + spline.Length)
                 {
                     cart.Spline = spline;
                     cart.AbsolutePosition = globalPos - offset;
+                   
                     return;
                 }
             }
 
             Debug.LogError("Global position out of bounds!");
         }
+
 
         public void MakeLeader(SplineController selectedCart)
         {

@@ -13,6 +13,8 @@ namespace TrainPuller.Scripts.Runtime.Managers
         [Header("Cached References")] private Camera _mainCam;
         [AudioClipName] public string popSound;
         [SerializeField] private CartScript currentlySelectedCart;
+        private Vector3 lastHitPoint = Vector3.zero;
+        private Vector3 lastMousePos = Vector3.zero;
 
         [Header("Parameters")] public LayerMask trainCartLayer;
 
@@ -52,22 +54,41 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void MoveObjectAlongSpline()
         {
-            var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Vector3 currentMousePos = Input.mousePosition;
+            Vector3 screenDragDir = Vector3.zero;
+            if (lastMousePos != Vector3.zero)
+            {
+                screenDragDir = (currentMousePos - lastMousePos).normalized;
+            }
+
+            lastMousePos = currentMousePos;
+
+            // Convert screen space direction to world space.
+            // Here we use the camera's transform; you might want to adjust this depending on your scene.
+            Vector3 dragDir = Camera.main.transform.TransformDirection(screenDragDir);
+
+            // Update CartScript's drag direction
+            var mover = currentlySelectedCart.GetSplineController();
+            var cart = mover.GetComponent<CartScript>();
+            if (cart != null)
+            {
+                cart.DraggingDirection = dragDir;
+            }
+
+            // Continue with your raycast to determine target position
+            var ray = Camera.main.ScreenPointToRay(currentMousePos);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                var mover = currentlySelectedCart.GetSplineController();
                 var targetAbsPos = mover.Spline.GetNearestPointTF(hit.point) * mover.Spline.Length;
                 var currentAbsPos = mover.AbsolutePosition;
-                var maxAbsPos = mover.Spline.Length;
-
                 var isMovingForward = targetAbsPos >= currentAbsPos;
 
+                // Determine closest control point on the spline
                 CurvySplineSegment closestCP = null;
-                var closestDistance = float.MaxValue;
-
+                float closestDistance = float.MaxValue;
                 foreach (var cp in mover.Spline.ControlPointsList)
                 {
-                    var distanceToCP = Mathf.Abs(cp.Distance - targetAbsPos);
+                    float distanceToCP = Mathf.Abs(cp.Distance - targetAbsPos);
                     if (distanceToCP < closestDistance)
                     {
                         closestDistance = distanceToCP;
@@ -81,17 +102,27 @@ namespace TrainPuller.Scripts.Runtime.Managers
                         closestCP);
                     if (newCp && newCp != closestCP)
                     {
-                        mover.AbsolutePosition = newCp.Distance;
+                        if (newCp.Spline != mover.Spline)
+                        {
+                            mover.Play();
+
+                            float destinationTf = newCp.Distance / newCp.Spline.Length;
+                            mover.SwitchTo(newCp.Spline, destinationTf, 0.5f);
+                        }
+                        else
+                        {
+                            mover.AbsolutePosition = newCp.Distance;
+                        }
+
                         return;
                     }
                 }
 
-                mover.GetComponent<CartScript>().SetMovementDirection(isMovingForward);
 
+                mover.GetComponent<CartScript>().SetMovementDirection(isMovingForward);
                 mover.AbsolutePosition = Mathf.Lerp(currentAbsPos, targetAbsPos, Time.deltaTime * 10f);
             }
         }
-
 
         private bool ShouldProcessInput()
         {
