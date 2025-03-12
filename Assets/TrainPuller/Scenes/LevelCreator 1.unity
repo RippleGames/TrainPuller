@@ -1220,6 +1220,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 39525509}
+  - component: {fileID: 39525510}
   m_Layer: 0
   m_Name: Train Parent
   m_TagString: Untagged
@@ -1246,6 +1247,26 @@ Transform:
   - {fileID: 295898767}
   m_Father: {fileID: 1590268679}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &39525510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 39525508}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8238753347b91dd4dadbb2bb8d9821ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cartSpacing: 1
+  carts:
+  - {fileID: 1497309983}
+  - {fileID: 1814560819}
+  - {fileID: 1310494782}
+  - {fileID: 295898770}
+  cartsColor: 1
+  leaderChosenSplineSegment: {fileID: 497275136}
 --- !u!1001 &41929539
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2421,7 +2442,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 94667900}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3772,6 +3793,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 0}
 --- !u!4 &140906251
 Transform:
   m_ObjectHideFlags: 0
@@ -8139,13 +8161,14 @@ GameObject:
   - component: {fileID: 295898770}
   - component: {fileID: 295898769}
   - component: {fileID: 295898768}
+  - component: {fileID: 295898771}
   m_Layer: 7
   m_Name: Cart(Clone)
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &295898767
 Transform:
   m_ObjectHideFlags: 0
@@ -8154,8 +8177,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 295898766}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0.0000057451452}
-  m_LocalPosition: {x: -3.8799999, y: 0, z: 3.9487867}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: -2.828043, y: 0, z: -1.01}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8196,7 +8219,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27916ccc4b3891046b8f3e8dc033136a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trainMovement: {fileID: 0}
+  trainMovement: {fileID: 39525510}
   cartSplineController: {fileID: 295898770}
   cartRenderers:
   - {fileID: 625571615}
@@ -8226,17 +8249,17 @@ MonoBehaviour:
   UpdateIn: 0
   targetComponent: 0
   m_PositionMode: 1
-  m_Position: 0.9899998
+  m_Position: 4.81
   m_MoveMode: 1
-  m_Speed: 5
+  m_Speed: 0
   m_Direction: 1
   m_Clamping: 1
   motionConstraints: 0
-  m_PlayAutomatically: 0
+  m_PlayAutomatically: 1
   m_OrientationMode: 2
   m_LockRotation: 1
   m_OrientationAxis: 2
-  m_IgnoreDirection: 0
+  m_IgnoreDirection: 1
   m_DampingDirection: 0.05
   m_DampingUp: 0
   m_OffsetAngle: 0
@@ -8246,7 +8269,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_ForceFrequentUpdates: 0
-  m_Spline: {fileID: 2056630789}
+  m_Spline: {fileID: 289745213}
   m_UseCache: 0
   connectionBehavior: 4
   allowDirectionChange: 1
@@ -8264,6 +8287,23 @@ MonoBehaviour:
   m_OnSwitch:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &295898771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295898766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20c966fcc8fffa2409e773ced80eb326, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trainMovement: {fileID: 39525510}
+  followingCart: {fileID: 1310494782}
+  thisCart: {fileID: 295898770}
+  followingDistance: 1
+  previousSegments: []
 --- !u!1 &296538386
 GameObject:
   m_ObjectHideFlags: 0
@@ -8362,6 +8402,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 0}
 --- !u!4 &297633157
 Transform:
   m_ObjectHideFlags: 0
@@ -14035,7 +14076,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 500335512}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 4.04, y: 0, z: 7.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -15271,7 +15312,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 537127617}
-  - component: {fileID: 537127616}
+  - component: {fileID: 537127618}
   m_Layer: 0
   m_Name: CustomSelector
   m_TagString: Untagged
@@ -15279,19 +15320,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &537127616
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 537127615}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0aa87a10c9b03bc4ca0866a16c0118b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Version: 
 --- !u!4 &537127617
 Transform:
   m_ObjectHideFlags: 0
@@ -15307,6 +15335,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1310494785}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &537127618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 537127615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa87a10c9b03bc4ca0866a16c0118b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 
+  cartFollower: {fileID: 1310494786}
 --- !u!1 &537678945
 GameObject:
   m_ObjectHideFlags: 0
@@ -20991,7 +21033,7 @@ Transform:
   m_GameObject: {fileID: 736127769}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.0699999, y: 0, z: 7.9}
+  m_LocalPosition: {x: 1.07, y: 0, z: 7.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -21465,6 +21507,7 @@ MonoBehaviour:
   - {fileID: 1878924404}
   - {fileID: 1319449817}
   cartsColor: 3
+  leaderChosenSplineSegment: {fileID: 0}
 --- !u!1001 &756460200
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22513,6 +22556,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 0}
 --- !u!4 &788230329
 Transform:
   m_ObjectHideFlags: 0
@@ -25429,6 +25473,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 0}
 --- !u!4 &872305988
 Transform:
   m_ObjectHideFlags: 0
@@ -32056,6 +32101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 0}
 --- !u!1001 &1159493607
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -35358,13 +35404,14 @@ GameObject:
   - component: {fileID: 1310494782}
   - component: {fileID: 1310494784}
   - component: {fileID: 1310494783}
+  - component: {fileID: 1310494786}
   m_Layer: 7
   m_Name: Cart(Clone)
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1310494782
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -35381,17 +35428,17 @@ MonoBehaviour:
   UpdateIn: 0
   targetComponent: 0
   m_PositionMode: 1
-  m_Position: 0
+  m_Position: 5.81
   m_MoveMode: 1
-  m_Speed: 5
+  m_Speed: 0
   m_Direction: 1
   m_Clamping: 1
   motionConstraints: 0
-  m_PlayAutomatically: 0
+  m_PlayAutomatically: 1
   m_OrientationMode: 2
   m_LockRotation: 1
   m_OrientationAxis: 2
-  m_IgnoreDirection: 0
+  m_IgnoreDirection: 1
   m_DampingDirection: 0.05
   m_DampingUp: 0
   m_OffsetAngle: 0
@@ -35401,14 +35448,14 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_ForceFrequentUpdates: 0
-  m_Spline: {fileID: 2056630789}
+  m_Spline: {fileID: 289745213}
   m_UseCache: 0
   connectionBehavior: 4
   allowDirectionChange: 1
   rejectCurrentSpline: 1
   rejectTooDivergentSplines: 0
   maxAllowedDivergenceAngle: 90
-  connectionCustomSelector: {fileID: 537127616}
+  connectionCustomSelector: {fileID: 537127618}
   onPositionReachedList: []
   m_OnControlPointReached:
     m_PersistentCalls:
@@ -35452,7 +35499,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27916ccc4b3891046b8f3e8dc033136a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trainMovement: {fileID: 0}
+  trainMovement: {fileID: 39525510}
   cartSplineController: {fileID: 1310494782}
   cartRenderers:
   - {fileID: 1459554303}
@@ -35474,8 +35521,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1310494781}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -3.8799999, y: 0, z: 2.95}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: -1.828042, y: 0, z: -1.01}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -35483,6 +35530,23 @@ Transform:
   - {fileID: 537127617}
   m_Father: {fileID: 39525509}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1310494786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1310494781}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20c966fcc8fffa2409e773ced80eb326, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trainMovement: {fileID: 39525510}
+  followingCart: {fileID: 1814560819}
+  thisCart: {fileID: 1310494782}
+  followingDistance: 1
+  previousSegments: []
 --- !u!1 &1314565498
 GameObject:
   m_ObjectHideFlags: 0
@@ -35508,7 +35572,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1314565498}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -39777,11 +39841,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bbb1b20cbc1ca54f80a8ce6987a4893, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _spline: {fileID: 61700845}
-  _train: {fileID: 1497309982}
+  _spline: {fileID: 0}
+  _train: {fileID: 0}
   sphereTransform: {fileID: 1899549117}
   splineController: {fileID: 1497309983}
-  tfSpeed: 20
+  tfOffset: 0.1
 --- !u!4 &1462981757
 Transform:
   m_ObjectHideFlags: 0
@@ -40666,10 +40730,10 @@ MonoBehaviour:
   m_Version: 
   UpdateIn: 0
   targetComponent: 0
-  m_PositionMode: 0
-  m_Position: 0.737
+  m_PositionMode: 1
+  m_Position: 7.81
   m_MoveMode: 1
-  m_Speed: 5
+  m_Speed: 0
   m_Direction: 0
   m_Clamping: 0
   motionConstraints: 0
@@ -40677,7 +40741,7 @@ MonoBehaviour:
   m_OrientationMode: 2
   m_LockRotation: 1
   m_OrientationAxis: 2
-  m_IgnoreDirection: 0
+  m_IgnoreDirection: 1
   m_DampingDirection: 0.05
   m_DampingUp: 0
   m_OffsetAngle: 0
@@ -40738,7 +40802,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27916ccc4b3891046b8f3e8dc033136a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trainMovement: {fileID: 0}
+  trainMovement: {fileID: 39525510}
   cartSplineController: {fileID: 1497309983}
   cartRenderers:
   - {fileID: 725361526}
@@ -40761,7 +40825,7 @@ Transform:
   m_GameObject: {fileID: 1497309982}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0.21166988, y: 0, z: -1.01}
+  m_LocalPosition: {x: 0.17195709, y: 0, z: -1.01}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -41004,6 +41068,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 0}
 --- !u!4 &1514432936 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3851735702992929080, guid: 2a1d698624a7f704b81831e45839c590,
@@ -41259,7 +41324,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1536475251}
-  - component: {fileID: 1536475250}
+  - component: {fileID: 1536475252}
   m_Layer: 0
   m_Name: CustomSelector
   m_TagString: Untagged
@@ -41267,19 +41332,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1536475250
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1536475249}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0aa87a10c9b03bc4ca0866a16c0118b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Version: 
 --- !u!4 &1536475251
 Transform:
   m_ObjectHideFlags: 0
@@ -41295,6 +41347,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1814560822}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1536475252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536475249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa87a10c9b03bc4ca0866a16c0118b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 
+  cartFollower: {fileID: 1814560823}
 --- !u!1 &1537443192
 GameObject:
   m_ObjectHideFlags: 0
@@ -42276,8 +42342,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1564520368}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.07999999, y: 0, z: 7.9}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.08, y: 0, z: 7.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -43447,6 +43513,21 @@ MonoBehaviour:
     reservedCount: 0
   - colorType: 4
     reservedCount: 0
+  splines:
+  - {fileID: 94667902}
+  - {fileID: 1384413492}
+  - {fileID: 1314565500}
+  - {fileID: 101084286}
+  - {fileID: 1721464472}
+  - {fileID: 893844647}
+  - {fileID: 1547605627}
+  - {fileID: 1433335473}
+  - {fileID: 2016216638}
+  - {fileID: 61700845}
+  - {fileID: 517044428}
+  - {fileID: 289745213}
+  - {fileID: 2056630789}
+  - {fileID: 773774242}
   gridWidth: 11
   gridHeight: 20
   levelTime: 180
@@ -44538,6 +44619,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Version: 
   ballTransform: {fileID: 1899549117}
+  trainMovement: {fileID: 39525510}
 --- !u!1001 &1647574842
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -45039,6 +45121,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   popSound: BusArrived
   currentlySelectedCart: {fileID: 0}
+  sphere: {fileID: 1899549116}
+  levelContainer: {fileID: 0}
   trainCartLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -46905,6 +46989,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 0}
 --- !u!4 &1717744667
 Transform:
   m_ObjectHideFlags: 0
@@ -49384,13 +49469,14 @@ GameObject:
   - component: {fileID: 1814560819}
   - component: {fileID: 1814560821}
   - component: {fileID: 1814560820}
+  - component: {fileID: 1814560823}
   m_Layer: 7
   m_Name: Cart(Clone)
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1814560819
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49407,17 +49493,17 @@ MonoBehaviour:
   UpdateIn: 0
   targetComponent: 0
   m_PositionMode: 1
-  m_Position: 7.9622
+  m_Position: 6.81
   m_MoveMode: 1
-  m_Speed: 5
+  m_Speed: 0
   m_Direction: 1
   m_Clamping: 1
   motionConstraints: 0
-  m_PlayAutomatically: 0
+  m_PlayAutomatically: 1
   m_OrientationMode: 2
   m_LockRotation: 1
   m_OrientationAxis: 2
-  m_IgnoreDirection: 0
+  m_IgnoreDirection: 1
   m_DampingDirection: 0.05
   m_DampingUp: 0
   m_OffsetAngle: 0
@@ -49427,14 +49513,14 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_ForceFrequentUpdates: 0
-  m_Spline: {fileID: 893844647}
+  m_Spline: {fileID: 289745213}
   m_UseCache: 0
   connectionBehavior: 4
   allowDirectionChange: 1
   rejectCurrentSpline: 1
   rejectTooDivergentSplines: 0
   maxAllowedDivergenceAngle: 90
-  connectionCustomSelector: {fileID: 1536475250}
+  connectionCustomSelector: {fileID: 1536475252}
   onPositionReachedList: []
   m_OnControlPointReached:
     m_PersistentCalls:
@@ -49478,7 +49564,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27916ccc4b3891046b8f3e8dc033136a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trainMovement: {fileID: 0}
+  trainMovement: {fileID: 39525510}
   cartSplineController: {fileID: 1814560819}
   cartRenderers:
   - {fileID: 1557718276}
@@ -49501,7 +49587,7 @@ Transform:
   m_GameObject: {fileID: 1814560818}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -3.1307242, y: 0, z: 2.95}
+  m_LocalPosition: {x: -0.82804275, y: 0, z: -1.01}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -49509,6 +49595,23 @@ Transform:
   - {fileID: 1536475251}
   m_Father: {fileID: 39525509}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1814560823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1814560818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20c966fcc8fffa2409e773ced80eb326, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trainMovement: {fileID: 39525510}
+  followingCart: {fileID: 1497309983}
+  thisCart: {fileID: 1814560819}
+  followingDistance: 1
+  previousSegments: []
 --- !u!1 &1819925125
 GameObject:
   m_ObjectHideFlags: 0
@@ -50144,6 +50247,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 0}
 --- !u!4 &1840220649
 Transform:
   m_ObjectHideFlags: 0
@@ -51857,6 +51961,7 @@ MonoBehaviour:
   - {fileID: 1800786524}
   - {fileID: 2022291202}
   cartsColor: 2
+  leaderChosenSplineSegment: {fileID: 0}
 --- !u!1001 &1886167025
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -52322,7 +52427,6 @@ GameObject:
   - component: {fileID: 1899549117}
   - component: {fileID: 1899549120}
   - component: {fileID: 1899549119}
-  - component: {fileID: 1899549118}
   m_Layer: 0
   m_Name: Sphere
   m_TagString: Untagged
@@ -52339,33 +52443,12 @@ Transform:
   m_GameObject: {fileID: 1899549116}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.21, y: 0, z: -1.03}
+  m_LocalPosition: {x: 0.11, y: 0.055284433, z: -1.11}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &1899549118
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1899549116}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &1899549119
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -59520,6 +59603,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Version: 
+  cartFollower: {fileID: 295898771}
 --- !u!1001 &2138411804
 PrefabInstance:
   m_ObjectHideFlags: 0

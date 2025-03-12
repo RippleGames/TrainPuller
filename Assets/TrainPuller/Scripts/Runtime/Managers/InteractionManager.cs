@@ -15,6 +15,8 @@ namespace TrainPuller.Scripts.Runtime.Managers
         [SerializeField] private CartScript currentlySelectedCart;
         private Vector3 lastHitPoint = Vector3.zero;
         private Vector3 lastMousePos = Vector3.zero;
+        [SerializeField] private GameObject sphere;
+        [SerializeField] private LevelContainer levelContainer;
 
         [Header("Parameters")] public LayerMask trainCartLayer;
 
@@ -23,6 +25,15 @@ namespace TrainPuller.Scripts.Runtime.Managers
         private void Start()
         {
             AssignMainCam();
+            AssignLevelContainer();
+        }
+
+        private void AssignLevelContainer()
+        {
+            if (!levelContainer)
+            {
+                levelContainer = FindObjectOfType<LevelContainer>();
+            }
         }
 
         private void AssignMainCam()
@@ -48,9 +59,48 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
             if (currentlySelectedCart && isHolding)
             {
-                MoveObjectAlongSpline();
+                // MoveObjectAlongSpline();
+                MoveSphereToMousePosition();
             }
         }
+
+        private void MoveSphereToMousePosition()
+        {
+            // Create a ray from the main camera through the mouse position
+            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                // This is the position from the raycast hit
+                Vector3 mouseWorldPoint = hit.point;
+                Vector3 closestSplinePoint = Vector3.zero;
+                float closestDistance = Mathf.Infinity;
+
+                // Loop through each spline in levelContainer.splines
+                foreach (var spline in levelContainer.splines)
+                {
+                    // Get the normalized parameter on the spline closest to the mouse point.
+                    // (GetNearestPointTF is provided by Curvy Splines and returns a value between 0 and 1.)
+                    // Get normalized t using GetNearestPointTF
+                    float t = spline.GetNearestPointTF(mouseWorldPoint);
+
+                    // Use Interpolate to get the position on the spline.
+                    Vector3 splinePos = spline.Interpolate(t);
+
+                    // Calculate distance from the mouse point to this spline position
+                    float distance = Vector3.Distance(mouseWorldPoint, splinePos);
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        closestSplinePoint = splinePos;
+                    }
+                }
+
+                // Smoothly move the sphere toward the closest point on any spline
+                sphere.transform.position = closestSplinePoint;
+            }
+        }
+
 
         private void MoveObjectAlongSpline()
         {
@@ -96,27 +146,27 @@ namespace TrainPuller.Scripts.Runtime.Managers
                     }
                 }
 
-                if (closestCP && closestCP.Connection && closestDistance < 0.5f)
-                {
-                    var newCp = mover.ConnectionCustomSelector.SelectConnectedControlPoint(mover, closestCP.Connection,
-                        closestCP);
-                    if (newCp && newCp != closestCP)
-                    {
-                        if (newCp.Spline != mover.Spline)
-                        {
-                            mover.Play();
-
-                            float destinationTf = newCp.Distance / newCp.Spline.Length;
-                            mover.SwitchTo(newCp.Spline, destinationTf, 0.5f);
-                        }
-                        else
-                        {
-                            mover.AbsolutePosition = newCp.Distance;
-                        }
-
-                        return;
-                    }
-                }
+                // if (closestCP && closestCP.Connection && closestDistance < 0.5f)
+                // {
+                //     var newCp = mover.ConnectionCustomSelector.SelectConnectedControlPoint(mover, closestCP.Connection,
+                //         closestCP);
+                //     if (newCp && newCp != closestCP)
+                //     {
+                //         if (newCp.Spline != mover.Spline)
+                //         {
+                //             mover.Play();
+                //
+                //             float destinationTf = newCp.Distance / newCp.Spline.Length;
+                //             mover.SwitchTo(newCp.Spline, destinationTf, 0.5f);
+                //         }
+                //         else
+                //         {
+                //             mover.AbsolutePosition = newCp.Distance;
+                //         }
+                //
+                //         return;
+                //     }
+                // }
 
 
                 mover.GetComponent<CartScript>().SetMovementDirection(isMovingForward);

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FluffyUnderware.Curvy;
 using TemplateProject.Scripts.Runtime.LevelCreation;
 using TemplateProject.Scripts.Runtime.Managers;
 using TemplateProject.Scripts.Runtime.Models;
@@ -13,13 +14,15 @@ namespace TemplateProject.Scripts.Data
         [SerializeField] private GridSaveClass[] levelGridBases;
         [SerializeField] private List<GoalScript> levelGoalScripts;
         [SerializeField] private List<LevelGoal> levelGoals;
+        [SerializeField] public List<CurvySpline> splines;
         
         [Header("Parameters")]
         [SerializeField] private int gridWidth;
         [SerializeField] private int gridHeight;
         [SerializeField] private int levelTime;
 
-        public void Init(int width, int height, int time, GridBase[,] gridBases, List<GoalScript> busScripts, List<LevelGoal> goals)
+        public void Init(int width, int height, int time, GridBase[,] gridBases, List<GoalScript> busScripts,
+            List<LevelGoal> goals, List<CurvySpline> curvySplines)
         {
             CopyGridArray(gridBases);
             gridWidth = width;
@@ -27,6 +30,7 @@ namespace TemplateProject.Scripts.Data
             levelGoalScripts = busScripts;
             levelTime = time;
             levelGoals = goals;
+            splines = curvySplines;
         }
 
         private void CopyGridArray(GridBase[,] gridBases)

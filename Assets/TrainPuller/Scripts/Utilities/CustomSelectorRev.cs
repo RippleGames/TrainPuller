@@ -7,6 +7,7 @@ using UnityEngine;
 public class CustomSelectorRev : ConnectedControlPointsSelector
 {
     public Transform ballTransform;
+    public TrainMovement trainMovement;
     public override CurvySplineSegment SelectConnectedControlPoint(
          SplineController caller,
          CurvyConnection connection,
@@ -51,6 +52,7 @@ public class CustomSelectorRev : ConnectedControlPointsSelector
 
 
         Debug.Log($"Selector: Chosen {bestMatch?.name} with angle");
+        trainMovement.leaderChosenSplineSegment = bestMatch != null ? bestMatch : currentControlPoint;
         return bestMatch != null ? bestMatch : currentControlPoint;
     }
 }

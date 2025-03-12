@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class CustomConnectedControlPointsSelector : ConnectedControlPointsSelector
 {
+    public CartFollower cartFollower;
     public override CurvySplineSegment SelectConnectedControlPoint(
         SplineController caller,
         CurvyConnection connection,
@@ -13,35 +14,18 @@ public class CustomConnectedControlPointsSelector : ConnectedControlPointsSelect
         if (connection == null || currentControlPoint == null)
             return currentControlPoint;
 
-        CartScript cart = caller.GetComponent<CartScript>();
-        if (cart == null)
-            return currentControlPoint;
-
-        Vector3 dragDir = cart.DraggingDirection;
-        if (dragDir == Vector3.zero)
-            return currentControlPoint;
-
-        CurvySplineSegment bestMatch = null;
-        float smallestAngle = float.MaxValue;
-        Vector3 currentPos = currentControlPoint.transform.position;
-
-        foreach (var cp in connection.ControlPointsList)
+        CurvySplineSegment bestSegment;
+        if (cartFollower.followingCart.Spline == cartFollower.thisCart.Spline)
         {
-            if (cp == currentControlPoint)
-                continue;
-
-            Vector3 candidateDir = (cp.transform.position - currentPos).normalized;
-            float angle = Vector3.Angle(dragDir, candidateDir);
-            // Debug to check computed angles:
-            Debug.Log($"Comparing candidate {cp.name}: Angle = {angle}");
-            if (angle < smallestAngle)
-            {
-                smallestAngle = angle;
-                bestMatch = cp;
-            }
+            bestSegment = cartFollower.previousSegments[^1];
+            cartFollower.previousSegments.Remove(bestSegment);
         }
-
-        Debug.Log($"Selector: Chosen {bestMatch?.name} with angle {smallestAngle}");
-        return bestMatch != null ? bestMatch : currentControlPoint;
+        else
+        {
+            cartFollower.previousSegments.Add(currentControlPoint);
+            bestSegment = cartFollower.trainMovement.leaderChosenSplineSegment;
+        }
+        
+        return bestSegment;
     }
 }

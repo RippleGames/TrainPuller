@@ -202,7 +202,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             HandleTrainsAndCards(gridBases, cardParent.transform, exitParent.transform, splines);
             var currentGoals = SpawnLevelGoals(newParentObject.transform);
 
-            levelContainer.Init(gridWidth, gridHeight, levelTime, gridBases, currentGoals, levelGoals);
+            levelContainer.Init(gridWidth, gridHeight, levelTime, gridBases, currentGoals, levelGoals,splines);
             EditorUtility.SetDirty(levelContainer);
             _currentParentObject = newParentObject;
         }
