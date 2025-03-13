@@ -244,7 +244,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             trainCart.transform.SetParent(trainParent.transform);
                             var cartScript = trainCart.GetComponent<CartScript>();
                             var trainController = trainCart.GetComponent<SplineController>();
-                            cartScript.SetCartProperties(stackDataColorTypes[1]);
+                            cartScript.SetCartProperties(i, j, stackDataColorTypes[1]);
                             // var closestSpline = FindClosestSpline(gridBases[i, j].transform.position, splines);
                             // if (!closestSpline)
                             // {

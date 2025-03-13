@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.LevelCreation;
@@ -9,21 +10,21 @@ namespace TrainPuller.Scripts.Runtime.Managers
 {
     public class InteractionManager : MonoBehaviour
     {
-        [Header("Cached References")]
-        private Camera _mainCam;
+        [Header("Cached References")] private Camera _mainCam;
         [SerializeField] private CartScript currentlySelectedCart;
 
-        [Header("Parameters")] 
-        public LayerMask trainCartLayer;
+        [Header("Parameters")] public LayerMask trainCartLayer;
 
-        [Header("Flags")] 
-        public bool isHolding;
+        [Header("Flags")] public bool isHolding;
+
+        public GridBase[,] gridBases;
         private HashSet<Vector2Int> trailPositions;
 
         private void Start()
         {
             AssignMainCam();
             trailPositions = GetTrailPositions();
+            gridBases = FindObjectOfType<LevelContainer>().GetGridBases();
         }
 
         private void AssignMainCam()
@@ -35,7 +36,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
         {
             if (Input.GetMouseButtonDown(0) && !currentlySelectedCart && !isHolding)
             {
-                ProcessRaycastInteraction();
+                ProcessInteraction();
                 isHolding = true;
             }
 
@@ -53,56 +54,77 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void MoveObjectAlongGrid()
         {
-            var ray = _mainCam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            Vector3 mouseWorldPos = GetMouseWorldPosition();
+            Vector2Int targetGridPos = GetNearestGridCell(mouseWorldPos);
+
+            if (trailPositions.Contains(targetGridPos) && IsAdjacentToCart(targetGridPos))
             {
-                if (hit.collider.CompareTag("GridBase") && hit.collider.gameObject.TryGetComponent(out GridBase gridBase))
+                Vector3 targetWorldPos = GetWorldPositionFromGrid(targetGridPos);
+                currentlySelectedCart.AddToPath(targetGridPos, targetWorldPos);
+            }
+        }
+
+        private Vector2Int GetNearestGridCell(Vector3 worldPos)
+        {
+            Vector2Int closestGridPos = Vector2Int.zero;
+            float minDistance = float.MaxValue;
+
+            foreach (var trailPos in trailPositions)
+            {
+                Vector3 cellWorldPos = GetWorldPositionFromGrid(trailPos);
+                float distance = Vector3.Distance(worldPos, cellWorldPos);
+
+                if (distance < minDistance)
                 {
-                    Vector2Int gridPos = GetGridPosition(gridBase.transform.position);
-
-                    if (gridBase.isTrail && IsAdjacentToCart(gridPos))
-                    {
-                        Vector3 targetWorldPos = new Vector3(gridBase.transform.position.x,
-                            currentlySelectedCart.transform.position.y, gridBase.transform.position.z);
-
-                        currentlySelectedCart.transform.position = Vector3.MoveTowards(
-                            currentlySelectedCart.transform.position, targetWorldPos, 5f * Time.deltaTime);
-
-                        UpdateCartRotation(targetWorldPos);
-                    }
+                    minDistance = distance;
+                    closestGridPos = trailPos;
                 }
             }
+
+            return closestGridPos;
+        }
+
+        private Vector3 GetMouseWorldPosition()
+        {
+            Plane plane = new Plane(Vector3.up, Vector3.zero);
+            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+
+            if (plane.Raycast(ray, out float enter))
+            {
+                return ray.GetPoint(enter);
+            }
+
+            return Vector3.zero;
+        }
+
+        private Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
+        {
+            var gridBase = gridBases[gridPos.x, gridPos.y];
+            return gridBase != null ? gridBase.transform.position : Vector3.zero;
         }
 
         private bool IsAdjacentToCart(Vector2Int targetPos)
         {
-            Vector2Int cartPos = GetGridPosition(currentlySelectedCart.transform.position);
-
-            int dx = Mathf.Abs(targetPos.x - cartPos.x);
-            int dy = Mathf.Abs(targetPos.y - cartPos.y);
-
-            return (dx == 1 && dy == 0) || (dx == 0 && dy == 1); 
-        }
-
-        private void UpdateCartRotation(Vector3 targetWorldPos)
-        {
-            Vector3 direction = (targetWorldPos - currentlySelectedCart.transform.position).normalized;
-            if (direction != Vector3.zero)
+            var isAdjacentToPath = false;
+            if (currentlySelectedCart.GetPath().Count <= 0)
             {
-                float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
-                Quaternion targetRotation = Quaternion.Euler(0, angle, 0);
-
-                currentlySelectedCart.transform.rotation = Quaternion.RotateTowards(
-                    currentlySelectedCart.transform.rotation, targetRotation, Time.deltaTime * 200f);
+                isAdjacentToPath = true;
             }
+            else
+            {
+                var gridBase = gridBases[currentlySelectedCart.GetPath().ToList()[^1].x,
+                    currentlySelectedCart.GetPath().ToList()[^1].y];
+                isAdjacentToPath = gridBase.GetNeighbors()
+                    .Any(x => x.GetXAxis() == targetPos.x && x.GetYAxis() == targetPos.y);
+            }
+
+            var isNeighbor = gridBases[currentlySelectedCart.currentGridCell.x, currentlySelectedCart.currentGridCell.y]
+                .GetNeighbors().Any(x => x.GetXAxis() == targetPos.x && x.GetYAxis() == targetPos.y);
+
+            return isNeighbor || isAdjacentToPath;
         }
 
-        private Vector2Int GetGridPosition(Vector3 worldPos)
-        {
-            return new Vector2Int(Mathf.RoundToInt(worldPos.x), Mathf.RoundToInt(worldPos.z));
-        }
-
-        private void ProcessRaycastInteraction()
+        private void ProcessInteraction()
         {
             var ray = _mainCam.ScreenPointToRay(Input.mousePosition);
             if (!TryRayCast(ray, out var hitInfo, trainCartLayer)) return;
@@ -144,6 +166,19 @@ namespace TrainPuller.Scripts.Runtime.Managers
             }
 
             return trailCells;
+        }
+
+        private void UpdateCartRotation(Vector3 targetWorldPos)
+        {
+            Vector3 direction = (targetWorldPos - currentlySelectedCart.transform.position).normalized;
+            if (direction != Vector3.zero)
+            {
+                float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+                Quaternion targetRotation = Quaternion.Euler(0, angle, 0);
+
+                currentlySelectedCart.transform.rotation = Quaternion.RotateTowards(
+                    currentlySelectedCart.transform.rotation, targetRotation, Time.deltaTime * 200f);
+            }
         }
     }
 }

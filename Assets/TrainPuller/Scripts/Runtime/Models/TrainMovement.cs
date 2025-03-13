@@ -13,15 +13,13 @@ namespace TrainPuller.Scripts.Runtime.Models
         public float cartSpacing = 1f;
         public List<CartScript> carts = new List<CartScript>();
         public LevelData.GridColorType cartsColor;
-        private int movementDirection = 1; // 1 = forward, -1 = backward
-        private Dictionary<CartScript, Vector2> cartGridPositions = new Dictionary<CartScript, Vector2>();
-        private HashSet<Vector2> trailPositions;
+        private Dictionary<CartScript, Vector2Int> cartGridPositions = new Dictionary<CartScript, Vector2Int>();
+        private HashSet<Vector2Int> trailPositions;
 
         private void Start()
         {
             InitializeCartPositions(FindObjectOfType<LevelContainer>().GetGridBases());
         }
-
 
         private void Update()
         {
@@ -35,7 +33,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             
             foreach (var cart in carts)
             {
-                Vector2Int gridPos = GetGridPosition(cart.transform.position);
+                Vector2Int gridPos = cart.currentGridCell;
                 if (trailPositions.Contains(gridPos))
                 {
                     cartGridPositions[cart] = gridPos;
@@ -59,8 +57,8 @@ namespace TrainPuller.Scripts.Runtime.Models
 
                 if (!cartGridPositions.ContainsKey(leader)) continue;
 
-                Vector2 leaderGridPos = cartGridPositions[leader];
-                Vector2 targetPos = GetNextValidPosition(leaderGridPos);
+                Vector2Int leaderGridPos = cartGridPositions[leader];
+                Vector2Int targetPos = GetNextValidPosition(leaderGridPos);
 
                 if (trailPositions.Contains(targetPos))
                 {
@@ -70,47 +68,48 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
         }
 
-        private Vector2Int GetGridPosition(Vector3 worldPos)
+        private Vector2Int GetNextValidPosition(Vector2Int leaderPos)
         {
-            return new Vector2Int(Mathf.RoundToInt(worldPos.x), Mathf.RoundToInt(worldPos.z));
+            return trailPositions.Contains(leaderPos) ? leaderPos : leaderPos;
         }
 
-        private Vector2 GetNextValidPosition(Vector2 leaderPos)
+        private void MoveCartSmoothly(CartScript cart, Vector2Int targetGridPos)
         {
-            Vector2 targetPos = leaderPos;
-            return trailPositions.Contains(targetPos) ? targetPos : leaderPos;
-        }
-
-        private void MoveCartSmoothly(CartScript cart, Vector2 targetPos)
-        {
-            Vector3 worldTargetPos = new Vector3(targetPos.x, cart.transform.position.y, targetPos.y);
+            Vector3 worldTargetPos = GetWorldPositionFromGrid(targetGridPos);
             cart.transform.position = Vector3.Lerp(cart.transform.position, worldTargetPos, Time.deltaTime * speed);
+            cart.currentGridCell = targetGridPos;
         }
 
-        public HashSet<Vector2> GetTrailPositions(GridBase[,] gridBases)
+        private Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
         {
-            HashSet<Vector2> trailCells = new HashSet<Vector2>();
+            var gridBase = FindObjectOfType<LevelContainer>().GetGridBases()[gridPos.x, gridPos.y];
+            return gridBase != null ? gridBase.transform.position : Vector3.zero;
+        }
+
+        public HashSet<Vector2Int> GetTrailPositions(GridBase[,] gridBases)
+        {
+            HashSet<Vector2Int> trailCells = new HashSet<Vector2Int>();
             for (var x = 0; x < gridBases.GetLength(0); x++)
             {
                 for (var y = 0; y < gridBases.GetLength(1); y++)
                 {
                     if (gridBases[x, y].isTrail)
                     {
-                        trailCells.Add(new Vector2(gridBases[x,y].transform.position.x,gridBases[x,y].transform.position.z));
+                        trailCells.Add(new Vector2Int(x, y));
                     }
                 }
             }
             return trailCells;
         }
 
-        private Vector2 FindClosestTrailPosition(Vector2Int startPos)
+        private Vector2Int FindClosestTrailPosition(Vector2Int startPos)
         {
-            Vector2 closest = startPos;
+            Vector2Int closest = startPos;
             float minDistance = float.MaxValue;
             
             foreach (var trailPos in trailPositions)
             {
-                float distance = Vector2.Distance(startPos, trailPos);
+                float distance = Vector2Int.Distance(startPos, trailPos);
                 if (distance < minDistance)
                 {
                     minDistance = distance;
@@ -125,9 +124,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (carts.Count == 0 || carts[0] == selectedCart) return;
             if (!carts.Contains(selectedCart)) return;
 
-            movementDirection *= -1;
             carts.Remove(selectedCart);
-            carts.Reverse();
             carts.Insert(0, selectedCart);
         }
     }
