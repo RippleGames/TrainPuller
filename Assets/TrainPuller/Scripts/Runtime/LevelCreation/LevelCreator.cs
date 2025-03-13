@@ -191,9 +191,9 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             }
 
             HandleAdjacentSet(gridBases);
-            // var splineParent = new GameObject("Spline Parent");
-            // splineParent.transform.SetParent(newParentObject.transform);
-            // var splines = splineGenerator.GenerateSplines(gridBases, splineParent.transform);
+            var splineParent = new GameObject("Spline Parent");
+            splineParent.transform.SetParent(newParentObject.transform);
+            var splines = splineGenerator.GenerateSplines(gridBases, splineParent.transform);
             var trailParent = new GameObject("Trail Parent");
             trailParent.transform.SetParent(newParentObject.transform);
             HandleRoadPrefabs(gridBases, trailParent.transform);
@@ -204,7 +204,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             HandleTrainsAndCards(gridBases, cardParent.transform, exitParent.transform);
             var currentGoals = SpawnLevelGoals(newParentObject.transform);
 
-            levelContainer.Init(gridWidth, gridHeight, levelTime, gridBases, currentGoals, levelGoals);
+            levelContainer.Init(gridWidth, gridHeight, levelTime, gridBases, currentGoals, levelGoals, splines);
             EditorUtility.SetDirty(levelContainer);
             _currentParentObject = newParentObject;
         }
@@ -235,7 +235,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 trainMovement = trainParent.AddComponent<TrainMovement>();
                                 trainMovement.cartSpacing = 1;
                                 trainMovement.cartsColor = stackDataColorTypes[1];
-                                trainMovement.InitializeCartPositions(gridBases);
+                                // trainMovement.InitializeCartPositions(gridBases);
                                 trainParentList.Add(trainMovement);
                             }
 
@@ -256,6 +256,10 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             //     closestSpline.GetNearestPointTF(trainController.transform.position, Space.World);
                             // trainController.Spline = closestSpline;
                             // trainController.RelativePosition = closestTF;
+                            if (trainMovement.carts == null)
+                            {
+                                trainMovement.carts = new List<CartScript>();
+                            }
                             if (!trainMovement.carts.Contains(cartScript))
                             {
                                 trainMovement.carts.Add(cartScript);
