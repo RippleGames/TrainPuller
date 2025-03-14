@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using FluffyUnderware.Curvy.Controllers;
 using TemplateProject.Scripts.Data;
+using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
 namespace TrainPuller.Scripts.Runtime.Models
@@ -13,24 +14,89 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private GameColors colors;
         [SerializeField] public Vector2Int currentGridCell;
 
-        private bool isMoving = false;
-        private float moveSpeed = 10f;
-        private Queue<Vector2Int> pathQueue = new Queue<Vector2Int>();
+        [SerializeField] private Queue<Vector2Int> pathQueue = new Queue<Vector2Int>();
         private Vector3 movementTarget;
+
+
+        [SerializeField] private float moveSpeed = 10f;
+        private Vector3 movementDirection;
+        public bool isMoving = false;
+        public InteractionManager interactionManager;
+        [SerializeField] private List<Vector3> pathPositions = new List<Vector3>(); // Liderin geçtiği pozisyonlar
+        [SerializeField] private int maxPathLength = 10; // Kaydedilecek maksimum pozisyon sayısı
+
+
+        public void StopMovement()
+        {
+            isMoving = false;
+            pathQueue.Clear();
+        }
 
         private void Update()
         {
             if (isMoving)
             {
-                MoveCart();
+                MoveTowardsTarget();
             }
         }
 
-        public void AddToPath(Vector2Int newGridCell, Vector3 worldPos)
+        private void MoveTowardsTarget()
         {
-            if (!pathQueue.Contains(newGridCell))
+            if (pathPositions.Count == 0 || Vector3.Distance(transform.position, pathPositions[^1]) > 0.1f)
+            {
+                pathPositions.Add(transform.position);
+
+                // Eğer liste çok uzunsa, en eski pozisyonu sil
+                if (pathPositions.Count > maxPathLength)
+                {
+                    pathPositions.RemoveAt(0);
+                }
+            }
+
+            var targetPos = interactionManager.GetProjectedMousePositionOnTrail();
+            if (Vector3.Distance(transform.position, targetPos) <= 2f)
+            {
+                // Hedef pozisyonun Trail hücresi içinde olup olmadığını kontrol et
+                if (interactionManager.IsPositionOnTrail(targetPos))
+                {
+                    Vector3 snappedPosition = interactionManager.GetNearestTrailPosition(targetPos);
+                    transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
+                    UpdateRotation(targetPos); 
+                    if (Vector3.Distance(transform.position, movementTarget) < 0.1f && Vector3.Distance(
+                            transform.position,
+                            targetPos) <= 0.1f)
+                    {
+                        MoveToNextGridCell();
+                    }
+                }
+                else
+                {
+                    // Eğer hedef pozisyon Trail dışındaysa, hareketi durdur
+                    StopMovement();
+                }
+            }
+        }
+
+        private void UpdateRotation(Vector3 targetPosition)
+        {
+            Vector3 direction = (targetPosition - transform.position).normalized;
+            if (direction != Vector3.zero)
+            {
+                direction.y = 0;
+                transform.rotation = Quaternion.Lerp(transform.rotation,Quaternion.LookRotation(direction), moveSpeed *Time.deltaTime);
+            }
+        }
+        public List<Vector3> GetPathPositions()
+        {
+            return pathPositions; // Liderin geçtiği pozisyonları döndür
+        }
+
+        public void AddToPath(Vector2Int newGridCell)
+        {
+            if (!pathQueue.Contains(newGridCell) && !pathQueue.Contains(currentGridCell))
             {
                 pathQueue.Enqueue(newGridCell);
+                // Debug.Log("PathCount = " + pathQueue.Count);
                 if (!isMoving)
                 {
                     MoveToNextGridCell();
@@ -55,15 +121,20 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             if (Vector3.Distance(transform.position, movementTarget) < 0.01f)
             {
+                if (pathQueue.Count > 0)
+                {
+                    MoveToNextGridCell();
+                    return;
+                }
+
                 isMoving = false;
-                MoveToNextGridCell();
             }
         }
 
-        private Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
+        public Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
         {
             var gridBase = FindObjectOfType<LevelContainer>().GetGridBases()[gridPos.x, gridPos.y];
-            return gridBase != null ? gridBase.transform.position : Vector3.zero;
+            return gridBase.transform.position;
         }
 
 

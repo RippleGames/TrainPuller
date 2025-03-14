@@ -28,9 +28,9 @@ namespace TemplateProject.Scripts.Utilities
 
         private void Start()
         {
-            var prefabAddress = $"Level_{LevelManager.instance.GetLevelIndex()}";
-            LoadPrefab(prefabAddress);
-            AssignLevelCount();
+            // var prefabAddress = $"Level_{LevelManager.instance.GetLevelIndex()}";
+            // LoadPrefab(prefabAddress);
+            // AssignLevelCount();
         }
 
         private void AssignLevelCount()

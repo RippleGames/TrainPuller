@@ -3092,6 +3092,11 @@ MonoBehaviour:
   - {fileID: 979270049}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 9, y: 4}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 0}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!114 &83256339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4391,6 +4396,11 @@ MonoBehaviour:
   - {fileID: 316802566}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 9, y: 13}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 0}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!114 &121205790
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13268,6 +13278,11 @@ MonoBehaviour:
   - {fileID: 728696805}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 9, y: 15}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 0}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!114 &439766023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19834,13 +19849,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 2
-  cartSpacing: 1
+  cartSpacing: 3
   carts:
   - {fileID: 1690822324}
   - {fileID: 1186408934}
   - {fileID: 1608669814}
   - {fileID: 2022426290}
   cartsColor: 1
+  interactionManager: {fileID: 1656296572}
 --- !u!1 &684381045
 GameObject:
   m_ObjectHideFlags: 0
@@ -24164,6 +24180,7 @@ MonoBehaviour:
   - {fileID: 1609410963}
   - {fileID: 1348622563}
   cartsColor: 3
+  interactionManager: {fileID: 0}
 --- !u!1001 &906420182
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24611,6 +24628,11 @@ MonoBehaviour:
   - {fileID: 1007383819}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 9, y: 3}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 0}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!114 &914854515
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29801,13 +29823,14 @@ GameObject:
   - component: {fileID: 1186408937}
   - component: {fileID: 1186408934}
   - component: {fileID: 1186408936}
+  - component: {fileID: 1186408938}
   m_Layer: 7
   m_Name: Cart(Clone)
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1186408934
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29835,6 +29858,11 @@ MonoBehaviour:
   - {fileID: 361467449}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 1, y: 5}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 1656296572}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!65 &1186408936
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -29873,6 +29901,23 @@ Transform:
   - {fileID: 1057072638}
   m_Father: {fileID: 684228392}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1186408938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186408933}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77ebc06f511a29e4aaf389f4ac1940cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leaderCart: {fileID: 1690822324}
+  thisCart: {fileID: 1186408934}
+  followSpeed: 10
+  followDistance: 1
+  interactionManager: {fileID: 1656296572}
 --- !u!1 &1190825858
 GameObject:
   m_ObjectHideFlags: 0
@@ -33455,6 +33500,11 @@ MonoBehaviour:
   - {fileID: 417994865}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 9, y: 6}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 0}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!114 &1348622564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34077,6 +34127,11 @@ MonoBehaviour:
   - {fileID: 837569320}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 9, y: 14}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 0}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!114 &1373685286
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39339,13 +39394,14 @@ GameObject:
   - component: {fileID: 1608669817}
   - component: {fileID: 1608669814}
   - component: {fileID: 1608669816}
+  - component: {fileID: 1608669818}
   m_Layer: 7
   m_Name: Cart(Clone)
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1608669814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39373,6 +39429,11 @@ MonoBehaviour:
   - {fileID: 547796710}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 1, y: 6}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 1656296572}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!65 &1608669816
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -39411,6 +39472,23 @@ Transform:
   - {fileID: 1409045665}
   m_Father: {fileID: 684228392}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1608669818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1608669813}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77ebc06f511a29e4aaf389f4ac1940cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leaderCart: {fileID: 1186408934}
+  thisCart: {fileID: 1608669814}
+  followSpeed: 50
+  followDistance: 1
+  interactionManager: {fileID: 1656296572}
 --- !u!1 &1609410962
 GameObject:
   m_ObjectHideFlags: 0
@@ -39457,6 +39535,11 @@ MonoBehaviour:
   - {fileID: 1854111231}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 9, y: 5}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 0}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!114 &1609410964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39875,6 +39958,7 @@ MonoBehaviour:
   - {fileID: 439766022}
   - {fileID: 1665777574}
   cartsColor: 2
+  interactionManager: {fileID: 0}
 --- !u!1001 &1622490323
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41177,6 +41261,11 @@ MonoBehaviour:
   - {fileID: 1969727444}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 9, y: 16}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 0}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!114 &1665777575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42038,6 +42127,11 @@ MonoBehaviour:
   - {fileID: 314035975}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 1, y: 4}
+  moveSpeed: 30
+  isMoving: 0
+  interactionManager: {fileID: 1656296572}
+  pathPositions: []
+  maxPathLength: 10
 --- !u!65 &1690822326
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -48765,13 +48859,14 @@ GameObject:
   - component: {fileID: 2022426288}
   - component: {fileID: 2022426290}
   - component: {fileID: 2022426289}
+  - component: {fileID: 2022426291}
   m_Layer: 7
   m_Name: Cart(Clone)
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2022426288
 Transform:
   m_ObjectHideFlags: 0
@@ -48837,6 +48932,28 @@ MonoBehaviour:
   - {fileID: 451932499}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 1, y: 7}
+  moveSpeed: 10
+  isMoving: 0
+  interactionManager: {fileID: 1656296572}
+  pathPositions: []
+  maxPathLength: 10
+--- !u!114 &2022426291
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022426287}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77ebc06f511a29e4aaf389f4ac1940cd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leaderCart: {fileID: 1608669814}
+  thisCart: {fileID: 2022426290}
+  followSpeed: 50
+  followDistance: 1
+  interactionManager: {fileID: 1656296572}
 --- !u!1001 &2027747712
 PrefabInstance:
   m_ObjectHideFlags: 0

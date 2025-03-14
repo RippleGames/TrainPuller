@@ -18,12 +18,14 @@ namespace TrainPuller.Scripts.Runtime.Managers
         [Header("Flags")] public bool isHolding;
 
         public GridBase[,] gridBases;
-        private HashSet<Vector2Int> trailPositions;
+        public HashSet<Vector2Int> trailPositions;
+        public HashSet<Vector2Int> gridPositions;
 
         private void Start()
         {
             AssignMainCam();
             trailPositions = GetTrailPositions();
+            gridPositions = GetGridPositions();
             gridBases = FindObjectOfType<LevelContainer>().GetGridBases();
         }
 
@@ -37,13 +39,17 @@ namespace TrainPuller.Scripts.Runtime.Managers
             if (Input.GetMouseButtonDown(0) && !currentlySelectedCart && !isHolding)
             {
                 ProcessInteraction();
-                isHolding = true;
+                isHolding = true; // Mouse'un başlangıç pozisyonunu kaydet
             }
 
             if (Input.GetMouseButtonUp(0))
             {
                 isHolding = false;
-                currentlySelectedCart = null;
+                if (currentlySelectedCart != null)
+                {
+                    currentlySelectedCart.StopMovement(); // Hareketi durdur
+                    currentlySelectedCart = null;
+                }
             }
 
             if (currentlySelectedCart && isHolding)
@@ -52,24 +58,121 @@ namespace TrainPuller.Scripts.Runtime.Managers
             }
         }
 
+        public Vector3 GetProjectedMousePositionOnTrail()
+        {
+            Vector3 mouseWorldPos = GetMouseWorldPosition(); // Mouse'un dünya pozisyonunu al
+            Vector2Int nearestGridPos = GetNearestGridCell(mouseWorldPos, true); // En yakın grid pozisyonunu bul
+
+            // Eğer bu pozisyon Trail hücresiyse, mouse pozisyonunu Trail üzerine project et
+            if (trailPositions.Contains(nearestGridPos))
+            {
+                Vector3 gridWorldPos = GetWorldPositionFromGrid(nearestGridPos); // Grid hücresinin dünya pozisyonu
+                Vector3 projectedPos =
+                    ProjectPositionOnTrail(mouseWorldPos, nearestGridPos); // Trail üzerine project et
+                return projectedPos;
+            }
+
+            // Eğer Trail hücresi değilse, en yakın Trail hücresine snap et
+            return GetNearestTrailPosition(mouseWorldPos);
+        }
+
+        public Vector3 GetNearestTrailPosition(Vector3 position)
+        {
+            Vector2Int nearestTrailPos = Vector2Int.zero;
+            float minDistance = float.MaxValue;
+
+            foreach (var trailPos in trailPositions)
+            {
+                Vector3 trailWorldPos = GetWorldPositionFromGrid(trailPos);
+                float distance = Vector3.Distance(position, trailWorldPos);
+
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nearestTrailPos = trailPos;
+                }
+            }
+
+            return GetWorldPositionFromGrid(nearestTrailPos);
+        }
+
+        private Vector3 ProjectPositionOnTrail(Vector3 mousePos, Vector2Int gridPos)
+        {
+            // Grid hücresinin dünya pozisyonunu al
+            Vector3 gridWorldPos = GetWorldPositionFromGrid(gridPos);
+
+            // Grid hücresinin komşularını al
+            GridBase currentGrid = gridBases[gridPos.x, gridPos.y];
+            List<GridBase> neighbors = currentGrid.GetNeighbors();
+
+            // Komşu hücrelerin pozisyonlarını kontrol et
+            bool isHorizontal = false; // Yatay komşu varsa true
+            bool isVertical = false; // Dikey komşu varsa true
+
+            foreach (var neighbor in neighbors)
+            {
+                if (neighbor.GetXAxis() == gridPos.x)
+                {
+                    // Aynı X ekseninde (dikey komşu)
+                    isVertical = true;
+                }
+                else if (neighbor.GetYAxis() == gridPos.y)
+                {
+                    // Aynı Y ekseninde (yatay komşu)
+                    isHorizontal = true;
+                }
+            }
+
+            // Mouse pozisyonunu hizala
+            Vector3 offset = mousePos - gridWorldPos;
+
+            if (isHorizontal && !isVertical)
+            {
+                // Yalnızca yatay komşu varsa, Y eksenini hizala (Z eksenini sabit tut)
+                offset.z = 0;
+            }
+            else if (isVertical && !isHorizontal)
+            {
+                // Yalnızca dikey komşu varsa, Z eksenini hizala (Y eksenini sabit tut)
+                offset.x = 0;
+            }
+            else
+            {
+                offset.z = 0; // X eksenine hizala
+
+                offset.x = 0; // Z eksenine hizala
+            }
+
+            // Project edilmiş pozisyonu döndür
+            return gridWorldPos + offset;
+        }
+
+        public bool IsPositionOnTrail(Vector3 position)
+        {
+            Vector2Int nearestGridPos = GetNearestGridCell(position, false);
+
+            var contains = trailPositions.Contains(nearestGridPos);
+
+            return contains;
+        }
+
         private void MoveObjectAlongGrid()
         {
             Vector3 mouseWorldPos = GetMouseWorldPosition();
-            Vector2Int targetGridPos = GetNearestGridCell(mouseWorldPos);
+            Vector2Int targetGridPos = GetNearestGridCell(mouseWorldPos, true);
 
             if (trailPositions.Contains(targetGridPos) && IsAdjacentToCart(targetGridPos))
             {
-                Vector3 targetWorldPos = GetWorldPositionFromGrid(targetGridPos);
-                currentlySelectedCart.AddToPath(targetGridPos, targetWorldPos);
+                currentlySelectedCart.AddToPath(targetGridPos);
             }
         }
 
-        private Vector2Int GetNearestGridCell(Vector3 worldPos)
+        public Vector2Int GetNearestGridCell(Vector3 worldPos, bool inTrail)
         {
             Vector2Int closestGridPos = Vector2Int.zero;
             float minDistance = float.MaxValue;
 
-            foreach (var trailPos in trailPositions)
+            foreach (var trailPos in inTrail ? trailPositions : gridPositions)
             {
                 Vector3 cellWorldPos = GetWorldPositionFromGrid(trailPos);
                 float distance = Vector3.Distance(worldPos, cellWorldPos);
@@ -97,7 +200,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             return Vector3.zero;
         }
 
-        private Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
+        public Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
         {
             var gridBase = gridBases[gridPos.x, gridPos.y];
             return gridBase != null ? gridBase.transform.position : Vector3.zero;
@@ -106,22 +209,34 @@ namespace TrainPuller.Scripts.Runtime.Managers
         private bool IsAdjacentToCart(Vector2Int targetPos)
         {
             var isAdjacentToPath = false;
+            var neighbor = gridBases[currentlySelectedCart.currentGridCell.x, currentlySelectedCart.currentGridCell.y]
+                .GetNeighbors().FirstOrDefault(x => x.GetXAxis() == targetPos.x && x.GetYAxis() == targetPos.y);
+
+            if (neighbor)
+            {
+                // Debug.Log($"Current = [{currentlySelectedCart.currentGridCell.x},{currentlySelectedCart.currentGridCell.y}] Neighbor = [{neighbor.GetXAxis()},{neighbor.GetYAxis()}]");
+            }
+
             if (currentlySelectedCart.GetPath().Count <= 0)
             {
-                isAdjacentToPath = true;
+                isAdjacentToPath = neighbor;
             }
             else
             {
                 var gridBase = gridBases[currentlySelectedCart.GetPath().ToList()[^1].x,
                     currentlySelectedCart.GetPath().ToList()[^1].y];
+
                 isAdjacentToPath = gridBase.GetNeighbors()
                     .Any(x => x.GetXAxis() == targetPos.x && x.GetYAxis() == targetPos.y);
+                if (isAdjacentToPath)
+                {
+                    // Debug.Log($"Last node at Path : [{gridBase.GetXAxis()},{gridBase.GetYAxis()}]");
+                    // Debug.Log($"Checking Node : [{targetPos.x},{targetPos.y}]");
+                }
             }
 
-            var isNeighbor = gridBases[currentlySelectedCart.currentGridCell.x, currentlySelectedCart.currentGridCell.y]
-                .GetNeighbors().Any(x => x.GetXAxis() == targetPos.x && x.GetYAxis() == targetPos.y);
 
-            return isNeighbor || isAdjacentToPath;
+            return neighbor || isAdjacentToPath;
         }
 
         private void ProcessInteraction()
@@ -146,11 +261,13 @@ namespace TrainPuller.Scripts.Runtime.Managers
                 {
                     trainMovement.MakeLeader(cartScript);
                     currentlySelectedCart = cartScript;
+                    currentlySelectedCart.isMoving = true;
+                    currentlySelectedCart.interactionManager = this;
                 }
             }
         }
 
-        private HashSet<Vector2Int> GetTrailPositions()
+        public HashSet<Vector2Int> GetTrailPositions()
         {
             var trailCells = new HashSet<Vector2Int>();
             var grid = FindObjectOfType<LevelContainer>().GetGridBases();
@@ -166,6 +283,21 @@ namespace TrainPuller.Scripts.Runtime.Managers
             }
 
             return trailCells;
+        }
+
+        private HashSet<Vector2Int> GetGridPositions()
+        {
+            var cells = new HashSet<Vector2Int>();
+            var grid = FindObjectOfType<LevelContainer>().GetGridBases();
+            for (int x = 0; x < grid.GetLength(0); x++)
+            {
+                for (int y = 0; y < grid.GetLength(1); y++)
+                {
+                    cells.Add(new Vector2Int(x, y));
+                }
+            }
+
+            return cells;
         }
 
         private void UpdateCartRotation(Vector3 targetWorldPos)
