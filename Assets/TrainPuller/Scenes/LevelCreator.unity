@@ -3097,7 +3097,6 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
-  isMovingBackwards: 0
 --- !u!114 &83256339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4402,7 +4401,6 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
-  isMovingBackwards: 0
 --- !u!114 &121205790
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13285,7 +13283,6 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
-  isMovingBackwards: 0
 --- !u!114 &439766023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19861,8 +19858,6 @@ MonoBehaviour:
   cartsColor: 1
   interactionManager: {fileID: 1656296572}
   currentLeader: {fileID: 0}
-  isReversing: 0
-  trainPath: []
 --- !u!1 &684381045
 GameObject:
   m_ObjectHideFlags: 0
@@ -24188,8 +24183,6 @@ MonoBehaviour:
   cartsColor: 3
   interactionManager: {fileID: 0}
   currentLeader: {fileID: 0}
-  isReversing: 0
-  trainPath: []
 --- !u!1001 &906420182
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24642,7 +24635,6 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
-  isMovingBackwards: 0
 --- !u!114 &914854515
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29873,7 +29865,6 @@ MonoBehaviour:
   interactionManager: {fileID: 1656296572}
   pathPositions: []
   maxPathLength: 200
-  isMovingBackwards: 0
 --- !u!65 &1186408936
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -33516,7 +33507,6 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
-  isMovingBackwards: 0
 --- !u!114 &1348622564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34144,7 +34134,6 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
-  isMovingBackwards: 0
 --- !u!114 &1373685286
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39414,7 +39403,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1608669814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39447,7 +39436,6 @@ MonoBehaviour:
   interactionManager: {fileID: 1656296572}
   pathPositions: []
   maxPathLength: 200
-  isMovingBackwards: 0
 --- !u!65 &1608669816
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -39554,7 +39542,6 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
-  isMovingBackwards: 0
 --- !u!114 &1609410964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39975,8 +39962,6 @@ MonoBehaviour:
   cartsColor: 2
   interactionManager: {fileID: 0}
   currentLeader: {fileID: 0}
-  isReversing: 0
-  trainPath: []
 --- !u!1001 &1622490323
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41284,7 +41269,6 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
-  isMovingBackwards: 0
 --- !u!114 &1665777575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42151,7 +42135,6 @@ MonoBehaviour:
   interactionManager: {fileID: 1656296572}
   pathPositions: []
   maxPathLength: 200
-  isMovingBackwards: 0
 --- !u!65 &1690822326
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -48886,7 +48869,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2022426288
 Transform:
   m_ObjectHideFlags: 0
@@ -48957,7 +48940,6 @@ MonoBehaviour:
   interactionManager: {fileID: 1656296572}
   pathPositions: []
   maxPathLength: 200
-  isMovingBackwards: 0
 --- !u!114 &2022426291
 MonoBehaviour:
   m_ObjectHideFlags: 0

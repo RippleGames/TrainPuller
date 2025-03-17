@@ -24,6 +24,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         public InteractionManager interactionManager;
         [SerializeField] private List<Vector3> pathPositions = new List<Vector3>(); // Liderin geçtiği pozisyonlar
         [SerializeField] private int maxPathLength = 10; // Kaydedilecek maksimum pozisyon sayısı
+        public bool isMovingBackwards;
 
 
         public void StopMovement()
@@ -42,7 +43,6 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void MoveTowardsTarget()
         {
-
             var targetPos = interactionManager.GetProjectedMousePositionOnTrail();
             UpdatePath(transform.position);
             if (Vector3.Distance(transform.position, targetPos) <= 2f)
@@ -73,6 +73,16 @@ namespace TrainPuller.Scripts.Runtime.Models
             Vector3 direction = (targetPosition - transform.position).normalized;
             if (direction != Vector3.zero)
             {
+                if (Mathf.Abs(Mathf.Abs(Quaternion.LookRotation(direction).eulerAngles.y -
+                                        transform.rotation.eulerAngles.y) - 180) < 10)
+                {
+                    isMovingBackwards = true;
+                    trainMovement.isMovingBackwards = true;
+                    return;
+                }
+
+                isMovingBackwards = false;
+                trainMovement.isMovingBackwards = false;
                 direction.y = 0;
                 transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(direction),
                     moveSpeed * Time.deltaTime);
