@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using TemplateProject.Scripts.Data;
-using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
@@ -8,159 +7,96 @@ namespace TrainPuller.Scripts.Runtime.Models
 {
     public class TrainMovement : MonoBehaviour
     {
-        public float speed = 2f; // Trenin hareket hızı
-        public float cartSpacing = 1f; // Kartlar arası mesafe
-        public List<CartScript> carts = new List<CartScript>(); // Tüm kartlar
-        public LevelData.GridColorType cartsColor; // Kartların rengi
-
-        private Dictionary<CartScript, Vector2Int>
-            cartGridPositions = new Dictionary<CartScript, Vector2Int>(); // Kartların grid pozisyonları
-
-        private HashSet<Vector2Int> trailPositions; // Trail hücreleri
+        public float speed = 5f;
+        public float cartSpacing = 1f;
+        public List<CartScript> carts = new List<CartScript>();
+        public LevelData.GridColorType cartsColor;
         [SerializeField] private InteractionManager interactionManager;
-
-        private void Start()
-        {
-            InitializeCartPositions();
-        }
+        [SerializeField] private CartScript currentLeader;
 
         private void Update()
         {
-            MoveTrain();
-        }
-
-        public void InitializeCartPositions()
-        {
-            trailPositions = interactionManager.GetTrailPositions();
-            cartGridPositions.Clear();
-
-            foreach (var cart in carts)
-            {
-                Vector2Int gridPos = cart.currentGridCell;
-                if (trailPositions.Contains(gridPos))
-                {
-                    cartGridPositions[cart] = gridPos;
-                }
-                else
-                {
-                    Debug.LogWarning($"Cart {cart.name} is not on a Trail! Assigning closest valid position.");
-                    cartGridPositions[cart] = FindClosestTrailPosition(gridPos);
-                }
-            }
-        }
-
-        private void MoveTrain()
-        {
-            if (carts.Count == 0) return;
-
+            if (carts.Count == 0 || !interactionManager.GetCurrentlySelectedCart()) return;
+            if (!currentLeader) return;
+            if (!currentLeader.isMoving) return;
+            // Tüm takipçi kartları güncelle
             for (int i = 1; i < carts.Count; i++)
             {
                 CartScript leader = carts[i - 1];
                 CartScript follower = carts[i];
-
                 FollowLeader(leader, follower);
             }
         }
 
-        private Vector2Int GetNextValidPosition(Vector2Int leaderPos)
+        private void FollowLeader(CartScript leader, CartScript follower)
         {
-            return trailPositions.Contains(leaderPos) ? leaderPos : leaderPos;
-        }
+            // Liderin yolunu al
+            List<Vector3> leaderPath = leader.GetPathPositions();
+            if (leaderPath.Count == 0) return;
 
-        private void FollowLeader(CartScript leaderCart, CartScript thisCart)
-        {
-            // Liderin geçtiği pozisyonları al
-            List<Vector3> leaderPath = leaderCart.GetPathPositions();
-
-            // Takipçi kartın hedef pozisyonunu hesapla
-            Vector3 targetPosition = GetTargetPositionOnPath(leaderPath);
-
-            // Hedef pozisyonun Trail hücresi içinde olup olmadığını kontrol et
-            if (IsPositionOnTrail(targetPosition))
+            // Takipçinin hedef pozisyonunu hesapla
+            Vector3 targetPosition = CalculateTargetPosition(leaderPath, follower, cartSpacing);
+            // Pozisyon Trail üzerindeyse hareket ettir
+            if (interactionManager.IsPositionOnTrail(targetPosition) &&
+                Vector3.Distance(leader.transform.position, follower.transform.position) >= cartSpacing)
             {
-                thisCart.AddToPath(interactionManager.GetNearestGridCell(targetPosition, true));
-                // // Takipçi kartı hedef pozisyona doğru hareket ettir
-                // thisCart.transform.position = Vector3.Lerp(thisCart.transform.position, targetPosition,
-                //     speed * Time.deltaTime);
-                //
-                // // Takipçi kartın rotasyonunu hedef pozisyona doğru yumuşakça döndür
-                // Vector3 direction = (targetPosition - thisCart.transform.position).normalized;
-                // if (direction != Vector3.zero)
-                // {
-                //     Quaternion targetRotation = Quaternion.LookRotation(direction);
-                //     thisCart.transform.rotation = Quaternion.Slerp(thisCart.transform.rotation, targetRotation,
-                //         speed * Time.deltaTime);
-                // }
+                // Hedef pozisyona doğru hareket
+                follower.transform.position = targetPosition;
+
+                // Rotasyonu güncelle
+                UpdateFollowerRotation(follower, leader.transform.position);
+
+                // Takipçinin grid pozisyonunu güncelle
+                Vector2Int nearestGrid = interactionManager.GetNearestGridCell(targetPosition, true);
+                follower.currentGridCell = nearestGrid;
+                follower.UpdatePath(targetPosition);
             }
         }
 
-        private Vector3 GetTargetPositionOnPath(List<Vector3> leaderPath)
+        private Vector3 CalculateTargetPosition(List<Vector3> leaderPath, CartScript follower, float spacing)
         {
-            // Liderin yolundaki pozisyonları kullanarak takipçi kartın hedef pozisyonunu hesapla
             float accumulatedDistance = 0f;
             for (int i = leaderPath.Count - 1; i > 0; i--)
             {
-                float segmentDistance = Vector3.Distance(leaderPath[i], leaderPath[i - 1]);
+                Vector3 currentPoint = leaderPath[i];
+                Vector3 nextPoint = leaderPath[i - 1];
+                float segmentDistance = Vector3.Distance(currentPoint, nextPoint);
+
                 accumulatedDistance += segmentDistance;
 
-                // Eğer birikmiş mesafe followDistance'ı aştıysa, hedef pozisyonu bul
-                if (accumulatedDistance >= cartSpacing)
+                // Eğer istenen mesafe aşıldıysa, hedef pozisyonu bul
+                if (accumulatedDistance >= spacing)
                 {
-                    float overshoot = accumulatedDistance - cartSpacing;
-                    Vector3 direction = (leaderPath[i - 1] - leaderPath[i]).normalized;
-                    return leaderPath[i] + direction * (segmentDistance - overshoot);
+                    float overshoot = accumulatedDistance - spacing;
+                    Vector3 direction = (nextPoint - currentPoint).normalized;
+                    return currentPoint + direction * (segmentDistance - overshoot);
                 }
             }
 
-            if (leaderPath.Count <= 0)
+            // Debug.Log("Path 0 pos");
+            return follower.transform.position;
+        }
+
+        private void UpdateFollowerRotation(CartScript follower, Vector3 targetPosition)
+        {
+            Vector3 direction = (targetPosition - follower.transform.position).normalized;
+            if (direction != Vector3.zero)
             {
-                return Vector3.zero;
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
+                follower.transform.rotation = Quaternion.Slerp(
+                    follower.transform.rotation,
+                    targetRotation,
+                    speed * Time.fixedDeltaTime
+                );
             }
-
-            // Eğer followDistance kadar yol yoksa, liderin ilk pozisyonunu döndür
-            return leaderPath[0];
-        }
-
-        private bool IsPositionOnTrail(Vector3 position)
-        {
-            // Pozisyonun en yakın grid hücresini bul
-            Vector2Int nearestGridPos = interactionManager.GetNearestGridCell(position, true);
-
-            // Eğer bu pozisyon Trail hücresiyse true döndür
-            return interactionManager.trailPositions.Contains(nearestGridPos);
-        }
-
-        private Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
-        {
-            var gridBase = FindObjectOfType<LevelContainer>().GetGridBases()[gridPos.x, gridPos.y];
-            return gridBase != null ? gridBase.transform.position : Vector3.zero;
-        }
-
-        private Vector2Int FindClosestTrailPosition(Vector2Int startPos)
-        {
-            Vector2Int closest = startPos;
-            float minDistance = float.MaxValue;
-
-            foreach (var trailPos in trailPositions)
-            {
-                float distance = Vector2Int.Distance(startPos, trailPos);
-                if (distance < minDistance)
-                {
-                    minDistance = distance;
-                    closest = trailPos;
-                }
-            }
-
-            return closest;
         }
 
         public void MakeLeader(CartScript selectedCart)
         {
-            if (carts.Count == 0 || carts[0] == selectedCart) return;
             if (!carts.Contains(selectedCart)) return;
-
             carts.Remove(selectedCart);
             carts.Insert(0, selectedCart);
+            currentLeader = selectedCart;
         }
     }
 }

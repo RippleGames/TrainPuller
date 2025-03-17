@@ -3097,6 +3097,7 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
+  isMovingBackwards: 0
 --- !u!114 &83256339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4401,6 +4402,7 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
+  isMovingBackwards: 0
 --- !u!114 &121205790
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13283,6 +13285,7 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
+  isMovingBackwards: 0
 --- !u!114 &439766023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19848,8 +19851,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8238753347b91dd4dadbb2bb8d9821ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 2
-  cartSpacing: 3
+  speed: 10
+  cartSpacing: 1
   carts:
   - {fileID: 1690822324}
   - {fileID: 1186408934}
@@ -19857,6 +19860,9 @@ MonoBehaviour:
   - {fileID: 2022426290}
   cartsColor: 1
   interactionManager: {fileID: 1656296572}
+  currentLeader: {fileID: 0}
+  isReversing: 0
+  trainPath: []
 --- !u!1 &684381045
 GameObject:
   m_ObjectHideFlags: 0
@@ -24181,6 +24187,9 @@ MonoBehaviour:
   - {fileID: 1348622563}
   cartsColor: 3
   interactionManager: {fileID: 0}
+  currentLeader: {fileID: 0}
+  isReversing: 0
+  trainPath: []
 --- !u!1001 &906420182
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24633,6 +24642,7 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
+  isMovingBackwards: 0
 --- !u!114 &914854515
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29825,7 +29835,7 @@ GameObject:
   - component: {fileID: 1186408936}
   - component: {fileID: 1186408938}
   m_Layer: 7
-  m_Name: Cart(Clone)
+  m_Name: Cart(Clone)_1
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29862,7 +29872,8 @@ MonoBehaviour:
   isMoving: 0
   interactionManager: {fileID: 1656296572}
   pathPositions: []
-  maxPathLength: 10
+  maxPathLength: 200
+  isMovingBackwards: 0
 --- !u!65 &1186408936
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -29892,7 +29903,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1186408933}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: -3.8799999, y: 0, z: 2.95}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -29900,7 +29911,7 @@ Transform:
   - {fileID: 93719864}
   - {fileID: 1057072638}
   m_Father: {fileID: 684228392}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1186408938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33505,6 +33516,7 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
+  isMovingBackwards: 0
 --- !u!114 &1348622564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34132,6 +34144,7 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
+  isMovingBackwards: 0
 --- !u!114 &1373685286
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39396,12 +39409,12 @@ GameObject:
   - component: {fileID: 1608669816}
   - component: {fileID: 1608669818}
   m_Layer: 7
-  m_Name: Cart(Clone)
+  m_Name: Cart(Clone)_2
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1608669814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39433,7 +39446,8 @@ MonoBehaviour:
   isMoving: 0
   interactionManager: {fileID: 1656296572}
   pathPositions: []
-  maxPathLength: 10
+  maxPathLength: 200
+  isMovingBackwards: 0
 --- !u!65 &1608669816
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -39463,15 +39477,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1608669813}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.8799999, y: 0, z: 3.94}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: -3.8799999, y: 0, z: 3.97}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1115458155}
   - {fileID: 1409045665}
   m_Father: {fileID: 684228392}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1608669818
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39540,6 +39554,7 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
+  isMovingBackwards: 0
 --- !u!114 &1609410964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39959,6 +39974,9 @@ MonoBehaviour:
   - {fileID: 1665777574}
   cartsColor: 2
   interactionManager: {fileID: 0}
+  currentLeader: {fileID: 0}
+  isReversing: 0
+  trainPath: []
 --- !u!1001 &1622490323
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41266,6 +41284,7 @@ MonoBehaviour:
   interactionManager: {fileID: 0}
   pathPositions: []
   maxPathLength: 10
+  isMovingBackwards: 0
 --- !u!114 &1665777575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -42094,7 +42113,7 @@ GameObject:
   - component: {fileID: 1690822324}
   - component: {fileID: 1690822326}
   m_Layer: 7
-  m_Name: Cart(Clone)
+  m_Name: Cart(Clone)_0
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -42127,11 +42146,12 @@ MonoBehaviour:
   - {fileID: 314035975}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 1, y: 4}
-  moveSpeed: 30
+  moveSpeed: 10
   isMoving: 0
   interactionManager: {fileID: 1656296572}
   pathPositions: []
-  maxPathLength: 10
+  maxPathLength: 200
+  isMovingBackwards: 0
 --- !u!65 &1690822326
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -42161,15 +42181,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1690822323}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.8799999, y: 0, z: 1.96}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: -3.8799999, y: 0, z: 1.94}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1127537348}
   - {fileID: 173522860}
   m_Father: {fileID: 684228392}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &1693364221
 GameObject:
   m_ObjectHideFlags: 0
@@ -48861,12 +48881,12 @@ GameObject:
   - component: {fileID: 2022426289}
   - component: {fileID: 2022426291}
   m_Layer: 7
-  m_Name: Cart(Clone)
+  m_Name: Cart(Clone)_3
   m_TagString: TrainCart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2022426288
 Transform:
   m_ObjectHideFlags: 0
@@ -48875,15 +48895,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2022426287}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.8799999, y: 0, z: 4.93}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: -3.8799999, y: 0, z: 4.98}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1283997736}
   - {fileID: 1803282074}
   m_Father: {fileID: 684228392}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!65 &2022426289
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -48936,7 +48956,8 @@ MonoBehaviour:
   isMoving: 0
   interactionManager: {fileID: 1656296572}
   pathPositions: []
-  maxPathLength: 10
+  maxPathLength: 200
+  isMovingBackwards: 0
 --- !u!114 &2022426291
 MonoBehaviour:
   m_ObjectHideFlags: 0

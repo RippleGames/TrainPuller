@@ -128,19 +128,19 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
             if (isHorizontal && !isVertical)
             {
-                // Yalnızca yatay komşu varsa, Y eksenini hizala (Z eksenini sabit tut)
+               
                 offset.z = 0;
             }
             else if (isVertical && !isHorizontal)
             {
-                // Yalnızca dikey komşu varsa, Z eksenini hizala (Y eksenini sabit tut)
+                
                 offset.x = 0;
             }
             else
             {
-                offset.z = 0; // X eksenine hizala
+                offset.z = 0; 
 
-                offset.x = 0; // Z eksenine hizala
+                offset.x = 0;
             }
 
             // Project edilmiş pozisyonu döndür
@@ -311,6 +311,11 @@ namespace TrainPuller.Scripts.Runtime.Managers
                 currentlySelectedCart.transform.rotation = Quaternion.RotateTowards(
                     currentlySelectedCart.transform.rotation, targetRotation, Time.deltaTime * 200f);
             }
+        }
+
+        public bool GetCurrentlySelectedCart()
+        {
+            return currentlySelectedCart;
         }
     }
 }

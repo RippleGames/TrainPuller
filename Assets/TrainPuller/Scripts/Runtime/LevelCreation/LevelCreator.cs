@@ -235,7 +235,6 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 trainMovement = trainParent.AddComponent<TrainMovement>();
                                 trainMovement.cartSpacing = 1;
                                 trainMovement.cartsColor = stackDataColorTypes[1];
-                                trainMovement.InitializeCartPositions();
                                 trainParentList.Add(trainMovement);
                             }
 

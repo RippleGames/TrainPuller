@@ -32,7 +32,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             pathQueue.Clear();
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
             if (isMoving)
             {
@@ -42,18 +42,9 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void MoveTowardsTarget()
         {
-            if (pathPositions.Count == 0 || Vector3.Distance(transform.position, pathPositions[^1]) > 0.1f)
-            {
-                pathPositions.Add(transform.position);
-
-                // Eğer liste çok uzunsa, en eski pozisyonu sil
-                if (pathPositions.Count > maxPathLength)
-                {
-                    pathPositions.RemoveAt(0);
-                }
-            }
 
             var targetPos = interactionManager.GetProjectedMousePositionOnTrail();
+            UpdatePath(transform.position);
             if (Vector3.Distance(transform.position, targetPos) <= 2f)
             {
                 // Hedef pozisyonun Trail hücresi içinde olup olmadığını kontrol et
@@ -61,7 +52,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 {
                     Vector3 snappedPosition = interactionManager.GetNearestTrailPosition(targetPos);
                     transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
-                    UpdateRotation(targetPos); 
+                    UpdateRotation(targetPos);
                     if (Vector3.Distance(transform.position, movementTarget) < 0.1f && Vector3.Distance(
                             transform.position,
                             targetPos) <= 0.1f)
@@ -83,9 +74,11 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (direction != Vector3.zero)
             {
                 direction.y = 0;
-                transform.rotation = Quaternion.Lerp(transform.rotation,Quaternion.LookRotation(direction), moveSpeed *Time.deltaTime);
+                transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(direction),
+                    moveSpeed * Time.deltaTime);
             }
         }
+
         public List<Vector3> GetPathPositions()
         {
             return pathPositions; // Liderin geçtiği pozisyonları döndür
@@ -96,7 +89,6 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (!pathQueue.Contains(newGridCell) && !pathQueue.Contains(currentGridCell))
             {
                 pathQueue.Enqueue(newGridCell);
-                // Debug.Log("PathCount = " + pathQueue.Count);
                 if (!isMoving)
                 {
                     MoveToNextGridCell();
@@ -171,6 +163,19 @@ namespace TrainPuller.Scripts.Runtime.Models
         public Queue<Vector2Int> GetPath()
         {
             return pathQueue;
+        }
+
+        public void UpdatePath(Vector3 targetPosition)
+        {
+            if (pathPositions.Count == 0 || Vector3.Distance(transform.position, pathPositions[^1]) > 0.01f)
+            {
+                pathPositions.Add(targetPosition);
+
+                if (pathPositions.Count > maxPathLength)
+                {
+                    pathPositions.RemoveAt(0);
+                }
+            }
         }
     }
 }
