@@ -15,6 +15,10 @@ namespace TrainPuller.Scripts.Runtime.Models
         public bool isMovingBackwards;
         public float maxRemovalSpeed;
         public bool isTrainMoving;
+        private Vector3 lastCartPrevPosition;
+        private float lastCartBackwardTimer = 0f;
+        public float backwardVelocityThreshold = 0.1f; // Geri yönde minimum hız (birim/saniye)
+        public float backwardTimeThreshold = 0.5f;
 
         private void Update()
         {
@@ -32,7 +36,54 @@ namespace TrainPuller.Scripts.Runtime.Models
             {
                 FollowLeader(carts[i], carts[i - 1], i);
             }
+
+            CheckLastCartMovement();
         }
+
+
+        private void CheckLastCartMovement()
+        {
+            CartScript lastCart = carts[carts.Count - 1];
+            Vector3 currentPos = lastCart.transform.position;
+
+            if (lastCartPrevPosition == Vector3.zero)
+            {
+                lastCartPrevPosition = currentPos;
+                return;
+            }
+
+            Vector3 velocity = (currentPos - lastCartPrevPosition) / Time.deltaTime;
+            lastCartPrevPosition = currentPos;
+
+            if (isMovingBackwards)
+            {
+                if (velocity.magnitude < backwardVelocityThreshold)
+                {
+                    lastCartBackwardTimer += Time.deltaTime;
+                    if (lastCartBackwardTimer > backwardTimeThreshold)
+                    {
+                        // Son vagon yeterince geri hareket etmiyorsa tüm treni durdur
+                        isTrainMoving = false;
+                        foreach (CartScript cart in carts)
+                        {
+                            cart.isMoving = false;
+                        }
+
+                        isMovingBackwards = false;
+                    }
+                }
+                else
+                {
+                    lastCartBackwardTimer = 0f;
+                }
+            }
+            else
+            {
+                // İleri harekette timer sıfırlansın
+                lastCartBackwardTimer = 0f;
+            }
+        }
+
 
         private void UpdateTrainPath()
         {
@@ -44,11 +95,6 @@ namespace TrainPuller.Scripts.Runtime.Models
                 if (trainPath.Count == 0 || Vector3.Distance(leaderPosition, trainPath[^1]) > 0.01f)
                 {
                     trainPath.Add(leaderPosition);
-                }
-
-                if (trainPath.Count > 300)
-                {
-                    trainPath.RemoveAt(0);
                 }
             }
             else
@@ -85,7 +131,6 @@ namespace TrainPuller.Scripts.Runtime.Models
                         break;
                     }
                 }
-                
             }
             else
             {

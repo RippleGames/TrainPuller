@@ -45,29 +45,38 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void MoveTowardsTarget()
         {
-            var targetPos = interactionManager.GetProjectedMousePositionOnTrail();
+            Vector3 targetPos = interactionManager.GetProjectedMousePositionOnTrail();
+
+            // Eğer tren durduysa ve ileri doğru hareket etmeye çalışıyorsak tekrar başlat
+            if (!trainMovement.isTrainMoving && !trainMovement.isMovingBackwards)
+            {
+                if (interactionManager.IsPositionOnTrail(targetPos)) // Eğer hedef pozisyon ray üzerindeyse
+                {
+                    trainMovement.isTrainMoving = true;
+                }
+            }
+
             if (Vector3.Distance(transform.position, targetPos) <= 2f)
             {
-                // Hedef pozisyonun Trail hücresi içinde olup olmadığını kontrol et
                 if (interactionManager.IsPositionOnTrail(targetPos))
                 {
                     Vector3 snappedPosition = interactionManager.GetNearestTrailPosition(targetPos);
                     transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
                     UpdateRotation(targetPos);
-                    if (Vector3.Distance(transform.position, movementTarget) < 0.1f && Vector3.Distance(
-                            transform.position,
-                            targetPos) <= 0.1f)
+
+                    if (Vector3.Distance(transform.position, movementTarget) < 0.1f &&
+                        Vector3.Distance(transform.position, targetPos) <= 0.1f)
                     {
                         MoveToNextGridCell();
                     }
                 }
                 else
                 {
-                    // Eğer hedef pozisyon Trail dışındaysa, hareketi durdur
                     StopMovement();
                 }
             }
         }
+
 
         private void UpdateRotation(Vector3 targetPosition)
         {
