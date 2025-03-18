@@ -1,9 +1,7 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluffyUnderware.Curvy;
-using FluffyUnderware.Curvy.Controllers;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.LevelCreation;
 using TemplateProject.Scripts.Runtime.Models;
@@ -25,14 +23,12 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         [SerializeField] private GameObject cardBasePrefab;
         [SerializeField] private GameObject cardPrefab;
         [SerializeField] private GameObject exitPrefab;
-        [SerializeField] private GameObject goalPrefab;
         [SerializeField] private GameColors gameColors;
         [SerializeField] private AddressablePrefabSaver prefabSaver;
         [SerializeField] private AddressablePrefabLoader prefabLoader;
         [SerializeField] private TestConfig testConfig;
         private GameObject _currentParentObject;
         private GameObject _loadedLevel;
-        [SerializeField] private RoadSplineGenerator splineGenerator;
         [SerializeField] private GameObject roadPrefabForward;
         [SerializeField] private GameObject roadPrefabRight;
         [SerializeField] private GameObject roadPrefabLeft;
@@ -54,7 +50,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
         private LevelData _levelData;
         private CurvySpline _curvyGenerator;
-        public GridBase[,] gridBases;
+        private GridBase[,] _gridBases;
 
         public void GenerateLevel()
         {
@@ -145,7 +141,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
         public void SpawnGrid()
         {
-            gridBases = new GridBase[gridWidth, gridHeight];
+            _gridBases = new GridBase[gridWidth, gridHeight];
             var oldParentObject = GameObject.FindGameObjectWithTag("LevelParent");
             if (oldParentObject)
             {
@@ -164,10 +160,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                 {
                     var cell = _levelData.GetGridCell(x, y);
 
-                    if (cell.stackData.colorTypes == null)
-                    {
-                        cell.stackData.colorTypes = new List<LevelData.GridColorType>();
-                    }
+                    cell.stackData.colorTypes ??= new List<LevelData.GridColorType>();
 
                     var pos = transform.position + GridSpaceToWorldSpace(x, y);
 
@@ -178,7 +171,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                     gridBaseObj.transform.localEulerAngles = new Vector3(0f, 180f, 0);
 
                     var gridBaseScript = gridBaseObj.GetComponent<GridBase>();
-                    gridBases[x, y] = gridBaseScript;
+                    _gridBases[x, y] = gridBaseScript;
 
                     if (cell.stackData.colorTypes.Contains(LevelData.GridColorType.Trail))
                     {
@@ -191,32 +184,30 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                 }
             }
 
-            HandleAdjacentSet(gridBases);
-            // var splineParent = new GameObject("Spline Parent");
-            // splineParent.transform.SetParent(newParentObject.transform);
-            // var splines = splineGenerator.GenerateSplines(gridBases, splineParent.transform);
+            HandleAdjacentSet(_gridBases);
             var trailParent = new GameObject("Trail Parent");
             trailParent.transform.SetParent(newParentObject.transform);
-            HandleRoadPrefabs(gridBases, trailParent.transform);
+            HandleRoadPrefabs(_gridBases, trailParent.transform);
             var cardParent = new GameObject("Card Parent");
             cardParent.transform.SetParent(newParentObject.transform);
             var exitParent = new GameObject("Exit Parent");
             exitParent.transform.SetParent(newParentObject.transform);
-            HandleTrainsAndCards(gridBases, cardParent.transform, exitParent.transform);
-            var currentGoals = SpawnLevelGoals(newParentObject.transform);
+            var trainParent = new GameObject("Train Parent");
+            trainParent.transform.SetParent(newParentObject.transform);
+            HandleTrainsAndCards(_gridBases, cardParent.transform, trainParent.transform, exitParent.transform);
 
-            levelContainer.Init(gridWidth, gridHeight, levelTime, gridBases, currentGoals, levelGoals,splines);
+            levelContainer.Init(gridWidth, gridHeight, levelTime, _gridBases);
             EditorUtility.SetDirty(levelContainer);
             _currentParentObject = newParentObject;
         }
 
-        private void HandleTrainsAndCards(GridBase[,] gridBases, Transform cardParent,
+        private void HandleTrainsAndCards(GridBase[,] gridBaseArray, Transform cardParent, Transform trainCartParent,
             Transform exitParent)
         {
             var trainParentList = new List<TrainMovement>();
-            for (var i = 0; i < gridBases.GetLength(0); i++)
+            for (var i = 0; i < gridBaseArray.GetLength(0); i++)
             {
-                for (var j = 0; j < gridBases.GetLength(1); j++)
+                for (var j = 0; j < gridBaseArray.GetLength(1); j++)
                 {
                     var stackDataColorTypes = _levelData.GetGridCell(i, j).stackData.colorTypes;
 
@@ -232,7 +223,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             if (!trainParent)
                             {
                                 trainParent = new GameObject("Train Parent");
-                                trainParent.transform.SetParent(cardParent.parent.transform);
+                                trainParent.transform.SetParent(trainCartParent.transform);
                                 trainMovement = trainParent.AddComponent<TrainMovement>();
                                 trainMovement.speed = 30f;
                                 trainMovement.cartSpacing = 1;
@@ -240,34 +231,21 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 trainParentList.Add(trainMovement);
                             }
 
-                            var trainCart = Instantiate(trainCartPrefab, gridBases[i, j].transform.position,
+                            var trainCart = Instantiate(trainCartPrefab, gridBaseArray[i, j].transform.position,
                                 Quaternion.identity);
                             trainCart.transform.SetParent(trainParent.transform);
                             var cartScript = trainCart.GetComponent<CartScript>();
                             cartScript.SetCartProperties(i, j, stackDataColorTypes[1]);
-                            // var closestSpline = FindClosestSpline(gridBases[i, j].transform.position, splines);
-                            // if (!closestSpline)
-                            // {
-                            //     Debug.LogError("No spline found!");
-                            //     return;
-                            // }
-
-                            // var closestTF =
-                            //     closestSpline.GetNearestPointTF(trainController.transform.position, Space.World);
-                            // trainController.Spline = closestSpline;
-                            // trainController.RelativePosition = closestTF;
-                            if (!trainMovement.carts.Contains(cartScript))
-                            {
-                                trainMovement.carts.Add(cartScript);
-                                cartScript.SetTrainMovementScript(trainMovement);
-                            }
+                            if (trainMovement.carts.Contains(cartScript)) continue;
+                            trainMovement.carts.Add(cartScript);
+                            cartScript.SetTrainMovementScript(trainMovement);
                         }
                     }
                     else if (stackDataColorTypes.Count >= 1 &&
                              !stackDataColorTypes.Contains(LevelData.GridColorType.None) &&
                              !_levelData.GetGridCell(i, j).isExit)
                     {
-                        var cardBase = Instantiate(cardBasePrefab, gridBases[i, j].transform.position,
+                        var cardBase = Instantiate(cardBasePrefab, gridBaseArray[i, j].transform.position,
                             Quaternion.identity);
                         cardBase.transform.SetParent(cardParent);
 
@@ -284,14 +262,14 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 card.transform.SetParent(cardBase.transform);
                                 var cardScript = card.GetComponent<CardScript>();
                                 cardScript.SetCardProperties(colorType);
-                                yOffset += 0.05f;
+                                yOffset += 0.1f;
                                 yRotation += 90f;
                             }
                         }
                     }
                     else if (_levelData.GetGridCell(i, j).isExit)
                     {
-                        var exitBarrier = Instantiate(exitPrefab, gridBases[i, j].transform.position,
+                        var exitBarrier = Instantiate(exitPrefab, gridBaseArray[i, j].transform.position,
                             Quaternion.identity).GetComponent<ExitBarrierScript>();
                         exitBarrier.transform.SetParent(exitParent);
                         exitBarrier.SetBarrierProperties(stackDataColorTypes[^1]);
@@ -305,50 +283,33 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                         }
                         else if (j == gridHeight - 1)
                         {
-                            exitBarrier.transform.position += new Vector3(0f, 0f, 0.3f);
-                            exitBarrier.transform.eulerAngles += new Vector3(0f, 90f, 0f);
+                            var barrierTransform = exitBarrier.transform;
+                            barrierTransform.position += new Vector3(0f, 0f, 0.3f);
+                            barrierTransform.eulerAngles += new Vector3(0f, 90f, 0f);
                         }
                         else if (j == 0)
                         {
-                            exitBarrier.transform.position -= new Vector3(0f, 0f, 0.3f);
-                            exitBarrier.transform.eulerAngles += new Vector3(0f, 90f, 0f);
+                            var barrierTransform = exitBarrier.transform;
+                            barrierTransform.position -= new Vector3(0f, 0f, 0.3f);
+                            barrierTransform.eulerAngles += new Vector3(0f, 90f, 0f);
                         }
                     }
                 }
             }
         }
 
-        private CurvySpline FindClosestSpline(Vector3 position, List<CurvySpline> splines)
-        {
-            CurvySpline closestSpline = null;
-            var minDistance = Mathf.Infinity;
-
-            foreach (var spline in splines)
-            {
-                var closestPoint = spline.GetNearestPoint(position, Space.World);
-                var distance = Vector3.Distance(position, closestPoint);
-
-                if (!(distance < minDistance)) continue;
-                minDistance = distance;
-                closestSpline = spline;
-            }
-
-            return closestSpline;
-        }
-
-
-        private void HandleRoadPrefabs(GridBase[,] gridBases, Transform parent)
+        private void HandleRoadPrefabs(GridBase[,] gridBaseArray, Transform parent)
         {
             var forwardsDone = false;
             for (var x = 0; x < 2; x++)
             {
-                for (var i = 0; i < gridBases.GetLength(0); i++)
+                for (var i = 0; i < gridBaseArray.GetLength(0); i++)
                 {
-                    for (var j = 0; j < gridBases.GetLength(1); j++)
+                    for (var j = 0; j < gridBaseArray.GetLength(1); j++)
                     {
-                        if (gridBases[i, j].isTrail)
+                        if (gridBaseArray[i, j].isTrail)
                         {
-                            var neighbors = gridBases[i, j].GetNeighbors();
+                            var neighbors = gridBaseArray[i, j].GetNeighbors();
                             if (!forwardsDone)
                             {
                                 if (neighbors.Count == 2)
@@ -356,19 +317,19 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                     if (neighbors[0].GetXAxis() == neighbors[1].GetXAxis())
                                     {
                                         var trailObject = Instantiate(roadPrefabForward,
-                                            gridBases[i, j].transform.position,
+                                            gridBaseArray[i, j].transform.position,
                                             Quaternion.identity);
                                         trailObject.transform.eulerAngles = new Vector3(0, 90f, 0);
                                         trailObject.transform.SetParent(parent);
-                                        gridBases[i, j].SetRoadPrefab(trailObject, true);
+                                        gridBaseArray[i, j].SetRoadPrefab(trailObject, true);
                                     }
                                     else if (neighbors[0].GetYAxis() == neighbors[1].GetYAxis())
                                     {
                                         var trailObject = Instantiate(roadPrefabForward,
-                                            gridBases[i, j].transform.position,
+                                            gridBaseArray[i, j].transform.position,
                                             Quaternion.identity);
                                         trailObject.transform.SetParent(parent);
-                                        gridBases[i, j].SetRoadPrefab(trailObject, true);
+                                        gridBaseArray[i, j].SetRoadPrefab(trailObject, true);
                                     }
                                 }
 
@@ -383,11 +344,11 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                         (neighbors[0].GetYAxis() < j && neighbors[1].GetYAxis() == j))
                                     {
                                         var trailObject = Instantiate(roadPrefabLeft,
-                                            gridBases[i, j].transform.position,
+                                            gridBaseArray[i, j].transform.position,
                                             Quaternion.identity);
                                         trailObject.transform.eulerAngles = new Vector3(0, 180f, 0);
                                         trailObject.transform.SetParent(parent);
-                                        gridBases[i, j].SetRoadPrefab(trailObject, false);
+                                        gridBaseArray[i, j].SetRoadPrefab(trailObject, false);
                                         foreach (var neighbor in neighbors)
                                         {
                                             neighbor.DeleteRoadPrefab();
@@ -397,10 +358,10 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                              (neighbors[0].GetYAxis() > j && neighbors[1].GetYAxis() == j))
                                     {
                                         var trailObject = Instantiate(roadPrefabRight,
-                                            gridBases[i, j].transform.position,
+                                            gridBaseArray[i, j].transform.position,
                                             Quaternion.identity);
                                         trailObject.transform.SetParent(parent);
-                                        gridBases[i, j].SetRoadPrefab(trailObject, false);
+                                        gridBaseArray[i, j].SetRoadPrefab(trailObject, false);
                                         foreach (var neighbor in neighbors)
                                         {
                                             neighbor.DeleteRoadPrefab();
@@ -413,11 +374,11 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                         (neighbors[0].GetYAxis() < j && neighbors[1].GetYAxis() == j))
                                     {
                                         var trailObject = Instantiate(roadPrefabRight,
-                                            gridBases[i, j].transform.position,
+                                            gridBaseArray[i, j].transform.position,
                                             Quaternion.identity);
                                         trailObject.transform.eulerAngles = new Vector3(0, 180f, 0);
                                         trailObject.transform.SetParent(parent);
-                                        gridBases[i, j].SetRoadPrefab(trailObject, false);
+                                        gridBaseArray[i, j].SetRoadPrefab(trailObject, false);
                                         foreach (var neighbor in neighbors)
                                         {
                                             neighbor.DeleteRoadPrefab();
@@ -427,10 +388,10 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                              (neighbors[0].GetYAxis() > j && neighbors[1].GetYAxis() == j))
                                     {
                                         var trailObject = Instantiate(roadPrefabLeft,
-                                            gridBases[i, j].transform.position,
+                                            gridBaseArray[i, j].transform.position,
                                             Quaternion.identity);
                                         trailObject.transform.SetParent(parent);
-                                        gridBases[i, j].SetRoadPrefab(trailObject, false);
+                                        gridBaseArray[i, j].SetRoadPrefab(trailObject, false);
                                         foreach (var neighbor in neighbors)
                                         {
                                             neighbor.DeleteRoadPrefab();
@@ -440,9 +401,9 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             }
                             else if (neighbors.Count == 3)
                             {
-                                var trailObject = Instantiate(roadPrefabTri, gridBases[i, j].transform.position,
+                                var trailObject = Instantiate(roadPrefabTri, gridBaseArray[i, j].transform.position,
                                     Quaternion.identity);
-                                gridBases[i, j].SetRoadPrefab(trailObject, false);
+                                gridBaseArray[i, j].SetRoadPrefab(trailObject, false);
                                 var xMatchingNeighbors = new List<GridBase>();
                                 foreach (var neighbor in neighbors)
                                 {
@@ -481,7 +442,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             }
                             else if (neighbors.Count == 4)
                             {
-                                var trailObject = Instantiate(roadPrefabFour, gridBases[i, j].transform.position,
+                                var trailObject = Instantiate(roadPrefabFour, gridBaseArray[i, j].transform.position,
                                     Quaternion.identity);
                                 trailObject.transform.SetParent(parent);
                                 foreach (var neighbor in neighbors)
@@ -489,7 +450,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                     neighbor.DeleteRoadPrefab();
                                 }
 
-                                gridBases[i, j].SetRoadPrefab(trailObject, false);
+                                gridBaseArray[i, j].SetRoadPrefab(trailObject, false);
                             }
                         }
                     }
@@ -499,150 +460,35 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             }
         }
 
-        private List<Vector2> FindClosedPath(GridBase[,] gridBases)
-        {
-            List<Vector2> roadPath = new List<Vector2>();
-            HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
-            Vector2Int start = FindStartPoint(gridBases);
-            if (start == Vector2Int.one * -1) return roadPath; // No valid start
-
-            Queue<Vector2Int> queue = new Queue<Vector2Int>();
-            queue.Enqueue(start);
-            Dictionary<Vector2Int, Vector2Int> parentMap = new Dictionary<Vector2Int, Vector2Int>();
-            parentMap[start] = start;
-
-            while (queue.Count > 0)
-            {
-                Vector2Int current = queue.Dequeue();
-                if (visited.Contains(current)) continue;
-
-                visited.Add(current);
-                roadPath.Add((Vector2)current);
-
-                foreach (Vector2Int neighbor in GetValidNeighbors(current, visited, gridBases))
-                {
-                    if (!parentMap.ContainsKey(neighbor))
-                    {
-                        parentMap[neighbor] = current;
-                        queue.Enqueue(neighbor);
-                    }
-                }
-            }
-
-            return roadPath;
-        }
-
-        List<Vector2Int> GetOrderedNeighbors(Vector2Int pos, HashSet<Vector2Int> visited, GridBase[,] gridBases)
-        {
-            List<Vector2Int> neighbors = new List<Vector2Int>();
-            Vector2Int[] directions = { Vector2Int.left, Vector2Int.down, Vector2Int.right, Vector2Int.up };
-
-            foreach (var dir in directions)
-            {
-                Vector2Int next = pos + dir;
-                if (IsValid(next, gridBases) && gridBases[next.x, next.y].isTrail && !visited.Contains(next) &&
-                    AreDirectlyConnected(pos, next, gridBases))
-                {
-                    neighbors.Add(next);
-                }
-            }
-
-            return neighbors;
-        }
-
-
-        Vector2Int FindStartPoint(GridBase[,] gridBases)
-        {
-            for (var y = 0; y < gridBases.GetLength(1); y++)
-            for (var x = gridBases.GetLength(0) - 1; x >= 0; x--)
-                if (gridBases[x, y].isTrail)
-                    return new Vector2Int(x, y);
-            return Vector2Int.one * -1;
-        }
-
-
-        private Vector2Int GetNextRoad(Vector2Int current, Vector2Int previous, HashSet<Vector2Int> visited,
-            GridBase[,] gridBases)
-        {
-            Vector2Int[] directions =
-                { Vector2Int.left, Vector2Int.down, Vector2Int.right, Vector2Int.up }; // Right-hand rule traversal
-
-            foreach (var dir in directions)
-            {
-                var next = current + dir;
-                if (IsValid(next, gridBases) && gridBases[next.x, next.y].isTrail && next != previous &&
-                    !visited.Contains(next))
-                    return next;
-            }
-
-            return Vector2Int.one * -1;
-        }
-
-        List<Vector2Int> GetValidNeighbors(Vector2Int pos, HashSet<Vector2Int> visited, GridBase[,] gridBases)
-        {
-            List<Vector2Int> neighbors = new List<Vector2Int>();
-            Vector2Int[] directions = { Vector2Int.left, Vector2Int.down, Vector2Int.right, Vector2Int.up };
-
-            foreach (var dir in directions)
-            {
-                Vector2Int next = pos + dir;
-                if (IsValid(next, gridBases) && gridBases[next.x, next.y].isTrail && !visited.Contains(next))
-                {
-                    neighbors.Add(next);
-                }
-            }
-
-            return neighbors;
-        }
-
-        private bool IsValid(Vector2Int pos, GridBase[,] gridBases) => pos.x >= 0 && pos.y >= 0 &&
-                                                                       pos.x < gridBases.GetLength(0) &&
-                                                                       pos.y < gridBases.GetLength(1);
-
-        bool AreDirectlyConnected(Vector2Int a, Vector2Int b, GridBase[,] gridBases)
-        {
-            if (Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) != 1)
-                return false;
-
-            return gridBases[a.x, a.y].connections.Contains(b) && gridBases[b.x, b.y].connections.Contains(a);
-        }
-
-
-        private void HandleAdjacentSet(GridBase[,] gridBases)
+        private void HandleAdjacentSet(GridBase[,] bases)
         {
             for (var y = 0; y < _levelData.height; y++)
             {
                 for (var x = 0; x < _levelData.width; x++)
                 {
                     var cell = _levelData.GetGridCell(x, y);
-                    var gridBaseScript = gridBases[x, y];
+                    var gridBaseScript = bases[x, y];
 
-                    if (cell.stackData.colorTypes == null)
-                    {
-                        cell.stackData.colorTypes = new List<LevelData.GridColorType>();
-                    }
+                    cell.stackData.colorTypes ??= new List<LevelData.GridColorType>();
 
                     if (!cell.stackData.colorTypes.Contains(LevelData.GridColorType.Trail)) continue;
 
                     gridBaseScript.isTrail = true;
-                    CheckForAdjacentCells(gridBases, _levelData, gridBaseScript);
+                    CheckForAdjacentCells(bases, _levelData, gridBaseScript);
                 }
             }
         }
 
 
-        private void CheckForAdjacentCells(GridBase[,] gridBases, LevelData levelData, GridBase cell)
+        private void CheckForAdjacentCells(GridBase[,] bases, LevelData levelData, GridBase cell)
         {
-            var maxX = gridBases.GetLength(0) - 1;
-            var maxY = gridBases.GetLength(1) - 1;
+            var maxX = bases.GetLength(0) - 1;
+            var maxY = bases.GetLength(1) - 1;
             var currentY = cell.GetYAxis();
             var currentX = cell.GetXAxis();
 
             var gridCell = levelData.GetGridCell(currentX, currentY);
-            if (gridCell.stackData.colorTypes == null)
-            {
-                gridCell.stackData.colorTypes = new List<LevelData.GridColorType>();
-            }
+            gridCell.stackData.colorTypes ??= new List<LevelData.GridColorType>();
 
             if (!gridCell.stackData.colorTypes.Contains(LevelData.GridColorType.Trail))
             {
@@ -651,7 +497,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
             if (currentY > 0)
             {
-                var upperCell = gridBases[currentX, currentY - 1];
+                var upperCell = bases[currentX, currentY - 1];
                 if (levelData.GetGridCell(currentX, currentY - 1).stackData.colorTypes
                     .Contains(LevelData.GridColorType.Trail))
                 {
@@ -661,7 +507,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
             if (currentY < maxY)
             {
-                var lowerCell = gridBases[currentX, currentY + 1];
+                var lowerCell = bases[currentX, currentY + 1];
                 if (levelData.GetGridCell(currentX, currentY + 1).stackData.colorTypes
                     .Contains(LevelData.GridColorType.Trail))
                 {
@@ -671,7 +517,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
             if (currentX > 0)
             {
-                var leftCell = gridBases[currentX - 1, currentY];
+                var leftCell = bases[currentX - 1, currentY];
                 if (levelData.GetGridCell(currentX - 1, currentY).stackData.colorTypes
                     .Contains(LevelData.GridColorType.Trail))
                 {
@@ -681,36 +527,13 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
             if (currentX < maxX)
             {
-                var rightCell = gridBases[currentX + 1, currentY];
+                var rightCell = bases[currentX + 1, currentY];
                 if (levelData.GetGridCell(currentX + 1, currentY).stackData.colorTypes
                     .Contains(LevelData.GridColorType.Trail))
                 {
                     cell.AddToAdjacent(rightCell);
                 }
             }
-        }
-
-
-        private List<GoalScript> SpawnLevelGoals(Transform levelParent)
-        {
-            var goals = new List<GoalScript>();
-            var goalParent = new GameObject("GoalParent");
-            goalParent.transform.SetParent(levelParent);
-            goalParent.transform.position = new Vector3(0, 0.60848f, -7.5f);
-            var x = 5.75f;
-            foreach (var levelGoal in levelGoals)
-            {
-                var goal = PrefabUtility.InstantiatePrefab(goalPrefab) as GameObject;
-                if (!goal) continue;
-                goal.transform.SetParent(goalParent.transform);
-                goal.transform.localPosition = new Vector3(x, 0, 0);
-                x += 5.75f;
-                var goalScript = goal.GetComponent<GoalScript>();
-                goalScript.Init(levelGoal.colorType, levelGoal.reservedCount);
-                goals.Add(goalScript);
-            }
-
-            return goals;
         }
 
         private Vector3 GridSpaceToWorldSpace(int x, int y)
@@ -729,7 +552,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             testConfig.testLevelIndex = levelIndex;
             EditorUtility.SetDirty(this);
             EditorSceneManager.SaveOpenScenes();
-            EditorSceneManager.OpenScene("Assets/TemplateProject/Scenes/TestScene.unity");
+            EditorSceneManager.OpenScene($"Assets/{Application.productName}/Scenes/TestScene.unity");
             EditorApplication.isPlaying = true;
         }
     }
