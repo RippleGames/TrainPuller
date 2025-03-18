@@ -3,21 +3,23 @@ using System.Linq;
 using DG.Tweening;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
+using TrainPuller.Scripts.Runtime.Managers;
 using UnityEditor.AddressableAssets;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Random = UnityEngine.Random;
 
-namespace TemplateProject.Scripts.Utilities
+namespace TrainPuller.Scripts.Utilities
 {
     public class AddressablePrefabLoader : MonoBehaviour
     {
         [Header("Cached References")] 
+        [SerializeField] private InteractionManager interactionManager;
         [SerializeField] private GameplayManager gameplayManager;
         [SerializeField] private GridManager gridManager;
         [SerializeField] private TimeManager timeManager;
-        private GameObject loadedPrefabInstance;
+        private GameObject _loadedPrefabInstance;
 
         [Header("Variables")] public string levelGroupName = "LevelsGroup";
 
@@ -28,9 +30,9 @@ namespace TemplateProject.Scripts.Utilities
 
         private void Start()
         {
-            // var prefabAddress = $"Level_{LevelManager.instance.GetLevelIndex()}";
-            // LoadPrefab(prefabAddress);
-            // AssignLevelCount();
+            var prefabAddress = $"Level_{LevelManager.instance.GetLevelIndex()}";
+            LoadPrefab(prefabAddress);
+            AssignLevelCount();
         }
 
         private void AssignLevelCount()
@@ -50,10 +52,10 @@ namespace TemplateProject.Scripts.Utilities
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
-                loadedPrefabInstance = Instantiate(handle.Result);
-                if (loadedPrefabInstance.TryGetComponent(out LevelContainer levelContainer))
+                _loadedPrefabInstance = Instantiate(handle.Result);
+                if (_loadedPrefabInstance.TryGetComponent(out LevelContainer levelContainer))
                 {
-                    levelContainer.InitializeVariables(gameplayManager, gridManager, timeManager);
+                    levelContainer.InitializeVariables(interactionManager,gameplayManager, gridManager, timeManager);
                 }
 
                 HandleTransitions();
@@ -85,8 +87,8 @@ namespace TemplateProject.Scripts.Utilities
         {
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
-                loadedPrefabInstance = Instantiate(handle.Result);
-                callbackAction?.Invoke(loadedPrefabInstance);
+                _loadedPrefabInstance = Instantiate(handle.Result);
+                callbackAction?.Invoke(_loadedPrefabInstance);
                 Debug.Log($"Loaded and instantiated prefab: {handle.Result.name}");
                 handle.Release();
             }
@@ -120,9 +122,9 @@ namespace TemplateProject.Scripts.Utilities
 
         private void OnDestroy()
         {
-            if (loadedPrefabInstance)
+            if (_loadedPrefabInstance)
             {
-                Addressables.ReleaseInstance(loadedPrefabInstance);
+                Addressables.ReleaseInstance(_loadedPrefabInstance);
             }
         }
 
@@ -132,14 +134,14 @@ namespace TemplateProject.Scripts.Utilities
         {
             callbackAction = callback;
             LoadPrefabEditor(prefabAddress);
-            return loadedPrefabInstance;
+            return _loadedPrefabInstance;
         }
 
         private void OnDisable()
         {
-            if (loadedPrefabInstance)
+            if (_loadedPrefabInstance)
             {
-                Addressables.ReleaseInstance(loadedPrefabInstance);
+                Addressables.ReleaseInstance(_loadedPrefabInstance);
             }
         }
 #endif

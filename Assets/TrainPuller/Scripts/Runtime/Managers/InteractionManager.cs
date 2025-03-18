@@ -2,11 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Models;
-using TrainPuller.Scripts.Runtime.LevelCreation;
 using TrainPuller.Scripts.Runtime.Models;
-using UnityEditor.AddressableAssets.Build;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace TrainPuller.Scripts.Runtime.Managers
 {
@@ -18,17 +15,17 @@ namespace TrainPuller.Scripts.Runtime.Managers
         [Header("Parameters")] public LayerMask trainCartLayer;
 
         [Header("Flags")] public bool isHolding;
-
-        public GridBase[,] gridBases;
+        private GridBase[,] _gridBases;
         public HashSet<Vector2Int> trailPositions;
         public HashSet<Vector2Int> gridPositions;
+        [SerializeField] LevelContainer levelContainer;
 
-        private void Start()
+        public void InitializeInteractionManager()
         {
-            AssignMainCam();
+            AssignMainCam();            
+            _gridBases = levelContainer.GetGridBases();
             trailPositions = GetTrailPositions();
             gridPositions = GetGridPositions();
-            gridBases = FindObjectOfType<LevelContainer>().GetGridBases();
         }
 
         private void AssignMainCam()
@@ -38,23 +35,20 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                SceneManager.LoadScene("LevelCreator");
-            }
 
             if (Input.GetMouseButtonDown(0) && !currentlySelectedCart && !isHolding)
             {
                 ProcessInteraction();
-                isHolding = true; // Mouse'un başlangıç pozisyonunu kaydet
+                isHolding = true;
             }
 
             if (Input.GetMouseButtonUp(0))
             {
                 isHolding = false;
-                if (currentlySelectedCart != null)
+                
+                if (currentlySelectedCart)
                 {
-                    currentlySelectedCart.StopMovement(); // Hareketi durdur
+                    currentlySelectedCart.StopMovement();
                     currentlySelectedCart = null;
                 }
             }
@@ -67,37 +61,29 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         public Vector3 GetProjectedMousePositionOnTrail()
         {
-            Vector3 mouseWorldPos = GetMouseWorldPosition(); // Mouse'un dünya pozisyonunu al
-            Vector2Int nearestGridPos = GetNearestGridCell(mouseWorldPos, true); // En yakın grid pozisyonunu bul
+            var mouseWorldPos = GetMouseWorldPosition();
+            var nearestGridPos = GetNearestGridCell(mouseWorldPos, true);
 
-            // Eğer bu pozisyon Trail hücresiyse, mouse pozisyonunu Trail üzerine project et
-            if (trailPositions.Contains(nearestGridPos))
-            {
-                Vector3 gridWorldPos = GetWorldPositionFromGrid(nearestGridPos); // Grid hücresinin dünya pozisyonu
-                Vector3 projectedPos =
-                    ProjectPositionOnTrail(mouseWorldPos, nearestGridPos); // Trail üzerine project et
-                return projectedPos;
-            }
+            if (!trailPositions.Contains(nearestGridPos)) return GetNearestTrailPosition(mouseWorldPos);
+            var projectedPos =
+                ProjectPositionOnTrail(mouseWorldPos, nearestGridPos);
+            return projectedPos;
 
-            // Eğer Trail hücresi değilse, en yakın Trail hücresine snap et
-            return GetNearestTrailPosition(mouseWorldPos);
         }
 
-        public Vector3 GetNearestTrailPosition(Vector3 position)
+        private Vector3 GetNearestTrailPosition(Vector3 position)
         {
-            Vector2Int nearestTrailPos = Vector2Int.zero;
-            float minDistance = float.MaxValue;
+            var nearestTrailPos = Vector2Int.zero;
+            var minDistance = float.MaxValue;
 
             foreach (var trailPos in trailPositions)
             {
-                Vector3 trailWorldPos = GetWorldPositionFromGrid(trailPos);
-                float distance = Vector3.Distance(position, trailWorldPos);
+                var trailWorldPos = GetWorldPositionFromGrid(trailPos);
+                var distance = Vector3.Distance(position, trailWorldPos);
 
-                if (distance < minDistance)
-                {
-                    minDistance = distance;
-                    nearestTrailPos = trailPos;
-                }
+                if (!(distance < minDistance)) continue;
+                minDistance = distance;
+                nearestTrailPos = trailPos;
             }
 
             return GetWorldPositionFromGrid(nearestTrailPos);
@@ -105,33 +91,27 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private Vector3 ProjectPositionOnTrail(Vector3 mousePos, Vector2Int gridPos)
         {
-            // Grid hücresinin dünya pozisyonunu al
-            Vector3 gridWorldPos = GetWorldPositionFromGrid(gridPos);
+            var gridWorldPos = GetWorldPositionFromGrid(gridPos);
 
-            // Grid hücresinin komşularını al
-            GridBase currentGrid = gridBases[gridPos.x, gridPos.y];
-            List<GridBase> neighbors = currentGrid.GetNeighbors();
+            var currentGrid = _gridBases[gridPos.x, gridPos.y];
+            var neighbors = currentGrid.GetNeighbors();
 
-            // Komşu hücrelerin pozisyonlarını kontrol et
-            bool isHorizontal = false; // Yatay komşu varsa true
-            bool isVertical = false; // Dikey komşu varsa true
+            var isHorizontal = false;
+            var isVertical = false; 
 
             foreach (var neighbor in neighbors)
             {
                 if (neighbor.GetXAxis() == gridPos.x)
                 {
-                    // Aynı X ekseninde (dikey komşu)
                     isVertical = true;
                 }
                 else if (neighbor.GetYAxis() == gridPos.y)
                 {
-                    // Aynı Y ekseninde (yatay komşu)
                     isHorizontal = true;
                 }
             }
 
-            // Mouse pozisyonunu hizala
-            Vector3 offset = mousePos - gridWorldPos;
+            var offset = mousePos - gridWorldPos;
 
             if (isHorizontal && !isVertical)
             {
@@ -148,13 +128,12 @@ namespace TrainPuller.Scripts.Runtime.Managers
                 offset.x = 0;
             }
 
-            // Project edilmiş pozisyonu döndür
             return gridWorldPos + offset;
         }
 
         public bool IsPositionOnTrail(Vector3 position)
         {
-            Vector2Int nearestGridPos = GetNearestGridCell(position, false);
+            var nearestGridPos = GetNearestGridCell(position, false);
 
             var contains = trailPositions.Contains(nearestGridPos);
 
@@ -163,8 +142,8 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void MoveObjectAlongGrid()
         {
-            Vector3 mouseWorldPos = GetMouseWorldPosition();
-            Vector2Int targetGridPos = GetNearestGridCell(mouseWorldPos, true);
+            var mouseWorldPos = GetMouseWorldPosition();
+            var targetGridPos = GetNearestGridCell(mouseWorldPos, true);
 
             if (trailPositions.Contains(targetGridPos) && IsAdjacentToCart(targetGridPos))
             {
@@ -174,8 +153,8 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         public Vector2Int GetNearestGridCell(Vector3 worldPos, bool inTrail)
         {
-            Vector2Int closestGridPos = Vector2Int.zero;
-            float minDistance = float.MaxValue;
+            var closestGridPos = Vector2Int.zero;
+            var minDistance = float.MaxValue;
 
             foreach (var trailPos in inTrail ? trailPositions : gridPositions)
             {
@@ -194,33 +173,23 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private Vector3 GetMouseWorldPosition()
         {
-            Plane plane = new Plane(Vector3.up, Vector3.zero);
-            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+            var plane = new Plane(Vector3.up, Vector3.zero);
+            var ray = _mainCam.ScreenPointToRay(Input.mousePosition);
 
-            if (plane.Raycast(ray, out float enter))
-            {
-                return ray.GetPoint(enter);
-            }
-
-            return Vector3.zero;
+            return plane.Raycast(ray, out var enter) ? ray.GetPoint(enter) : Vector3.zero;
         }
 
-        public Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
+        private Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
         {
-            var gridBase = gridBases[gridPos.x, gridPos.y];
-            return gridBase != null ? gridBase.transform.position : Vector3.zero;
+            var gridBase = _gridBases[gridPos.x, gridPos.y];
+            return gridBase ? gridBase.transform.position : Vector3.zero;
         }
 
         private bool IsAdjacentToCart(Vector2Int targetPos)
         {
-            var isAdjacentToPath = false;
-            var neighbor = gridBases[currentlySelectedCart.currentGridCell.x, currentlySelectedCart.currentGridCell.y]
+            bool isAdjacentToPath;
+            var neighbor = _gridBases[currentlySelectedCart.currentGridCell.x, currentlySelectedCart.currentGridCell.y]
                 .GetNeighbors().FirstOrDefault(x => x.GetXAxis() == targetPos.x && x.GetYAxis() == targetPos.y);
-
-            if (neighbor)
-            {
-                // Debug.Log($"Current = [{currentlySelectedCart.currentGridCell.x},{currentlySelectedCart.currentGridCell.y}] Neighbor = [{neighbor.GetXAxis()},{neighbor.GetYAxis()}]");
-            }
 
             if (currentlySelectedCart.GetPath().Count <= 0)
             {
@@ -228,7 +197,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             }
             else
             {
-                var gridBase = gridBases[currentlySelectedCart.GetPath().ToList()[^1].x,
+                var gridBase = _gridBases[currentlySelectedCart.GetPath().ToList()[^1].x,
                     currentlySelectedCart.GetPath().ToList()[^1].y];
 
                 isAdjacentToPath = gridBase.GetNeighbors()
@@ -259,29 +228,24 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void TrySelectCart(RaycastHit hitInfo)
         {
-            if (hitInfo.transform.gameObject.TryGetComponent(out CartScript cartScript))
-            {
-                var trainMovement = cartScript.GetTrainMovement();
-                if (trainMovement.carts[0] == cartScript || trainMovement.carts[^1] == cartScript)
-                {
-                    trainMovement.MakeLeader(cartScript);
-                    currentlySelectedCart = cartScript;
-                    currentlySelectedCart.isMoving = true;
-                    currentlySelectedCart.trainMovement.isTrainMoving = true;
-                    currentlySelectedCart.interactionManager = this;
-                }
-            }
+            if (!hitInfo.transform.gameObject.TryGetComponent(out CartScript cartScript)) return;
+            var trainMovement = cartScript.GetTrainMovement();
+            if (trainMovement.carts[0] != cartScript && trainMovement.carts[^1] != cartScript) return;
+            trainMovement.MakeLeader(cartScript);
+            currentlySelectedCart = cartScript;
+            currentlySelectedCart.isMoving = true;
+            currentlySelectedCart.trainMovement.isTrainMoving = true;
+            currentlySelectedCart.interactionManager = this;
         }
 
-        public HashSet<Vector2Int> GetTrailPositions()
+        private HashSet<Vector2Int> GetTrailPositions()
         {
             var trailCells = new HashSet<Vector2Int>();
-            var grid = FindObjectOfType<LevelContainer>().GetGridBases();
-            for (int x = 0; x < grid.GetLength(0); x++)
+            for (var x = 0; x < _gridBases.GetLength(0); x++)
             {
-                for (int y = 0; y < grid.GetLength(1); y++)
+                for (var y = 0; y < _gridBases.GetLength(1); y++)
                 {
-                    if (grid[x, y].isTrail)
+                    if (_gridBases[x, y].isTrail)
                     {
                         trailCells.Add(new Vector2Int(x, y));
                     }
@@ -294,10 +258,9 @@ namespace TrainPuller.Scripts.Runtime.Managers
         private HashSet<Vector2Int> GetGridPositions()
         {
             var cells = new HashSet<Vector2Int>();
-            var grid = FindObjectOfType<LevelContainer>().GetGridBases();
-            for (int x = 0; x < grid.GetLength(0); x++)
+            for (var x = 0; x < _gridBases.GetLength(0); x++)
             {
-                for (int y = 0; y < grid.GetLength(1); y++)
+                for (var y = 0; y < _gridBases.GetLength(1); y++)
                 {
                     cells.Add(new Vector2Int(x, y));
                 }
@@ -305,23 +268,15 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
             return cells;
         }
-
-        private void UpdateCartRotation(Vector3 targetWorldPos)
-        {
-            Vector3 direction = (targetWorldPos - currentlySelectedCart.transform.position).normalized;
-            if (direction != Vector3.zero)
-            {
-                float angle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
-                Quaternion targetRotation = Quaternion.Euler(0, angle, 0);
-
-                currentlySelectedCart.transform.rotation = Quaternion.RotateTowards(
-                    currentlySelectedCart.transform.rotation, targetRotation, Time.deltaTime * 200f);
-            }
-        }
-
+        
         public bool GetCurrentlySelectedCart()
         {
             return currentlySelectedCart;
+        }
+
+        public void SetLevelContainer(LevelContainer container)
+        {
+            levelContainer = container;
         }
     }
 }

@@ -1,11 +1,12 @@
-
 using TemplateProject.Scripts.Data;
+using TemplateProject.Scripts.Runtime.Managers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace TemplateProject.Scripts.Runtime.Managers
+namespace TrainPuller.Scripts.Runtime.Managers
 {
+    [DefaultExecutionOrder(-1)]
     public class LevelManager : MonoBehaviour
     {
         public static LevelManager instance;

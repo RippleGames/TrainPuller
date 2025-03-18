@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using FluffyUnderware.Curvy.Controllers;
 using TemplateProject.Scripts.Data;
+using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
@@ -14,18 +15,16 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private GameColors colors;
         [SerializeField] public Vector2Int currentGridCell;
 
-        [SerializeField] private Queue<Vector2Int> pathQueue = new Queue<Vector2Int>();
-        private Vector3 movementTarget;
-
-
+        [SerializeField] private Queue<Vector2Int> pathQueue = new();
+        private Vector3 _movementTarget;
         [SerializeField] private float moveSpeed = 10f;
-        private Vector3 movementDirection;
-        public bool isMoving = false;
+        private Vector3 _movementDirection;
+        public bool isMoving;
         public InteractionManager interactionManager;
-        [SerializeField] private int maxPathLength = 10; // Kaydedilecek maksimum pozisyon sayısı
         public bool isMovingBackwards;
         public Vector3 previousDirection;
         public Quaternion previousRotation;
+        public GridBase[,] gridBases;
 
 
         public void StopMovement()
@@ -45,75 +44,58 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void MoveTowardsTarget()
         {
-            Vector3 targetPos = interactionManager.GetProjectedMousePositionOnTrail();
-
-            // Eğer tren durduysa ve ileri doğru hareket etmeye çalışıyorsak tekrar başlat
+            var targetPos = interactionManager.GetProjectedMousePositionOnTrail();
+            
             if (!trainMovement.isTrainMoving && !trainMovement.isMovingBackwards)
             {
-                if (interactionManager.IsPositionOnTrail(targetPos)) // Eğer hedef pozisyon ray üzerindeyse
+                if (interactionManager.IsPositionOnTrail(targetPos))
                 {
                     trainMovement.isTrainMoving = true;
                 }
             }
 
-            if (Vector3.Distance(transform.position, targetPos) <= 2f)
+            if (!(Vector3.Distance(transform.position, targetPos) <= 2f)) return;
+            if (interactionManager.IsPositionOnTrail(targetPos))
             {
-                if (interactionManager.IsPositionOnTrail(targetPos))
-                {
-                    Vector3 snappedPosition = interactionManager.GetNearestTrailPosition(targetPos);
-                    transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
-                    UpdateRotation(targetPos);
+                transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
+                UpdateRotation(targetPos);
 
-                    if (Vector3.Distance(transform.position, movementTarget) < 0.1f &&
-                        Vector3.Distance(transform.position, targetPos) <= 0.1f)
-                    {
-                        MoveToNextGridCell();
-                    }
-                }
-                else
+                if (Vector3.Distance(transform.position, _movementTarget) < 0.1f &&
+                    Vector3.Distance(transform.position, targetPos) <= 0.1f)
                 {
-                    StopMovement();
+                    MoveToNextGridCell();
                 }
+            }
+            else
+            {
+                StopMovement();
             }
         }
 
 
         private void UpdateRotation(Vector3 targetPosition)
         {
-            Vector3 direction = (targetPosition - transform.position).normalized;
-            if (direction.magnitude < 0.01f) return; // Eğer hareket yoksa dönüş yapma
+            var direction = (targetPosition - transform.position).normalized;
+            if (direction.magnitude < 0.01f) return; 
 
-            // **Son 3-5 noktayı kontrol ederek önceki yönü bul**
-            int checkRange = Mathf.Min(3, trainMovement.trainPath.Count - 1);
-            Vector3 averagePreviousDirection = Vector3.zero;
+            var checkRange = Mathf.Min(3, trainMovement.trainPath.Count - 1);
+            var averagePreviousDirection = Vector3.zero;
 
             for (int i = 1; i <= checkRange; i++)
             {
-                Vector3 segment = (trainMovement.trainPath[^i] - trainMovement.trainPath[^(i + 1)]).normalized;
+                var segment = (trainMovement.trainPath[^i] - trainMovement.trainPath[^(i + 1)]).normalized;
                 averagePreviousDirection += segment;
             }
 
             averagePreviousDirection.Normalize();
 
-            // **Yön değişimini analiz et**
-            float angle = Vector3.Angle(averagePreviousDirection, direction);
+            var angle = Vector3.Angle(averagePreviousDirection, direction);
             isMovingBackwards = angle > 90f;
             trainMovement.isMovingBackwards = isMovingBackwards;
 
-            // **Dönüş noktasında ters dönüşü yap**
             if (isMovingBackwards)
             {
-                // Eğer dönüş noktası 90 derece ise, ters rotasyonu uygula
-                if (Mathf.Abs(Mathf.Abs(Vector3.Angle(previousDirection, direction) - 90f)) < 20f)
-                {
-                    transform.rotation = Quaternion.Lerp(transform.rotation,
-                        Quaternion.LookRotation(-previousDirection), moveSpeed * Time.deltaTime);
-                }
-                else
-                {
-                    transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(-direction),
-                        moveSpeed * Time.deltaTime);
-                }
+                transform.rotation = Quaternion.Lerp(transform.rotation, Mathf.Abs(Mathf.Abs(Vector3.Angle(previousDirection, direction) - 90f)) < 20f ? Quaternion.LookRotation(-previousDirection) : Quaternion.LookRotation(-direction), moveSpeed * Time.deltaTime);
             }
             else
             {
@@ -121,7 +103,6 @@ namespace TrainPuller.Scripts.Runtime.Models
                     moveSpeed * Time.deltaTime);
             }
 
-            // **Önceki yönü güncelle**
             previousDirection = direction;
         }
 
@@ -140,35 +121,17 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void MoveToNextGridCell()
         {
-            if (pathQueue.Count > 0)
-            {
-                Vector2Int nextGridCell = pathQueue.Dequeue();
-                movementTarget = GetWorldPositionFromGrid(nextGridCell);
-                currentGridCell = nextGridCell;
-                isMoving = true;
-                trainMovement.isTrainMoving = true;
-            }
+            if (pathQueue.Count <= 0) return;
+            var nextGridCell = pathQueue.Dequeue();
+            _movementTarget = GetWorldPositionFromGrid(nextGridCell);
+            currentGridCell = nextGridCell;
+            isMoving = true;
+            trainMovement.isTrainMoving = true;
         }
 
-        private void MoveCart()
+        private Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
         {
-            transform.position = Vector3.MoveTowards(transform.position, movementTarget, moveSpeed * Time.deltaTime);
-
-            if (Vector3.Distance(transform.position, movementTarget) < 0.01f)
-            {
-                if (pathQueue.Count > 0)
-                {
-                    MoveToNextGridCell();
-                    return;
-                }
-
-                isMoving = false;
-            }
-        }
-
-        public Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
-        {
-            var gridBase = FindObjectOfType<LevelContainer>().GetGridBases()[gridPos.x, gridPos.y];
+            var gridBase = gridBases[gridPos.x, gridPos.y];
             return gridBase.transform.position;
         }
 
@@ -182,9 +145,9 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             currentGridCell = new Vector2Int(x, y);
             var currentMaterial = colors.activeMaterials[(int)colorType];
-            foreach (var renderer in cartRenderers)
+            foreach (var cartRenderer in cartRenderers)
             {
-                renderer.sharedMaterial = currentMaterial;
+                cartRenderer.sharedMaterial = currentMaterial;
             }
         }
 

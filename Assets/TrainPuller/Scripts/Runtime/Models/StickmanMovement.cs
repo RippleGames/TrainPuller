@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using BusJamClone.Scripts.Runtime.Interfaces;
 using TemplateProject.Scripts.Runtime.Managers;
+using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
 namespace TemplateProject.Scripts.Runtime.Models

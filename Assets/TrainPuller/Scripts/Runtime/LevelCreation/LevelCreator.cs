@@ -9,6 +9,7 @@ using TemplateProject.Scripts.Runtime.LevelCreation;
 using TemplateProject.Scripts.Runtime.Models;
 using TemplateProject.Scripts.Utilities;
 using TrainPuller.Scripts.Runtime.Models;
+using TrainPuller.Scripts.Utilities;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -233,6 +234,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 trainParent = new GameObject("Train Parent");
                                 trainParent.transform.SetParent(cardParent.parent.transform);
                                 trainMovement = trainParent.AddComponent<TrainMovement>();
+                                trainMovement.speed = 30f;
                                 trainMovement.cartSpacing = 1;
                                 trainMovement.cartsColor = stackDataColorTypes[1];
                                 trainParentList.Add(trainMovement);
@@ -242,7 +244,6 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 Quaternion.identity);
                             trainCart.transform.SetParent(trainParent.transform);
                             var cartScript = trainCart.GetComponent<CartScript>();
-                            var trainController = trainCart.GetComponent<SplineController>();
                             cartScript.SetCartProperties(i, j, stackDataColorTypes[1]);
                             // var closestSpline = FindClosestSpline(gridBases[i, j].transform.position, splines);
                             // if (!closestSpline)

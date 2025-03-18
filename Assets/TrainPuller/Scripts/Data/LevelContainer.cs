@@ -3,6 +3,7 @@ using TemplateProject.Scripts.Runtime.LevelCreation;
 using TemplateProject.Scripts.Runtime.Managers;
 using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.LevelCreation;
+using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
 namespace TemplateProject.Scripts.Data
@@ -47,17 +48,25 @@ namespace TemplateProject.Scripts.Data
         }
 
 
-        public void InitializeVariables(GameplayManager gameplayManager, GridManager gridManager,
+        public void InitializeVariables(InteractionManager interactionManager, GameplayManager gameplayManager,
+            GridManager gridManager,
             TimeManager timeManager)
         {
+            InitializeInteractionManager(interactionManager);
             InitializeGameplayManager(gameplayManager);
             InitializeGridManager(gridManager);
             InitializeTimer(timeManager);
         }
 
+        private void InitializeInteractionManager(InteractionManager interactionManager)
+        {
+            interactionManager.SetLevelContainer(this);
+            interactionManager.InitializeInteractionManager();
+        }
+
         private void InitializeGameplayManager(GameplayManager gameplayManager)
         {
-            gameplayManager.SetBuses(levelGoalScripts);
+            // gameplayManager.SetBuses(levelGoalScripts);
         }
 
         private void InitializeGridManager(GridManager gridManager)

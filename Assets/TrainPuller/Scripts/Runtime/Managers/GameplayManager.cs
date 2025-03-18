@@ -6,6 +6,7 @@ using DG.Tweening;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Data.Config;
 using TemplateProject.Scripts.Runtime.Models;
+using TrainPuller.Scripts.Runtime.Managers;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -44,12 +45,14 @@ namespace TemplateProject.Scripts.Runtime.Managers
 
         private void OnEnable()
         {
+            if(!LevelManager.instance) return;
             if (!LevelManager.instance.isTestScene) return;
             Application.logMessageReceived += HandleLog;
         }
 
         private void OnDisable()
         {
+            if(!LevelManager.instance) return;
             if (!LevelManager.instance.isTestScene) return;
             Application.logMessageReceived -= HandleLog;
         }
