@@ -27,28 +27,28 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void FollowLeader()
         {
-            // Liderin geçtiği pozisyonları al
-            List<Vector3> leaderPath = leaderCart.GetPathPositions();
-
-            // Takipçi kartın hedef pozisyonunu hesapla
-            Vector3 targetPosition = GetTargetPositionOnPath(leaderPath);
-
-            // Hedef pozisyonun Trail hücresi içinde olup olmadığını kontrol et
-            if (IsPositionOnTrail(targetPosition))
-            {
-                // Takipçi kartı hedef pozisyona doğru hareket ettir
-                thisCart.transform.position = Vector3.Lerp(thisCart.transform.position, targetPosition,
-                    followSpeed * Time.deltaTime);
-
-                // Takipçi kartın rotasyonunu hedef pozisyona doğru yumuşakça döndür
-                Vector3 direction = (targetPosition - thisCart.transform.position).normalized;
-                if (direction != Vector3.zero)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(direction);
-                    thisCart.transform.rotation = Quaternion.Slerp(thisCart.transform.rotation, targetRotation,
-                        followSpeed * Time.deltaTime);
-                }
-            }
+            // // Liderin geçtiği pozisyonları al
+            // List<Vector3> leaderPath = leaderCart.GetPathPositions();
+            //
+            // // Takipçi kartın hedef pozisyonunu hesapla
+            // Vector3 targetPosition = GetTargetPositionOnPath(leaderPath);
+            //
+            // // Hedef pozisyonun Trail hücresi içinde olup olmadığını kontrol et
+            // if (IsPositionOnTrail(targetPosition))
+            // {
+            //     // Takipçi kartı hedef pozisyona doğru hareket ettir
+            //     thisCart.transform.position = Vector3.Lerp(thisCart.transform.position, targetPosition,
+            //         followSpeed * Time.deltaTime);
+            //
+            //     // Takipçi kartın rotasyonunu hedef pozisyona doğru yumuşakça döndür
+            //     Vector3 direction = (targetPosition - thisCart.transform.position).normalized;
+            //     if (direction != Vector3.zero)
+            //     {
+            //         Quaternion targetRotation = Quaternion.LookRotation(direction);
+            //         thisCart.transform.rotation = Quaternion.Slerp(thisCart.transform.rotation, targetRotation,
+            //             followSpeed * Time.deltaTime);
+            //     }
+            // }
         }
 
         private Vector3 GetTargetPositionOnPath(List<Vector3> leaderPath)

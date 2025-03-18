@@ -8,7 +8,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 {
     public class CartScript : MonoBehaviour
     {
-        [SerializeField] private TrainMovement trainMovement;
+        [SerializeField] public TrainMovement trainMovement;
         [SerializeField] private SplineController cartSplineController;
         [SerializeField] private List<Renderer> cartRenderers;
         [SerializeField] private GameColors colors;
@@ -22,20 +22,22 @@ namespace TrainPuller.Scripts.Runtime.Models
         private Vector3 movementDirection;
         public bool isMoving = false;
         public InteractionManager interactionManager;
-        [SerializeField] private List<Vector3> pathPositions = new List<Vector3>(); // Liderin geçtiği pozisyonlar
         [SerializeField] private int maxPathLength = 10; // Kaydedilecek maksimum pozisyon sayısı
         public bool isMovingBackwards;
+        public Vector3 previousDirection;
+        public Quaternion previousRotation;
 
 
         public void StopMovement()
         {
             isMoving = false;
+            trainMovement.isTrainMoving = false;
             pathQueue.Clear();
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
-            if (isMoving)
+            if (isMoving && interactionManager.GetCurrentlySelectedCart() == this)
             {
                 MoveTowardsTarget();
             }
@@ -44,7 +46,6 @@ namespace TrainPuller.Scripts.Runtime.Models
         private void MoveTowardsTarget()
         {
             var targetPos = interactionManager.GetProjectedMousePositionOnTrail();
-            UpdatePath(transform.position);
             if (Vector3.Distance(transform.position, targetPos) <= 2f)
             {
                 // Hedef pozisyonun Trail hücresi içinde olup olmadığını kontrol et
@@ -71,28 +72,50 @@ namespace TrainPuller.Scripts.Runtime.Models
         private void UpdateRotation(Vector3 targetPosition)
         {
             Vector3 direction = (targetPosition - transform.position).normalized;
-            if (direction != Vector3.zero)
-            {
-                if (Mathf.Abs(Mathf.Abs(Quaternion.LookRotation(direction).eulerAngles.y -
-                                        transform.rotation.eulerAngles.y) - 180) < 10)
-                {
-                    isMovingBackwards = true;
-                    trainMovement.isMovingBackwards = true;
-                    return;
-                }
+            if (direction.magnitude < 0.01f) return; // Eğer hareket yoksa dönüş yapma
 
-                isMovingBackwards = false;
-                trainMovement.isMovingBackwards = false;
-                direction.y = 0;
+            // **Son 3-5 noktayı kontrol ederek önceki yönü bul**
+            int checkRange = Mathf.Min(3, trainMovement.trainPath.Count - 1);
+            Vector3 averagePreviousDirection = Vector3.zero;
+
+            for (int i = 1; i <= checkRange; i++)
+            {
+                Vector3 segment = (trainMovement.trainPath[^i] - trainMovement.trainPath[^(i + 1)]).normalized;
+                averagePreviousDirection += segment;
+            }
+
+            averagePreviousDirection.Normalize();
+
+            // **Yön değişimini analiz et**
+            float angle = Vector3.Angle(averagePreviousDirection, direction);
+            isMovingBackwards = angle > 90f;
+            trainMovement.isMovingBackwards = isMovingBackwards;
+
+            // **Dönüş noktasında ters dönüşü yap**
+            if (isMovingBackwards)
+            {
+                // Eğer dönüş noktası 90 derece ise, ters rotasyonu uygula
+                if (Mathf.Abs(Mathf.Abs(Vector3.Angle(previousDirection, direction) - 90f)) < 20f)
+                {
+                    transform.rotation = Quaternion.Lerp(transform.rotation,
+                        Quaternion.LookRotation(-previousDirection), moveSpeed * Time.deltaTime);
+                }
+                else
+                {
+                    transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(-direction),
+                        moveSpeed * Time.deltaTime);
+                }
+            }
+            else
+            {
                 transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(direction),
                     moveSpeed * Time.deltaTime);
             }
+
+            // **Önceki yönü güncelle**
+            previousDirection = direction;
         }
 
-        public List<Vector3> GetPathPositions()
-        {
-            return pathPositions; // Liderin geçtiği pozisyonları döndür
-        }
 
         public void AddToPath(Vector2Int newGridCell)
         {
@@ -114,6 +137,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 movementTarget = GetWorldPositionFromGrid(nextGridCell);
                 currentGridCell = nextGridCell;
                 isMoving = true;
+                trainMovement.isTrainMoving = true;
             }
         }
 
@@ -173,19 +197,6 @@ namespace TrainPuller.Scripts.Runtime.Models
         public Queue<Vector2Int> GetPath()
         {
             return pathQueue;
-        }
-
-        public void UpdatePath(Vector3 targetPosition)
-        {
-            if (pathPositions.Count == 0 || Vector3.Distance(transform.position, pathPositions[^1]) > 0.01f)
-            {
-                pathPositions.Add(targetPosition);
-
-                if (pathPositions.Count > maxPathLength)
-                {
-                    pathPositions.RemoveAt(0);
-                }
-            }
         }
     }
 }

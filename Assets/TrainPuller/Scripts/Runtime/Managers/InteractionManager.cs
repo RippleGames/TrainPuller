@@ -4,7 +4,9 @@ using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.LevelCreation;
 using TrainPuller.Scripts.Runtime.Models;
+using UnityEditor.AddressableAssets.Build;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TrainPuller.Scripts.Runtime.Managers
 {
@@ -36,6 +38,11 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void Update()
         {
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                SceneManager.LoadScene("LevelCreator");
+            }
+
             if (Input.GetMouseButtonDown(0) && !currentlySelectedCart && !isHolding)
             {
                 ProcessInteraction();
@@ -128,17 +135,15 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
             if (isHorizontal && !isVertical)
             {
-               
                 offset.z = 0;
             }
             else if (isVertical && !isHorizontal)
             {
-                
                 offset.x = 0;
             }
             else
             {
-                offset.z = 0; 
+                offset.z = 0;
 
                 offset.x = 0;
             }
@@ -262,6 +267,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
                     trainMovement.MakeLeader(cartScript);
                     currentlySelectedCart = cartScript;
                     currentlySelectedCart.isMoving = true;
+                    currentlySelectedCart.trainMovement.isTrainMoving = true;
                     currentlySelectedCart.interactionManager = this;
                 }
             }

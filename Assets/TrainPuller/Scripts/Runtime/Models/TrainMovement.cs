@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using TemplateProject.Scripts.Data;
-using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
 namespace TrainPuller.Scripts.Runtime.Models
@@ -11,13 +10,15 @@ namespace TrainPuller.Scripts.Runtime.Models
         public float cartSpacing = 1f;
         public List<CartScript> carts = new List<CartScript>();
         public LevelData.GridColorType cartsColor;
-        [SerializeField] private InteractionManager interactionManager;
         [SerializeField] private CartScript currentLeader;
-        [SerializeField] private List<Vector3> trainPath = new List<Vector3>();
+        [SerializeField] public List<Vector3> trainPath = new List<Vector3>();
         public bool isMovingBackwards;
+        public float maxRemovalSpeed;
+        public bool isTrainMoving;
 
         private void Update()
         {
+            if (!isTrainMoving) return;
             if (carts.Count == 0) return;
 
             if (!currentLeader)
@@ -29,7 +30,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             for (int i = 1; i < carts.Count; i++)
             {
-                FollowLeader(carts[i], i);
+                FollowLeader(carts[i], carts[i - 1], i);
             }
         }
 
@@ -38,33 +39,33 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (carts.Count == 0) return;
             Vector3 leaderPosition = carts[0].transform.position;
 
-            if (isMovingBackwards)
+            if (!isMovingBackwards)
             {
-                if (trainPath.Count > 0)
+                if (trainPath.Count == 0 || Vector3.Distance(leaderPosition, trainPath[^1]) > 0.01f)
                 {
-                    if (Vector3.Distance(leaderPosition, trainPath[^1]) > 0.09f * cartSpacing)
+                    trainPath.Add(leaderPosition);
+                }
+
+                if (trainPath.Count > 300)
+                {
+                    trainPath.RemoveAt(0);
+                }
+            }
+            else
+            {
+                float gap = Vector3.Distance(carts[0].transform.position, carts[1].transform.position);
+                if (gap < cartSpacing)
+                {
+                    if (Vector3.Distance(carts[0].transform.position, trainPath[^1]) > 0.01f && trainPath.Count > 1)
                     {
                         trainPath.RemoveAt(trainPath.Count - 1);
                     }
                 }
-
-                return;
-            }
-
-            // Yeni pozisyonu sadece yeterince farklıysa ekle
-            if (trainPath.Count == 0 || Vector3.Distance(leaderPosition, trainPath[^1]) > 0.01f)
-            {
-                trainPath.Add(leaderPosition);
-            }
-
-            // Aşırı büyümeyi engelle
-            if (trainPath.Count > 300)
-            {
-                trainPath.RemoveAt(0);
             }
         }
 
-        private void FollowLeader(CartScript follower, int index)
+
+        private void FollowLeader(CartScript follower, CartScript leader, int index)
         {
             float targetDistance = index * cartSpacing;
             float accumulatedDistance = 0f;
@@ -80,11 +81,11 @@ namespace TrainPuller.Scripts.Runtime.Models
                     {
                         float overshoot = accumulatedDistance - targetDistance;
                         Vector3 direction = (trainPath[i - 1] - trainPath[i]).normalized;
-                        targetPosition = trainPath[i] + direction * overshoot;
-
+                        targetPosition = trainPath[i] + direction * (segmentDistance - overshoot);
                         break;
                     }
                 }
+                
             }
             else
             {
@@ -93,62 +94,53 @@ namespace TrainPuller.Scripts.Runtime.Models
                     float segmentDistance = Vector3.Distance(trainPath[i], trainPath[i - 1]);
                     accumulatedDistance += segmentDistance;
 
-                    if (accumulatedDistance >= targetDistance)
+                    if (accumulatedDistance >= targetDistance || trainPath.Count < 10)
                     {
                         float overshoot = accumulatedDistance - targetDistance;
                         Vector3 direction = (trainPath[i - 1] - trainPath[i]).normalized;
-                        targetPosition = trainPath[i] + direction * overshoot;
+                        targetPosition = trainPath[i] + direction * (segmentDistance - overshoot);
                         break;
                     }
                 }
             }
 
-            follower.transform.position =
-                Vector3.Lerp(follower.transform.position, targetPosition, speed * Time.deltaTime);
-            UpdateFollowerRotation(follower, targetPosition, carts[0].isMovingBackwards);
+            follower.transform.position = targetPosition;
+            UpdateFollowerRotation(follower, leader.transform.position);
         }
 
-
-        private Vector3 CalculateTargetPosition(List<Vector3> leaderPath, CartScript follower, float spacing)
+        private void UpdateFollowerRotation(CartScript follower, Vector3 targetPosition)
         {
-            float accumulatedDistance = 0f;
-            for (int i = leaderPath.Count - 1; i > 0; i--)
+            var followerPosition = follower.transform.position;
+            Vector3 direction = ((targetPosition + followerPosition) / 2 - followerPosition).normalized;
+
+            if (direction.magnitude < 0.01f)
             {
-                Vector3 currentPoint = leaderPath[i];
-                Vector3 nextPoint = leaderPath[i - 1];
-                float segmentDistance = Vector3.Distance(currentPoint, nextPoint);
-
-                accumulatedDistance += segmentDistance;
-
-                // Eğer istenen mesafe aşıldıysa, hedef pozisyonu bul
-                if (accumulatedDistance >= spacing)
-                {
-                    float overshoot = accumulatedDistance - spacing;
-                    Vector3 direction = (nextPoint - currentPoint).normalized;
-                    return currentPoint + direction * (segmentDistance - overshoot);
-                }
+                return;
             }
 
-            // Debug.Log("Path 0 pos");
-            return follower.transform.position;
-        }
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
 
-        private void UpdateFollowerRotation(CartScript follower, Vector3 targetPosition, bool isReversing)
-        {
-            Vector3 direction = (targetPosition - follower.transform.position).normalized;
+            // Eğer follower ile hedef arasındaki açı yaklaşık 180 dereceyse, ters bakıyor demektir
+            float angleDifference = Quaternion.Angle(follower.transform.rotation, targetRotation);
 
-            if (direction != Vector3.zero)
+            if (angleDifference > 170f) // 180 yerine biraz tolerans bıraktık
             {
-                Quaternion targetRotation =
-                    isReversing ? Quaternion.LookRotation(-direction) : Quaternion.LookRotation(direction);
-
-                follower.transform.rotation = Quaternion.Slerp(
-                    follower.transform.rotation,
-                    targetRotation,
-                    speed * Time.fixedDeltaTime
-                );
+                follower.isMovingBackwards = true;
+                targetRotation *= Quaternion.Euler(0, 180, 0); // 180 derece çevir
             }
+            else
+            {
+                follower.isMovingBackwards = false;
+            }
+
+            // Rotasyonu set et
+            follower.transform.rotation = Quaternion.Slerp(
+                follower.transform.rotation,
+                targetRotation,
+                speed * Time.fixedDeltaTime
+            );
         }
+
 
         public void MakeLeader(CartScript selectedCart)
         {
