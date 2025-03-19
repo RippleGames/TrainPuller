@@ -18,7 +18,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
         }
         
-        public LevelData.GridColorType GetCartColor()
+        public LevelData.GridColorType GetCardColor()
         {
             return cardColor;
         }

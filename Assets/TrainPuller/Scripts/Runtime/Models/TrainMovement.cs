@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 using TemplateProject.Scripts.Data;
 using TrainPuller.Scripts.Data;
 using UnityEngine;
@@ -11,8 +12,10 @@ namespace TrainPuller.Scripts.Runtime.Models
         public float speed = 5f;
         public float cartSpacing = 1f;
         public List<CartScript> carts = new List<CartScript>();
+        public TrainContainer trainContainer;
         public LevelData.GridColorType cartsColor;
         [SerializeField] private CartScript currentLeader;
+        public CartScript previousLeader;
         [SerializeField] private CartScript currentLastCart;
         [SerializeField] public List<Vector3> trainPath = new List<Vector3>();
         public bool isMovingBackwards;
@@ -86,9 +89,9 @@ namespace TrainPuller.Scripts.Runtime.Models
             var leaderPosition = leaderTransform.position;
             var direction = leaderTransform.forward;
             if (Physics.Raycast(leaderPosition + new Vector3(0f, 0.5f, 0f), direction, out var hit, checkDistance,
-                    LayerMask.GetMask("TrainCartLayer")))
+                    LayerMask.GetMask("TrainCartLayer") | LayerMask.GetMask("ObstacleLayer")))
             {
-                if (hit.collider.CompareTag("TrainCart"))
+                if (hit.collider.CompareTag("TrainCart") || hit.collider.CompareTag("Exit"))
                 {
                     if (hit.collider.TryGetComponent(out CartScript cart))
                     {
@@ -96,6 +99,17 @@ namespace TrainPuller.Scripts.Runtime.Models
                         {
                             return true;
                         }
+                    }
+
+                    if (hit.collider.TryGetComponent(out ExitBarrierScript exitBarrierScript))
+                    {
+                        if (trainContainer.isAllFull)
+                        {
+                            GetOutFromExit(exitBarrierScript);
+                            return !trainContainer.isAllFull;
+                        }
+
+                        return !trainContainer.isAllFull;
                     }
                 }
             }
@@ -113,7 +127,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             var direction = -lastCartTransform.forward;
             if (Physics.Raycast(leaderPosition + new Vector3(0f, 0.5f, 0f), direction, out var hit, checkDistance))
             {
-                if (hit.collider.CompareTag("TrainCart"))
+                if (hit.collider.CompareTag("TrainCart") || hit.collider.CompareTag("Exit"))
                 {
                     if (hit.collider.TryGetComponent(out CartScript cart))
                     {
@@ -121,6 +135,17 @@ namespace TrainPuller.Scripts.Runtime.Models
                         {
                             return true;
                         }
+                    }
+
+                    if (hit.collider.TryGetComponent(out ExitBarrierScript exitBarrierScript))
+                    {
+                        if (trainContainer.isAllFull)
+                        {
+                            GetOutFromExit(exitBarrierScript);
+                            return trainContainer.isAllFull;
+                        }
+
+                        return !trainContainer.isAllFull;
                     }
                 }
             }
@@ -270,6 +295,9 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (!carts.Contains(selectedCart)) return;
             if (selectedCart == carts[0])
             {
+                currentLeader = carts[0];
+                previousLeader = currentLeader;
+                currentLastCart = carts[^1];
                 return;
             }
 
@@ -285,9 +313,23 @@ namespace TrainPuller.Scripts.Runtime.Models
                 trainPath.AddRange(lastPositions);
             }
 
+            previousLeader = carts[0];
             carts.Reverse();
             currentLeader = carts[0];
             currentLastCart = carts[^1];
+        }
+
+        public void GetOutFromExit(ExitBarrierScript exitBarrierScript)
+        {
+            currentLeader.interactionManager.HandleExit();
+            transform.SetParent(null);
+            isTrainMoving = true;
+            canMoveBackwards = true;
+            canMoveForward = true;
+            currentLeader.gameObject.transform.DOMove(exitBarrierScript.GetPathEnd().position, 2f).OnComplete(() =>
+            {
+                transform.gameObject.SetActive(false);
+            });
         }
     }
 }

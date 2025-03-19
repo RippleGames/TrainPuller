@@ -221,11 +221,15 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             var trainMovement =
                                 trainParentList.FirstOrDefault(x => x.cartsColor == stackDataColorTypes[1]);
                             var trainParent = trainMovement?.gameObject;
+                            var trainContainer = trainParent?.GetComponent<TrainContainer>();
                             if (!trainParent)
                             {
                                 trainParent = new GameObject("Train Parent");
                                 trainParent.transform.SetParent(trainCartParent.transform);
                                 trainMovement = trainParent.AddComponent<TrainMovement>();
+                                trainContainer = trainParent.AddComponent<TrainContainer>();
+                                trainContainer.trainMovement = trainMovement;
+                                trainMovement.trainContainer = trainContainer;
                                 trainMovement.speed = 30f;
                                 trainMovement.cartSpacing = 1;
                                 trainMovement.cartsColor = stackDataColorTypes[1];
@@ -280,27 +284,38 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                         exitBarrier.SetBarrierProperties(stackDataColorTypes[^1]);
                         if (i == gridWidth - 1)
                         {
-                            exitBarrier.transform.position += new Vector3(0.3f, 0, 0);
+                            var barrierTransform = exitBarrier.transform;
+                            barrierTransform.position += new Vector3(0.3f, 0, 0);
+                            barrierTransform.eulerAngles += new Vector3(0f, -90f, 0f);
                         }
                         else if (i == 0)
-                        {
-                            exitBarrier.transform.position -= new Vector3(0.3f, 0, 0);
+                        {    var barrierTransform = exitBarrier.transform;
+                            barrierTransform.position -= new Vector3(0.3f, 0, 0);
+                            barrierTransform.eulerAngles += new Vector3(0f, 90f, 0f);
                         }
                         else if (j == gridHeight - 1)
                         {
                             var barrierTransform = exitBarrier.transform;
                             barrierTransform.position += new Vector3(0f, 0f, 0.3f);
-                            barrierTransform.eulerAngles += new Vector3(0f, 90f, 0f);
+                            barrierTransform.eulerAngles += new Vector3(0f, 180f, 0f);
+                            
                         }
                         else if (j == 0)
                         {
                             var barrierTransform = exitBarrier.transform;
                             barrierTransform.position -= new Vector3(0f, 0f, 0.3f);
-                            barrierTransform.eulerAngles += new Vector3(0f, 90f, 0f);
                         }
                     }
                 }
             }
+
+            foreach (var trainMovement in trainParentList)
+            {
+                trainMovement.trainContainer.SetCartSlots(trainMovement.carts);
+                EditorUtility.SetDirty(trainMovement.gameObject);
+            }
+            
+            
         }
 
         private void HandleRoadPrefabs(GridBase[,] gridBaseArray, Transform parent)

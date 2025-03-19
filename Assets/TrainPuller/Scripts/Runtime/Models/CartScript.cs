@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using FluffyUnderware.Curvy.Controllers;
 using TemplateProject.Scripts.Data;
@@ -10,11 +11,11 @@ namespace TrainPuller.Scripts.Runtime.Models
     public class CartScript : MonoBehaviour
     {
         [SerializeField] public TrainMovement trainMovement;
-        [SerializeField] private SplineController cartSplineController;
         [SerializeField] private List<Renderer> cartRenderers;
         [SerializeField] private GameColors colors;
         [SerializeField] public Vector2Int currentGridCell;
         [SerializeField] private LevelData.GridColorType cartColor;
+        [SerializeField] private List<CardSlot> cardSlots;
 
         [SerializeField] private Queue<Vector2Int> pathQueue = new();
         private Vector3 _movementTarget;
@@ -56,10 +57,11 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
 
             if (!(Vector3.Distance(transform.position, targetPos) <= 2f)) return;
+            
             if (interactionManager.IsPositionOnTrail(targetPos))
             {
                 UpdateRotation(targetPos);
-                
+
                 if ((trainMovement.isMovingBackwards && trainMovement.canMoveBackwards) ||
                     (!trainMovement.isMovingBackwards && trainMovement.canMoveForward))
                 {
@@ -83,7 +85,6 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             var direction = (targetPosition - transform.position).normalized;
             if (direction.magnitude < 0.01f) return;
-
             var checkRange = Mathf.Min(3, trainMovement.trainPath.Count - 1);
             var averagePreviousDirection = Vector3.zero;
 
@@ -178,10 +179,6 @@ namespace TrainPuller.Scripts.Runtime.Models
             return trainMovement;
         }
 
-        public SplineController GetSplineController()
-        {
-            return cartSplineController;
-        }
 
         public void SetCartGridBase(int x, int y)
         {
@@ -196,6 +193,45 @@ namespace TrainPuller.Scripts.Runtime.Models
         public LevelData.GridColorType GetCartColor()
         {
             return cartColor;
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.gameObject.CompareTag("CardBase"))
+            {
+                if (other.TryGetComponent(out CardBase cardBase))
+                {
+                    var trainContainer = trainMovement.trainContainer;
+                    if (!trainContainer.isAllFull)
+                    {
+                        var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor);
+                        if (!card) return;
+                        trainContainer.TakeCard(card);
+                    }
+                }
+            }
+        }
+        
+        private void OnTriggerStay(Collider other)
+        {
+            if (other.gameObject.CompareTag("CardBase"))
+            {
+                if (other.TryGetComponent(out CardBase cardBase))
+                {
+                    var trainContainer = trainMovement.trainContainer;
+                    if (!trainContainer.isAllFull)
+                    {
+                        var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor);
+                        if (!card) return;
+                        trainContainer.TakeCard(card);
+                    }
+                }
+            }
+        }
+
+        public List<CardSlot> GetCardSlots()
+        {
+            return cardSlots;
         }
     }
 }

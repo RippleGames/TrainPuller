@@ -279,5 +279,11 @@ namespace TrainPuller.Scripts.Runtime.Managers
         {
             levelContainer = container;
         }
+
+        public void HandleExit()
+        {
+            currentlySelectedCart = null;
+            isHolding = false;
+        }
     }
 }

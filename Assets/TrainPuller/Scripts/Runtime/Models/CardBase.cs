@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TemplateProject.Scripts.Data;
 using UnityEngine;
 
 namespace TrainPuller.Scripts.Runtime.Models
@@ -15,11 +16,12 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
         }
 
-        public CardScript GetCardFromStack()
+        public CardScript TryGetCardFromStack(LevelData.GridColorType trainColor)
         {
             if (cardStack.Count <= 0) return null;
+            if (cardStack[^1].GetCardColor() != trainColor) return null;
             var card = cardStack[^1];
-            cardStack.RemoveAt(cardStack.Count-1);
+            cardStack.RemoveAt(cardStack.Count - 1);
             return card;
 
         }
