@@ -6,6 +6,7 @@ using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.LevelCreation;
 using TemplateProject.Scripts.Runtime.Models;
 using TemplateProject.Scripts.Utilities;
+using TrainPuller.Scripts.Data;
 using TrainPuller.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Utilities;
 using UnityEditor;
@@ -245,8 +246,10 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                              !stackDataColorTypes.Contains(LevelData.GridColorType.None) &&
                              !_levelData.GetGridCell(i, j).isExit)
                     {
+                        
                         var cardBase = Instantiate(cardBasePrefab, gridBaseArray[i, j].transform.position,
                             Quaternion.identity);
+                        
                         cardBase.transform.SetParent(cardParent);
                         var cartBaseScript = cardBase.GetComponent<CardBase>();
 

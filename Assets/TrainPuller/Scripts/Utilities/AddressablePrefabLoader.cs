@@ -3,6 +3,7 @@ using System.Linq;
 using DG.Tweening;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
+using TrainPuller.Scripts.Data;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEditor.AddressableAssets;
 using UnityEngine;

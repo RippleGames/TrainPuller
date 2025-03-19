@@ -14,7 +14,8 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private List<Renderer> cartRenderers;
         [SerializeField] private GameColors colors;
         [SerializeField] public Vector2Int currentGridCell;
-
+        [SerializeField] private LevelData.GridColorType cartColor;
+ 
         [SerializeField] private Queue<Vector2Int> pathQueue = new();
         private Vector3 _movementTarget;
         [SerializeField] private float moveSpeed = 10f;
@@ -145,10 +146,13 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             currentGridCell = new Vector2Int(x, y);
             var currentMaterial = colors.activeMaterials[(int)colorType];
+            
             foreach (var cartRenderer in cartRenderers)
             {
                 cartRenderer.sharedMaterial = currentMaterial;
             }
+
+            cartColor = colorType;
         }
 
         public TrainMovement GetTrainMovement()

@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using FluffyUnderware.Curvy;
-using TemplateProject.Scripts.Runtime.LevelCreation;
 using TemplateProject.Scripts.Runtime.Managers;
 using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.LevelCreation;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
-namespace TemplateProject.Scripts.Data
+namespace TrainPuller.Scripts.Data
 {
     public class LevelContainer : MonoBehaviour
     {

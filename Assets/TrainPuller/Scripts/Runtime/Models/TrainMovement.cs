@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TemplateProject.Scripts.Data;
+using TrainPuller.Scripts.Data;
 using UnityEngine;
 
 namespace TrainPuller.Scripts.Runtime.Models
