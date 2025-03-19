@@ -9,6 +9,8 @@ TagManager:
   - Missile
   - TrainCart
   - GridBase
+  - Exit
+  - CardBase
   layers:
   - Default
   - TransparentFX
