@@ -248,6 +248,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                         var cardBase = Instantiate(cardBasePrefab, gridBaseArray[i, j].transform.position,
                             Quaternion.identity);
                         cardBase.transform.SetParent(cardParent);
+                        var cartBaseScript = cardBase.AddComponent<CardBase>();
 
                         var yOffset = 0.05f;
                         var yRotation = 0f;
@@ -262,6 +263,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 card.transform.SetParent(cardBase.transform);
                                 var cardScript = card.GetComponent<CardScript>();
                                 cardScript.SetCardProperties(colorType);
+                                cartBaseScript.AddToCardStack(cardScript);
                                 yOffset += 0.1f;
                                 yRotation += 90f;
                             }
