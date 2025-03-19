@@ -174,5 +174,10 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             return pathQueue;
         }
+
+        public LevelData.GridColorType GetCartColor()
+        {
+            return cartColor;
+        }
     }
 }
