@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1963303900465078030}
   - component: {fileID: 9142361440317926232}
   - component: {fileID: 405161389314166702}
+  - component: {fileID: 6257074699553696336}
   m_Layer: 7
   m_Name: Cart
   m_TagString: TrainCart
@@ -61,6 +62,7 @@ MonoBehaviour:
   - {fileID: 482597478229077671}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   currentGridCell: {x: 0, y: 0}
+  cartColor: 0
   moveSpeed: 30
   isMoving: 0
   interactionManager: {fileID: 0}
@@ -88,6 +90,33 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 0.40631008, z: 1}
   m_Center: {x: 0, y: 0.31315506, z: 0}
+--- !u!54 &6257074699553696336
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8945072548827803857}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &5478793072420540952
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TemplateProject.Scripts.Data;
 using TrainPuller.Scripts.Data;
 using UnityEngine;
@@ -12,8 +13,11 @@ namespace TrainPuller.Scripts.Runtime.Models
         public List<CartScript> carts = new List<CartScript>();
         public LevelData.GridColorType cartsColor;
         [SerializeField] private CartScript currentLeader;
+        [SerializeField] private CartScript currentLastCart;
         [SerializeField] public List<Vector3> trainPath = new List<Vector3>();
         public bool isMovingBackwards;
+        public bool canMoveBackwards = true;
+        public bool canMoveForward = true;
         public bool isTrainMoving;
         private Vector3 _lastCartPrevPosition;
         private float _lastCartBackwardTimer;
@@ -36,8 +40,11 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void Update()
         {
-            if (!isTrainMoving) return;
             if (carts.Count == 0) return;
+
+            HandleObstacles();
+
+            if (!isTrainMoving) return;
 
             if (!currentLeader)
             {
@@ -46,12 +53,79 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             UpdateTrainPath();
 
-            for (int i = 1; i < carts.Count; i++)
+            for (var i = 1; i < carts.Count; i++)
             {
                 FollowLeader(carts[i], carts[i - 1], i);
             }
 
             CheckLastCartMovement();
+        }
+
+        private void HandleObstacles()
+        {
+            if (!isMovingBackwards)
+            {
+                if (!CheckForObstaclesForward()) return;
+                isTrainMoving = false;
+                canMoveForward = false;
+            }
+            else
+            {
+                if (!CheckForObstaclesBackwards()) return;
+                isTrainMoving = false;
+                canMoveBackwards = false;
+            }
+        }
+
+        private bool CheckForObstaclesForward()
+        {
+            if (!currentLeader) return false;
+            if (isMovingBackwards) return false;
+            var checkDistance = 0.5f;
+            var leaderTransform = currentLeader.transform;
+            var leaderPosition = leaderTransform.position;
+            var direction = leaderTransform.forward;
+            if (Physics.Raycast(leaderPosition + new Vector3(0f, 0.5f, 0f), direction, out var hit, checkDistance,
+                    LayerMask.GetMask("TrainCartLayer")))
+            {
+                if (hit.collider.CompareTag("TrainCart"))
+                {
+                    if (hit.collider.TryGetComponent(out CartScript cart))
+                    {
+                        if (cart.trainMovement != this)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private bool CheckForObstaclesBackwards()
+        {
+            if (!currentLastCart) return false;
+            if (!isMovingBackwards) return false;
+            var checkDistance = 0.5f;
+            var lastCartTransform = currentLastCart.transform;
+            var leaderPosition = lastCartTransform.position;
+            var direction = -lastCartTransform.forward;
+            if (Physics.Raycast(leaderPosition + new Vector3(0f, 0.5f, 0f), direction, out var hit, checkDistance))
+            {
+                if (hit.collider.CompareTag("TrainCart"))
+                {
+                    if (hit.collider.TryGetComponent(out CartScript cart))
+                    {
+                        if (cart.trainMovement != this)
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
 
 
@@ -76,12 +150,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                     _lastCartBackwardTimer += Time.deltaTime;
                     if (!(_lastCartBackwardTimer > backwardTimeThreshold)) return;
                     isTrainMoving = false;
-                    foreach (var cart in carts)
-                    {
-                        cart.isMoving = false;
-                    }
-
-                    isMovingBackwards = false;
+                    canMoveBackwards = false;
                 }
                 else
                 {
@@ -111,9 +180,12 @@ namespace TrainPuller.Scripts.Runtime.Models
             {
                 var gap = Vector3.Distance(carts[0].transform.position, carts[1].transform.position);
                 if (!(gap < cartSpacing)) return;
-                if (Vector3.Distance(carts[0].transform.position, trainPath[^1]) > 0.01f && trainPath.Count > 1)
+                if (trainPath.Count > 1)
                 {
-                    trainPath.RemoveAt(trainPath.Count - 1);
+                    if (Vector3.Distance(carts[0].transform.position, trainPath[^1]) > 0.01f)
+                    {
+                        trainPath.RemoveAt(trainPath.Count - 1);
+                    }
                 }
             }
         }
@@ -131,11 +203,13 @@ namespace TrainPuller.Scripts.Runtime.Models
                     var segmentDistance = Vector3.Distance(trainPath[i], trainPath[i - 1]);
                     accumulatedDistance += segmentDistance;
 
-                    if (!(accumulatedDistance >= targetDistance)) continue;
-                    var overshoot = accumulatedDistance - targetDistance;
-                    var direction = (trainPath[i - 1] - trainPath[i]).normalized;
-                    targetPosition = trainPath[i] + direction * (segmentDistance - overshoot);
-                    break;
+                    if (accumulatedDistance >= targetDistance)
+                    {
+                        var overshoot = accumulatedDistance - targetDistance;
+                        var direction = (trainPath[i - 1] - trainPath[i]).normalized;
+                        targetPosition = trainPath[i] + direction * (segmentDistance - overshoot);
+                        break;
+                    }
                 }
             }
             else
@@ -145,11 +219,13 @@ namespace TrainPuller.Scripts.Runtime.Models
                     var segmentDistance = Vector3.Distance(trainPath[i], trainPath[i - 1]);
                     accumulatedDistance += segmentDistance;
 
-                    if (!(accumulatedDistance >= targetDistance) && trainPath.Count >= 10) continue;
-                    var overshoot = accumulatedDistance - targetDistance;
-                    var direction = (trainPath[i - 1] - trainPath[i]).normalized;
-                    targetPosition = trainPath[i] + direction * (segmentDistance - overshoot);
-                    break;
+                    if (accumulatedDistance >= targetDistance || trainPath.Count is > 0 and < 50)
+                    {
+                        var overshoot = accumulatedDistance - targetDistance;
+                        var direction = (trainPath[i - 1] - trainPath[i]).normalized;
+                        targetPosition = trainPath[i] + direction * (segmentDistance - overshoot);
+                        break;
+                    }
                 }
             }
 
@@ -192,13 +268,26 @@ namespace TrainPuller.Scripts.Runtime.Models
         public void MakeLeader(CartScript selectedCart)
         {
             if (!carts.Contains(selectedCart)) return;
+            if (selectedCart == carts[0])
+            {
+                return;
+            }
+
+            var lastPositions = new List<Vector3>();
+            if (trainPath.Count > 1)
+            {
+                lastPositions = trainPath.GetRange(trainPath.Count / 2, trainPath.Count / 2 - 1);
+            }
+
             if (currentLeader && trainPath.Count > 0)
             {
                 trainPath.Clear();
+                trainPath.AddRange(lastPositions);
             }
 
             carts.Reverse();
             currentLeader = carts[0];
+            currentLastCart = carts[^1];
         }
     }
 }

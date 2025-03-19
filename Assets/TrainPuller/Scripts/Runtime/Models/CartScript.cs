@@ -15,7 +15,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private GameColors colors;
         [SerializeField] public Vector2Int currentGridCell;
         [SerializeField] private LevelData.GridColorType cartColor;
- 
+
         [SerializeField] private Queue<Vector2Int> pathQueue = new();
         private Vector3 _movementTarget;
         [SerializeField] private float moveSpeed = 10f;
@@ -46,7 +46,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         private void MoveTowardsTarget()
         {
             var targetPos = interactionManager.GetProjectedMousePositionOnTrail();
-            
+
             if (!trainMovement.isTrainMoving && !trainMovement.isMovingBackwards)
             {
                 if (interactionManager.IsPositionOnTrail(targetPos))
@@ -58,8 +58,13 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (!(Vector3.Distance(transform.position, targetPos) <= 2f)) return;
             if (interactionManager.IsPositionOnTrail(targetPos))
             {
-                transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
                 UpdateRotation(targetPos);
+                
+                if ((trainMovement.isMovingBackwards && trainMovement.canMoveBackwards) ||
+                    (!trainMovement.isMovingBackwards && trainMovement.canMoveForward))
+                {
+                    transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
+                }
 
                 if (Vector3.Distance(transform.position, _movementTarget) < 0.1f &&
                     Vector3.Distance(transform.position, targetPos) <= 0.1f)
@@ -77,7 +82,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         private void UpdateRotation(Vector3 targetPosition)
         {
             var direction = (targetPosition - transform.position).normalized;
-            if (direction.magnitude < 0.01f) return; 
+            if (direction.magnitude < 0.01f) return;
 
             var checkRange = Mathf.Min(3, trainMovement.trainPath.Count - 1);
             var averagePreviousDirection = Vector3.zero;
@@ -96,10 +101,23 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             if (isMovingBackwards)
             {
-                transform.rotation = Quaternion.Lerp(transform.rotation, Mathf.Abs(Mathf.Abs(Vector3.Angle(previousDirection, direction) - 90f)) < 20f ? Quaternion.LookRotation(-previousDirection) : Quaternion.LookRotation(-direction), moveSpeed * Time.deltaTime);
+                if (!trainMovement.canMoveForward)
+                {
+                    trainMovement.canMoveForward = true;
+                }
+
+                transform.rotation = Quaternion.Lerp(transform.rotation,
+                    Mathf.Abs(Mathf.Abs(Vector3.Angle(previousDirection, direction) - 90f)) < 20f
+                        ? Quaternion.LookRotation(-previousDirection)
+                        : Quaternion.LookRotation(-direction), moveSpeed * Time.deltaTime);
             }
             else
             {
+                if (!trainMovement.canMoveBackwards)
+                {
+                    trainMovement.canMoveBackwards = true;
+                }
+
                 transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(direction),
                     moveSpeed * Time.deltaTime);
             }
@@ -146,7 +164,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             currentGridCell = new Vector2Int(x, y);
             var currentMaterial = colors.activeMaterials[(int)colorType];
-            
+
             foreach (var cartRenderer in cartRenderers)
             {
                 cartRenderer.sharedMaterial = currentMaterial;

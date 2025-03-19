@@ -72,7 +72,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         }
 
-        private Vector3 GetNearestTrailPosition(Vector3 position)
+        public Vector3 GetNearestTrailPosition(Vector3 position)
         {
             var nearestTrailPos = Vector2Int.zero;
             var minDistance = float.MaxValue;
