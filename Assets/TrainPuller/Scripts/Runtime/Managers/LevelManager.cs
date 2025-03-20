@@ -1,3 +1,4 @@
+using DG.Tweening;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
 using TMPro;
@@ -37,6 +38,8 @@ namespace TrainPuller.Scripts.Runtime.Managers
             {
                 Application.targetFrameRate = 120;
             }
+
+            DOTween.SetTweensCapacity(500, 50);
         }
 
         private void MakeSingleton()

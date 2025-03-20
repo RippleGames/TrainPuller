@@ -39,6 +39,8 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void Update()
         {
+            if (!interactionManager) return;
+            if (!interactionManager.GetCurrentlySelectedCart()) return;
             if (isMoving && interactionManager.GetCurrentlySelectedCart() == this)
             {
                 MoveTowardsTarget();
@@ -86,18 +88,17 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             if (!trainMovement.isTrainMoving) return;
 
-            Vector3 movementDirection = (targetPosition - transform.position).normalized;
-
+            var movementDirection = (targetPosition - transform.position).normalized;
             if (movementDirection.magnitude < 0.01f) return;
 
-            Quaternion targetRotation = trainMovement.isMovingBackwards
-                ? Quaternion.LookRotation(-movementDirection)
-                : Quaternion.LookRotation(movementDirection);
+            var targetRotation = Quaternion.LookRotation(movementDirection);
+
 
             float angleDifference = Quaternion.Angle(transform.rotation, targetRotation);
-            if (Mathf.Abs(angleDifference) < 100f) 
+            if (Mathf.Abs(angleDifference) < 100f)
             {
-                transform.rotation = Quaternion.Lerp(transform.rotation, targetRotation, moveSpeed * Time.deltaTime);
+                transform.transform.eulerAngles = Vector3.Lerp(transform.rotation.eulerAngles,
+                    targetRotation.eulerAngles, moveSpeed * Time.deltaTime * 100f);
             }
         }
 
