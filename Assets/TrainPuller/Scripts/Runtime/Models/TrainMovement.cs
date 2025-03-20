@@ -14,9 +14,9 @@ namespace TrainPuller.Scripts.Runtime.Models
         public List<CartScript> carts = new List<CartScript>();
         public TrainContainer trainContainer;
         public LevelData.GridColorType cartsColor;
-        [SerializeField] private CartScript currentLeader;
+        [SerializeField] public CartScript currentLeader;
         public CartScript previousLeader;
-        [SerializeField] private CartScript currentLastCart;
+        [SerializeField] public CartScript currentLastCart;
         [SerializeField] public List<Vector3> trainPath = new List<Vector3>();
         public bool isMovingBackwards;
         public bool canMoveBackwards = true;
@@ -25,7 +25,10 @@ namespace TrainPuller.Scripts.Runtime.Models
         private Vector3 _lastCartPrevPosition;
         private float _lastCartBackwardTimer;
         public float backwardVelocityThreshold = 0.1f;
-        public float backwardTimeThreshold = 0.5f;
+        public float backwardTimeThreshold = 0.1f;
+        private bool _isLeaderChanged = false;
+        private bool isLeaderChanging = false;
+
 
         private void Start()
         {
@@ -47,12 +50,14 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             HandleObstacles();
 
+            DetectMovementDirection();
             if (!isTrainMoving) return;
 
             if (!currentLeader)
             {
                 currentLeader = carts[0];
             }
+
 
             UpdateTrainPath();
 
@@ -63,6 +68,50 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             CheckLastCartMovement();
         }
+
+
+        private void DetectMovementDirection()
+        {
+            if (isLeaderChanging) return;
+            if (!currentLeader) return;
+            if (trainPath.Count < 2) return;
+
+            Vector3 targetPosition = currentLeader.interactionManager.GetProjectedMousePositionOnTrail();
+            Vector3 movementDirection = (targetPosition - currentLeader.transform.position).normalized;
+
+            if (movementDirection.magnitude < 0.01f) return;
+
+            Vector3 lastPosition = trainPath[^1];
+            Vector3 secondLastPosition = trainPath[^2];
+
+            Vector3 previousPathDirection = (lastPosition - secondLastPosition).normalized;
+
+            if (_isLeaderChanged)
+            {
+                var dotWithPreviousLeader = -1f * Vector3.Dot(previousPathDirection, movementDirection);
+
+                isMovingBackwards = dotWithPreviousLeader < 0;
+                _isLeaderChanged = false;
+            }
+            else
+            {
+                float dot = Vector3.Dot(previousPathDirection, movementDirection);
+                isMovingBackwards = dot < 0;
+            }
+
+            if (!canMoveForward && isMovingBackwards)
+            {
+                canMoveForward = true;
+                isTrainMoving = true;
+            }
+
+            if (!canMoveBackwards && !isMovingBackwards)
+            {
+                canMoveBackwards = true;
+                isTrainMoving = true;
+            }
+        }
+
 
         private void HandleObstacles()
         {
@@ -184,6 +233,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
             else
             {
+                canMoveBackwards = true;
                 _lastCartBackwardTimer = 0f;
             }
         }
@@ -292,31 +342,33 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         public void MakeLeader(CartScript selectedCart)
         {
+            isLeaderChanging = true;
             if (!carts.Contains(selectedCart)) return;
             if (selectedCart == carts[0])
             {
                 currentLeader = carts[0];
                 previousLeader = currentLeader;
                 currentLastCart = carts[^1];
+                isLeaderChanging = false;
                 return;
             }
 
-            var lastPositions = new List<Vector3>();
-            if (trainPath.Count > 1)
+            if (trainPath.Count < 2)
             {
-                lastPositions = trainPath.GetRange(trainPath.Count / 2, trainPath.Count / 2 - 1);
+                carts.Reverse();
+                currentLeader = carts[0];
+                currentLastCart = carts[^1];
+                isLeaderChanging = false;
+                return;
             }
-
-            if (currentLeader && trainPath.Count > 0)
-            {
-                trainPath.Clear();
-                trainPath.AddRange(lastPositions);
-            }
+           
 
             previousLeader = carts[0];
             carts.Reverse();
             currentLeader = carts[0];
             currentLastCart = carts[^1];
+            _isLeaderChanged = !_isLeaderChanged;
+            isLeaderChanging = false;
         }
 
         public void GetOutFromExit(ExitBarrierScript exitBarrierScript)
