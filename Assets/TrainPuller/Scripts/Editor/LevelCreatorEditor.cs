@@ -21,7 +21,7 @@ namespace TrainPuller.Scripts.Editor
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-            serializedObject.Update(); // ✅ Ensure serialized data is up-to-date
+            serializedObject.Update();
 
             EditorGUI.BeginChangeCheck();
             _levelCreator.GenerateLevel();
@@ -174,13 +174,15 @@ namespace TrainPuller.Scripts.Editor
                     }
                     else
                     {
+                       
                         // Non-Trail logic: Stack colors from bottom to top
                         subRects = new Rect[Mathf.Min(10, subColors.Count)]; // Limit to 10 layers max
 
                         float heightStep = buttonRect.height / Mathf.Max(1, subRects.Length); // Ensure valid height
-
+                        
                         for (int i = 0; i < subRects.Length; i++)
                         {
+                            
                             subRects[i] = new Rect(buttonRect.x, buttonRect.y + (subRects.Length - 1 - i) * heightStep,
                                 buttonRect.width, heightStep);
                         }
@@ -190,6 +192,17 @@ namespace TrainPuller.Scripts.Editor
                     for (int i = 0; i < subRects.Length && i < subColors.Count; i++)
                     {
                         EditorGUI.DrawRect(subRects[i], subColors[i]);
+                        if (!cell.stackData.colorTypes.Contains(LevelData.GridColorType.Trail) && !cell.stackData.colorTypes.Contains(LevelData.GridColorType.None))
+                        {
+                            EditorGUI.LabelField(subRects[i], "-",   textStyle = new GUIStyle
+                            {
+                                fontSize = 16,
+                                fontStyle = FontStyle.Bold,
+                                normal = { textColor = Color.black },
+                                alignment = TextAnchor.MiddleRight
+                            });
+
+                        }
                     }
 
                     Handles.Label(
