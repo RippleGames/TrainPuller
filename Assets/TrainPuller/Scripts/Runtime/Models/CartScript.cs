@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
-using FluffyUnderware.Curvy.Controllers;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace TrainPuller.Scripts.Runtime.Models
 {
@@ -23,17 +22,14 @@ namespace TrainPuller.Scripts.Runtime.Models
         private Vector3 _movementDirection;
         public bool isMoving;
         public InteractionManager interactionManager;
-        public bool isMovingBackwards;
-        public Vector3 previousDirection;
-        public Quaternion previousRotation;
         public GridBase[,] gridBases;
-        private Vector3 previousLeaderPosition;
+        private Vector3 _previousLeaderPosition;
 
 
         public void StopMovement()
         {
             isMoving = false;
-            trainMovement.isTrainMoving = false;
+            trainMovement.StopMovement();
             pathQueue.Clear();
         }
 
@@ -59,7 +55,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 }
             }
 
-            if (!(Vector3.Distance(transform.position, targetPos) <= 2f)) return;
+            if (!(Vector3.Distance(transform.position, targetPos) <= 1f)) return;
 
             if (interactionManager.IsPositionOnTrail(targetPos))
             {
@@ -88,18 +84,33 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             if (!trainMovement.isTrainMoving) return;
 
-            var movementDirection = (targetPosition - transform.position).normalized;
+            // Hareket yönünü hesapla
+            Vector3 movementDirection = (targetPosition - transform.position).normalized;
+            movementDirection.y = 0;
+
             if (movementDirection.magnitude < 0.01f) return;
 
-            var targetRotation = Quaternion.LookRotation(movementDirection);
+            // **Eğer gidilen yön, trenin yönünün tam tersi ise dönüş yapma**
+            float dot = Vector3.Dot(transform.forward, movementDirection);
+            if (dot < -0.9f) return;
 
+            // **Mevcut yön ile hedef yön arasındaki açıyı hesapla**
+            float angleDifference = Vector3.SignedAngle(-transform.forward, movementDirection, Vector3.up);
 
-            float angleDifference = Quaternion.Angle(transform.rotation, targetRotation);
-            if (Mathf.Abs(angleDifference) < 100f)
+            // **Yön kontrolü yaparak sola -90°, sağa +90° dönüş uygula**
+            if (angleDifference > 0)
             {
-                transform.transform.eulerAngles = Vector3.Lerp(transform.rotation.eulerAngles,
-                    targetRotation.eulerAngles, moveSpeed * Time.deltaTime * 100f);
+                angleDifference = 90f; // Sağa dönüş
             }
+            else if (angleDifference < 0)
+            {
+                angleDifference = -90f; // Sola dönüş
+            }
+
+            // **Yeni hedef rotasyonu uygula**
+            Quaternion targetRotation = Quaternion.Euler(0, transform.eulerAngles.y + angleDifference, 0);
+            transform.rotation =
+                Quaternion.RotateTowards(transform.rotation, targetRotation, 50f * moveSpeed * Time.deltaTime);
         }
 
 
@@ -183,6 +194,45 @@ namespace TrainPuller.Scripts.Runtime.Models
                         var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor);
                         if (!card) return;
                         trainContainer.TakeCard(card);
+                    }
+                }
+            }
+
+            if (other.CompareTag("TrainCart") || other.CompareTag("Exit"))
+            {
+                if (other.TryGetComponent(out CartScript cart))
+                {
+                    if (cart.trainMovement != trainMovement)
+                    {
+                        if (trainMovement.isMovingBackwards)
+                        {
+                            trainMovement.HandleBackCollision();
+                        }
+                        else
+                        {
+                            trainMovement.HandleFrontCollision();
+                        }
+                    }
+                }
+
+                if (other.TryGetComponent(out ExitBarrierScript exitBarrierScript))
+                {
+                    if (trainMovement.trainContainer.isAllFull)
+                    {
+                        trainMovement.GetOutFromExit(exitBarrierScript);
+                    }
+
+                    trainMovement.HandleFrontCollision();
+                }
+            }
+
+            if (other.CompareTag("BackwardsEnd"))
+            {
+                if (other.TryGetComponent(out BackwardsEnd backwardsEnd))
+                {
+                    if (backwardsEnd.GetTrainMovement() == trainMovement)
+                    {
+                        trainMovement.HandleBackwardsMovement();
                     }
                 }
             }

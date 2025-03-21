@@ -11,6 +11,7 @@ TagManager:
   - GridBase
   - Exit
   - CardBase
+  - BackwardsEnd
   layers:
   - Default
   - TransparentFX

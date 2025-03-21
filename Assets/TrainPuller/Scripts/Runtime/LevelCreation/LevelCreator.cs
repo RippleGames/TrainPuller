@@ -24,6 +24,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         [SerializeField] private GameObject cardBasePrefab;
         [SerializeField] private GameObject cardPrefab;
         [SerializeField] private GameObject exitPrefab;
+        [SerializeField] private GameObject backwardsEndPrefab;
         [SerializeField] private GameColors gameColors;
         [SerializeField] private AddressablePrefabSaver prefabSaver;
         [SerializeField] private AddressablePrefabLoader prefabLoader;
@@ -45,6 +46,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         [SerializeField] private int levelTime;
         [SerializeField] private LevelData.GridColorType colorTypes;
         public bool isExit;
+        public bool isBarrier;
 
         [Header("Constant Variables")] [SerializeField]
         private float spaceModifier;
@@ -228,6 +230,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 trainParent.transform.SetParent(trainCartParent.transform);
                                 trainMovement = trainParent.AddComponent<TrainMovement>();
                                 trainContainer = trainParent.AddComponent<TrainContainer>();
+                                trainMovement.backwardsEndPrefab = backwardsEndPrefab;
                                 trainContainer.trainMovement = trainMovement;
                                 trainMovement.trainContainer = trainContainer;
                                 trainMovement.speed = 30f;
@@ -281,7 +284,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                         var exitBarrier = Instantiate(exitPrefab, gridBaseArray[i, j].transform.position,
                             Quaternion.identity).GetComponent<ExitBarrierScript>();
                         exitBarrier.transform.SetParent(exitParent);
-                        exitBarrier.SetBarrierProperties(stackDataColorTypes[^1]);
+                        // exitBarrier.SetBarrierProperties(stackDataColorTypes[^1]);
                         if (i == gridWidth - 1)
                         {
                             var barrierTransform = exitBarrier.transform;

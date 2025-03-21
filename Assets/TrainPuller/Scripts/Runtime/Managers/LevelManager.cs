@@ -120,5 +120,11 @@ namespace TrainPuller.Scripts.Runtime.Managers
             startLevelTMP.text = "LEVEL " + totalPlayedLevelCount;
             UIManager.instance.OpenLevelText();
         }
+
+        [ContextMenu("Increase Level")]
+        public void IncreaseLevel()
+        {
+            LevelIncrease();
+        }
     }
 }

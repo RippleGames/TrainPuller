@@ -118,7 +118,7 @@ Transform:
   m_GameObject: {fileID: 2335115113143668337}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0.22}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0.37}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -272,7 +272,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   trainMovement: {fileID: 0}
-  cartSplineController: {fileID: 0}
   cartRenderers:
   - {fileID: 4851352742761153525}
   - {fileID: 8628716725381603180}
@@ -303,9 +302,6 @@ MonoBehaviour:
   moveSpeed: 30
   isMoving: 0
   interactionManager: {fileID: 0}
-  isMovingBackwards: 0
-  previousDirection: {x: 0, y: 0, z: 0}
-  previousRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!65 &405161389314166702
 BoxCollider:
   m_ObjectHideFlags: 0
