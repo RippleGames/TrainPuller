@@ -105,11 +105,11 @@ namespace TrainPuller.Scripts.Runtime.Models
                 targetRotation = Quaternion.Euler(0, targetRotation.eulerAngles.y + fixedAngle, 0);
             }
 
-            if (Quaternion.Angle(follower.transform.rotation, targetRotation) > 95f) return;
+            if (Quaternion.Angle(follower.transform.rotation, targetRotation) > 120f) return;
             follower.transform.rotation = Quaternion.RotateTowards(
                 follower.transform.rotation,
                 targetRotation,
-                100f * moveSpeed * Time.fixedDeltaTime
+                30f * moveSpeed * Time.fixedDeltaTime
             );
         }
 

@@ -90,7 +90,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             return GetWorldPositionFromGrid(nearestTrailPos);
         }
 
-        private Vector3 ProjectPositionOnTrail(Vector3 mousePos, Vector2Int gridPos)
+        public Vector3 ProjectPositionOnTrail(Vector3 mousePos, Vector2Int gridPos)
         {
             var gridWorldPos = GetWorldPositionFromGrid(gridPos);
 
