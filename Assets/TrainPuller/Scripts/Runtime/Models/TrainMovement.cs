@@ -47,6 +47,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                 cart.gridBases = levelContainer.GetGridBases();
             }
 
+            carts[0].transform.rotation = Quaternion.Euler(new Vector3(carts[0].transform.eulerAngles.x,
+                carts[0].transform.eulerAngles.y - 180f, carts[0].transform.eulerAngles.z));
             HandlePathInitial();
 
 
@@ -361,7 +363,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             direction.y = 0;
             var targetRotation = Quaternion.LookRotation(direction);
-                
+
             var angleDifference = Quaternion.Angle(follower.transform.rotation, targetRotation);
 
             if (angleDifference > 90f)
@@ -448,8 +450,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         }
 
         public void HandleBackwardsMovement()
-        { 
-            
+        {
             if (carts.Count < 2) return;
             if (!isMovingBackwards) return;
             if (!isTrainMoving) return;

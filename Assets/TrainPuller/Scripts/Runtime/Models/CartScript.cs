@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Models;
@@ -59,7 +60,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             if (interactionManager.IsPositionOnTrail(targetPos))
             {
-                UpdateRotation(targetPos);
+                UpdateRotation(this, targetPos);
 
                 if ((trainMovement.isMovingBackwards && trainMovement.canMoveBackwards) ||
                     (!trainMovement.isMovingBackwards && trainMovement.canMoveForward))
@@ -79,38 +80,37 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
         }
 
-
-        private void UpdateRotation(Vector3 targetPosition)
+        private void UpdateRotation(CartScript follower, Vector3 targetPosition)
         {
-            if (!trainMovement.isTrainMoving) return;
+            var followerPosition = follower.transform.position;
+            var direction = ((targetPosition + followerPosition) / 2 - followerPosition).normalized;
 
-            // Hareket yönünü hesapla
-            Vector3 movementDirection = (targetPosition - transform.position).normalized;
-            movementDirection.y = 0;
+            if (direction.magnitude < 0.01f) return;
 
-            if (movementDirection.magnitude < 0.01f) return;
+            direction.y = 0;
+            var movementDirection = (targetPosition - transform.position).normalized;
+            var dot = Vector3.Dot(transform.forward, movementDirection);
 
-            // **Eğer gidilen yön, trenin yönünün tam tersi ise dönüş yapma**
-            float dot = Vector3.Dot(transform.forward, movementDirection);
-            if (dot < -0.9f) return;
+            var targetRotation = Quaternion.LookRotation(direction);
+            var angleDifference = Vector3.SignedAngle(follower.transform.forward, direction, Vector3.up);
 
-            // **Mevcut yön ile hedef yön arasındaki açıyı hesapla**
-            float angleDifference = Vector3.SignedAngle(-transform.forward, movementDirection, Vector3.up);
+            if (Mathf.Abs(angleDifference) <= 1f) return;
 
-            // **Yön kontrolü yaparak sola -90°, sağa +90° dönüş uygula**
-            if (angleDifference > 0)
+            if (trainMovement.isMovingBackwards)
             {
-                angleDifference = 90f; // Sağa dönüş
-            }
-            else if (angleDifference < 0)
-            {
-                angleDifference = -90f; // Sola dönüş
+                var offset = 180f * ((dot * (trainMovement.isMovingBackwards ? -1f : 1f) <= 0) ? -1f : 1f);
+
+                var fixedAngle =
+                    Mathf.DeltaAngle(targetRotation.eulerAngles.y, targetRotation.eulerAngles.y + offset);
+                targetRotation = Quaternion.Euler(0, targetRotation.eulerAngles.y + fixedAngle, 0);
             }
 
-            // **Yeni hedef rotasyonu uygula**
-            Quaternion targetRotation = Quaternion.Euler(0, transform.eulerAngles.y + angleDifference, 0);
-            transform.rotation =
-                Quaternion.RotateTowards(transform.rotation, targetRotation, 50f * moveSpeed * Time.deltaTime);
+            if (Quaternion.Angle(follower.transform.rotation, targetRotation) > 95f) return;
+            follower.transform.rotation = Quaternion.RotateTowards(
+                follower.transform.rotation,
+                targetRotation,
+                100f * moveSpeed * Time.fixedDeltaTime
+            );
         }
 
 

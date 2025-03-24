@@ -53,7 +53,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (takenCard == null) return;
             emptySlot.isEmpty = false;
             takenCard.transform.SetParent(emptySlot.cartSlotTransform);
-            var midPoint = (takenCard.transform.localPosition + Vector3.zero) / 2;
+            var midPoint = (takenCard.transform.localPosition + emptySlot.cartSlotTransform.localPosition) / 2;
             midPoint.y += 1f;
             var path = new[] { takenCard.transform.localPosition, midPoint, Vector3.zero };
 
