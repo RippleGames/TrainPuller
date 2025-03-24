@@ -17,6 +17,7 @@ namespace TemplateProject.Scripts.Data
         public List<GridCell> adjacentCells;
         public bool isTrainSpawned;
         public bool isExit;
+        public bool isBarrier;
     }
 
     [Serializable]
@@ -33,7 +34,7 @@ namespace TemplateProject.Scripts.Data
             Orange = 6,
             Pink = 7,
             Trail = 8,
-            Close = 9
+            Barrier = 9
         }
 
         [Serializable]
@@ -71,10 +72,11 @@ namespace TemplateProject.Scripts.Data
         public GridCell[,] GetGrid() => gridCells;
         public GridCell GetGridCell(int x, int y) => gridCells[x, y];
 
-        public void SetCellColor(int x, int y, GridColorType stackColor, bool exit, int subIndex)
+        public void SetCellColor(int x, int y, GridColorType stackColor, bool isExit, bool isBarrier, int subIndex)
         {
             var cell = gridCells[x, y];
-            cell.isExit = exit;
+            cell.isExit = isExit;
+            cell.isBarrier = isBarrier;
             if (cell.stackData.colorTypes == null)
             {
                 cell.stackData.colorTypes = new List<LevelData.GridColorType>();
@@ -90,6 +92,12 @@ namespace TemplateProject.Scripts.Data
             else
             {
                 if (cell.isExit)
+                {
+                    cell.stackData.colorTypes[0] = stackColor;
+                    gridCells[x, y] = cell;
+                    return;
+                } 
+                if (cell.isBarrier)
                 {
                     cell.stackData.colorTypes[0] = stackColor;
                     gridCells[x, y] = cell;
@@ -120,6 +128,7 @@ namespace TemplateProject.Scripts.Data
             cell.stackData.colorTypes.Clear();
             cell.stackData.colorTypes.Add(LevelData.GridColorType.None);
             cell.isExit = false;
+            cell.isBarrier = false;
             gridCells[x, y] = cell;
         }
     }

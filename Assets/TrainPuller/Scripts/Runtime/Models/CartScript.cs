@@ -152,7 +152,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             currentGridCell = new Vector2Int(x, y);
             var currentMaterial = colors.activeMaterials[(int)colorType];
-            
+
             foreach (var cartRenderer in cartRenderers)
             {
                 cartRenderer.sharedMaterial = currentMaterial;
@@ -236,6 +236,27 @@ namespace TrainPuller.Scripts.Runtime.Models
                     }
                 }
             }
+
+            if (other.CompareTag("RoadBarrier"))
+            {
+                if (other.TryGetComponent(out RoadBarrierScript roadBarrierScript))
+                {
+                    if (!roadBarrierScript.GetIsOpen())
+                    {
+                        if (roadBarrierScript.GetColor() == trainMovement.cartsColor)
+                        {
+                            if (!roadBarrierScript.TryOpenBarrier(trainMovement.cartsColor))
+                            {
+                                trainMovement.HandleFrontCollision();
+                            }
+                        }
+                        else
+                        {
+                            trainMovement.HandleFrontCollision();
+                        }
+                    }
+                }
+            }
         }
 
         private void OnTriggerStay(Collider other)
@@ -253,6 +274,24 @@ namespace TrainPuller.Scripts.Runtime.Models
                     }
                 }
             }
+
+            // if (other.CompareTag("RoadBarrier"))
+            // {
+            //     if (other.TryGetComponent(out RoadBarrierScript roadBarrierScript))
+            //     {
+            //         if (roadBarrierScript.GetColor() == trainMovement.cartsColor)
+            //         {
+            //             if (!roadBarrierScript.TryOpenBarrier(trainMovement.cartsColor))
+            //             {
+            //                 trainMovement.HandleFrontCollision();
+            //             }
+            //         }
+            //         else
+            //         {
+            //             trainMovement.HandleFrontCollision();
+            //         }
+            //     }
+            // }
         }
 
         public List<CardSlot> GetCardSlots()

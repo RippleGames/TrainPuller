@@ -42,7 +42,7 @@ namespace TrainPuller.Scripts.Editor
                 Undo.RecordObject(_levelCreator, "Change Level");
                 EditorUtility.SetDirty(_levelCreator);
                 serializedObject.ApplyModifiedProperties();
-                Repaint(); 
+                Repaint();
             }
         }
 
@@ -146,7 +146,18 @@ namespace TrainPuller.Scripts.Editor
                         else
                         {
                             text += "," + "E";
-                        } 
+                        }
+                    }
+                    else if (cell.isBarrier)
+                    {
+                        if (text == "")
+                        {
+                            text += "B";
+                        }
+                        else
+                        {
+                            text += "," + "B";
+                        }
                     }
 
                     var buttonRect = GUILayoutUtility.GetRect(new GUIContent(text), style, GUILayout.Width(50),
@@ -174,34 +185,31 @@ namespace TrainPuller.Scripts.Editor
                     }
                     else
                     {
-                       
                         // Non-Trail logic: Stack colors from bottom to top
                         subRects = new Rect[Mathf.Min(10, subColors.Count)]; // Limit to 10 layers max
 
                         float heightStep = buttonRect.height / Mathf.Max(1, subRects.Length); // Ensure valid height
-                        
+
                         for (int i = 0; i < subRects.Length; i++)
                         {
-                            
                             subRects[i] = new Rect(buttonRect.x, buttonRect.y + (subRects.Length - 1 - i) * heightStep,
                                 buttonRect.width, heightStep);
                         }
-
                     }
-                    
+
                     for (int i = 0; i < subRects.Length && i < subColors.Count; i++)
                     {
                         EditorGUI.DrawRect(subRects[i], subColors[i]);
-                        if (!cell.stackData.colorTypes.Contains(LevelData.GridColorType.Trail) && !cell.stackData.colorTypes.Contains(LevelData.GridColorType.None))
+                        if (!cell.stackData.colorTypes.Contains(LevelData.GridColorType.Trail) &&
+                            !cell.stackData.colorTypes.Contains(LevelData.GridColorType.None))
                         {
-                            EditorGUI.LabelField(subRects[i], "-",   textStyle = new GUIStyle
+                            EditorGUI.LabelField(subRects[i], "-", textStyle = new GUIStyle
                             {
                                 fontSize = 16,
                                 fontStyle = FontStyle.Bold,
                                 normal = { textColor = Color.black },
                                 alignment = TextAnchor.MiddleRight
                             });
-
                         }
                     }
 
@@ -222,8 +230,8 @@ namespace TrainPuller.Scripts.Editor
                             case 0:
                                 _levelCreator.GridButtonAction(x, y, o);
                                 break;
-            
-                            case 1: 
+
+                            case 1:
                                 _levelCreator.GridRemoveButtonAction(x, y, o);
                                 break;
                         }

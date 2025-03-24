@@ -12,6 +12,7 @@ TagManager:
   - Exit
   - CardBase
   - BackwardsEnd
+  - RoadBarrier
   layers:
   - Default
   - TransparentFX
