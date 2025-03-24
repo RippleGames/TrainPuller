@@ -178,11 +178,11 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
                     if (cell.stackData.colorTypes.Contains(LevelData.GridColorType.Trail))
                     {
-                        gridBaseScript.Init(null, false, x, y);
+                        gridBaseScript.Init(false, x, y);
                     }
                     else
                     {
-                        gridBaseScript.Init(null, false, x, y);
+                        gridBaseScript.Init(false, x, y);
                     }
                 }
             }
@@ -220,16 +220,15 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                         stackDataColorTypes = stackDataColorTypes.Distinct().ToList();
                         if (stackDataColorTypes.Count > 1)
                         {
-                            var trainMovement =
-                                trainParentList.FirstOrDefault(x => x.cartsColor == stackDataColorTypes[1]);
-                            var trainParent = trainMovement?.gameObject;
-                            var trainContainer = trainParent?.GetComponent<TrainContainer>();
-                            if (!trainParent)
+                            var trainMovementList =
+                                trainParentList.Where(x => x.cartsColor == stackDataColorTypes[1]).ToList();
+
+                            if (trainMovementList.Count <= 0)
                             {
-                                trainParent = new GameObject("Train Parent");
+                                var trainParent = new GameObject("Train Parent");
                                 trainParent.transform.SetParent(trainCartParent.transform);
-                                trainMovement = trainParent.AddComponent<TrainMovement>();
-                                trainContainer = trainParent.AddComponent<TrainContainer>();
+                                var trainMovement = trainParent.AddComponent<TrainMovement>();
+                                var trainContainer = trainParent.AddComponent<TrainContainer>();
                                 trainMovement.backwardsEndPrefab = backwardsEndPrefab;
                                 trainContainer.trainMovement = trainMovement;
                                 trainMovement.trainContainer = trainContainer;
@@ -237,26 +236,64 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 trainMovement.cartSpacing = 1;
                                 trainMovement.cartsColor = stackDataColorTypes[1];
                                 trainParentList.Add(trainMovement);
+                                trainMovementList =
+                                    trainParentList.Where(x => x.cartsColor == stackDataColorTypes[1]).ToList();
                             }
 
-                            var trainCart = Instantiate(trainCartPrefab, gridBaseArray[i, j].transform.position,
-                                Quaternion.identity);
-                            trainCart.transform.SetParent(trainParent.transform);
-                            var cartScript = trainCart.GetComponent<CartScript>();
-                            cartScript.SetCartProperties(i, j, stackDataColorTypes[1]);
-                            if (trainMovement.carts.Contains(cartScript)) continue;
-                            trainMovement.carts.Add(cartScript);
-                            cartScript.SetTrainMovementScript(trainMovement);
+                            for (var t = 0; t < trainMovementList.Count; t++)
+                            {
+                                var trainMovement = trainMovementList[t];
+                                var isNeighborToTrain = GetIsNeighborToTrain(trainMovement, i, j);
+                                var trainParent = trainMovement.gameObject;
+                                var trainContainer = trainParent.GetComponent<TrainContainer>();
+
+                                if (!isNeighborToTrain)
+                                {
+                                    if (t == trainMovementList.Count - 1)
+                                    {
+                                        trainParent = new GameObject("Train Parent");
+                                        trainParent.transform.SetParent(trainCartParent.transform);
+                                        var newTrainMovement = trainParent.AddComponent<TrainMovement>();
+                                        trainContainer = trainParent.AddComponent<TrainContainer>();
+                                        newTrainMovement.backwardsEndPrefab = backwardsEndPrefab;
+                                        trainContainer.trainMovement = trainMovement;
+                                        newTrainMovement.trainContainer = trainContainer;
+                                        newTrainMovement.speed = 30f;
+                                        newTrainMovement.cartSpacing = 1;
+                                        newTrainMovement.cartsColor = stackDataColorTypes[1];
+                                        trainParentList.Add(newTrainMovement);
+                                        trainMovement = newTrainMovement;
+                                        trainParent = newTrainMovement.gameObject;
+                                    }
+                                    else
+                                    {
+                                        continue;
+                                    }
+                              
+                                }
+                            
+                                var trainCart = Instantiate(trainCartPrefab, gridBaseArray[i, j].transform.position,
+                                    Quaternion.identity);
+                                trainCart.transform.SetParent(trainParent.transform);
+                                var trainCartRotation = GetCartRotation(i, j);
+                                trainCart.transform.eulerAngles = trainCartRotation;
+                                var cartScript = trainCart.GetComponent<CartScript>();
+                                cartScript.SetCartProperties(i, j, stackDataColorTypes[1]);
+                                if (trainMovement.carts.Contains(cartScript)) continue;
+                                trainMovement.carts.Add(cartScript);
+                                trainMovement.cartCells.Add(_gridBases[i, j]);
+                                cartScript.SetTrainMovementScript(trainMovement);
+                                break;
+                            }
                         }
                     }
                     else if (stackDataColorTypes.Count >= 1 &&
                              !stackDataColorTypes.Contains(LevelData.GridColorType.None) &&
                              !_levelData.GetGridCell(i, j).isExit)
                     {
-                        
                         var cardBase = Instantiate(cardBasePrefab, gridBaseArray[i, j].transform.position,
                             Quaternion.identity);
-                        
+
                         cardBase.transform.SetParent(cardParent);
                         var cartBaseScript = cardBase.GetComponent<CardBase>();
 
@@ -292,7 +329,8 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             barrierTransform.eulerAngles += new Vector3(0f, -90f, 0f);
                         }
                         else if (i == 0)
-                        {    var barrierTransform = exitBarrier.transform;
+                        {
+                            var barrierTransform = exitBarrier.transform;
                             barrierTransform.position -= new Vector3(0.3f, 0, 0);
                             barrierTransform.eulerAngles += new Vector3(0f, 90f, 0f);
                         }
@@ -301,7 +339,6 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             var barrierTransform = exitBarrier.transform;
                             barrierTransform.position += new Vector3(0f, 0f, 0.3f);
                             barrierTransform.eulerAngles += new Vector3(0f, 180f, 0f);
-                            
                         }
                         else if (j == 0)
                         {
@@ -317,8 +354,85 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                 trainMovement.trainContainer.SetCartSlots(trainMovement.carts);
                 EditorUtility.SetDirty(trainMovement.gameObject);
             }
-            
-            
+        }
+
+        private bool GetIsNeighborToTrain(TrainMovement trainMovement, int x, int y)
+        {
+            if (!trainMovement) return false;
+            if (trainMovement.carts.Count == 0) return true;
+            var isNeighbor = false;
+            var currentGridCell = _gridBases[x, y];
+            foreach (var cartCell in trainMovement.cartCells)
+            {
+                if (cartCell.GetNeighbors().Contains(currentGridCell))
+                {
+                    isNeighbor = true;
+                }
+            }
+
+            return isNeighbor;
+        }
+
+        private Vector3 GetCartRotation(int x, int y)
+        {
+            var neighbors = _gridBases[x, y].GetNeighbors();
+            var isHorizontal = true;
+            var isVertical = true;
+            var isHorizontalRight = false;
+            var isVerticalDown = false;
+            var cartGridCell = _levelData.GetGridCell(x, y);
+            foreach (var neighbor in neighbors)
+            {
+                var neighborX = neighbor.GetXAxis();
+                var neighborY = neighbor.GetYAxis();
+                var neighborGridCell = _levelData.GetGridCell(neighborX, neighborY);
+                if (neighborGridCell.isExit ||
+                    neighborGridCell.stackData.colorTypes[^1] != cartGridCell.stackData.colorTypes[^1]) continue;
+
+                if (!isHorizontalRight && x > neighborX && y == neighborY)
+                {
+                    isHorizontalRight = true;
+                }
+
+                if (!isVerticalDown && y > neighborY && x == neighborX)
+                {
+                    isVerticalDown = true;
+                }
+
+                isVertical = isVertical && neighborX == x;
+
+                isHorizontal = isHorizontal && neighborY == y;
+            }
+
+            if (!isHorizontal && !isVertical)
+            {
+                if (isHorizontalRight && !isVerticalDown)
+                {
+                    return new Vector3(0f, 45f, 0f);
+                }
+
+                if (isHorizontalRight && isVerticalDown)
+                {
+                    return new Vector3(0f, -45f, 0f);
+                }
+
+                if (!isHorizontalRight && !isVerticalDown)
+                {
+                    return new Vector3(0f, -45f, 0f);
+                }
+
+                if (!isHorizontalRight && isVerticalDown)
+                {
+                    return new Vector3(0f, 45f, 0f);
+                }
+            }
+
+            if (isHorizontal && !isVertical)
+            {
+                return new Vector3(0f, 90f, 0f);
+            }
+
+            return Vector3.zero;
         }
 
         private void HandleRoadPrefabs(GridBase[,] gridBaseArray, Transform parent)

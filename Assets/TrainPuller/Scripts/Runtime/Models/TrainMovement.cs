@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using TemplateProject.Scripts.Data;
+using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Data;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         public float speed = 5f;
         public float cartSpacing = 1f;
         public List<CartScript> carts = new List<CartScript>();
+        public List<GridBase> cartCells = new List<GridBase>();
         public TrainContainer trainContainer;
         public InteractionManager interactionManager;
         public LevelData.GridColorType cartsColor;
@@ -352,6 +354,10 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             isMovingBackwards = false;
             isTrainMoving = false;
+            foreach (var cart in carts)
+            {
+                cart.isMoving = false;
+            }
         }
 
         public void HandleBackCollision()

@@ -39,7 +39,7 @@ namespace TemplateProject.Scripts.Mechanic
 
                 foreach (var neighbor in GetNeighbors(currentNode))
                 {
-                    if (neighbor.GetVisited() || neighbor.GetIsClosed() || closedSet.Contains(neighbor) || neighbor.GetStickman())
+                    if (neighbor.GetVisited() || neighbor.GetIsClosed() || closedSet.Contains(neighbor))
                         continue;
 
                     var newGCost = currentNode.GetGCost() + GetDistance(currentNode, neighbor);

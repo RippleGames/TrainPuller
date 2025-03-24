@@ -96,7 +96,6 @@ namespace TemplateProject.Scripts.Runtime.Models
 
         private void DissociateStickman()
         {
-            belongedGrid.DissociateStickman();
             belongedGrid = null;
         }
 

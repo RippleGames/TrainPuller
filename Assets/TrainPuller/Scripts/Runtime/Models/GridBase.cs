@@ -7,9 +7,7 @@ namespace TemplateProject.Scripts.Runtime.Models
 {
     public class GridBase : MonoBehaviour
     {
-        [Header("Cached References")] [SerializeField]
-        protected Stickman stickman;
-
+        [Header("Cached References")]
         [SerializeField] private Renderer gridRenderer;
         [SerializeField] private GameObject wallObject;
         [SerializeField] private GridBase parent;
@@ -54,27 +52,11 @@ namespace TemplateProject.Scripts.Runtime.Models
             // }
         }
 
-        public void Init(Stickman stkMan, bool flag, int xAxis, int yAxis)
+        public void Init(bool flag, int xAxis, int yAxis)
         {
             x = xAxis;
             y = yAxis;
 
-            if (!stkMan)
-            {
-                if (!flag) return;
-                isClosed = true;
-                EnableWall();
-
-                return;
-            }
-
-            stickman = stkMan;
-        }
-
-        private void EnableWall()
-        {
-            gridRenderer.enabled = false;
-            wallObject.SetActive(true);
         }
 
         public void ResetVisited()
@@ -82,10 +64,6 @@ namespace TemplateProject.Scripts.Runtime.Models
             visited = false;
         }
 
-        public void DissociateStickman()
-        {
-            stickman = null;
-        }
 
         // public List<GridBase> GetClosestPath()
         // {
@@ -146,12 +124,6 @@ namespace TemplateProject.Scripts.Runtime.Models
         {
             return isClosed;
         }
-
-        public bool GetStickman()
-        {
-            return stickman;
-        }
-
         public void SetVisited(bool flag)
         {
             visited = flag;

@@ -152,7 +152,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             currentGridCell = new Vector2Int(x, y);
             var currentMaterial = colors.activeMaterials[(int)colorType];
-
+            
             foreach (var cartRenderer in cartRenderers)
             {
                 cartRenderer.sharedMaterial = currentMaterial;
