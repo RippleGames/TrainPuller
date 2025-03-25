@@ -106,23 +106,28 @@ namespace TrainPuller.Scripts.Utilities
 
         private void HandleTransitions()
         {
-            DOVirtual.DelayedCall(Random.Range(0f, 0.5f), () =>
-            {
+            // DOVirtual.DelayedCall(Random.Range(0f, 0.5f), () =>
+            // {
                 UIManager.instance.OpenTransition(null);
-                DOVirtual.DelayedCall(Random.Range(0.5f, 1f), () =>
-                {
-                    UIManager.instance.CloseLoadingScreen();
-                    UIManager.instance.CloseTransition(() =>
-                    {
-                        TimeManager.instance.SetTimerTMP(UIManager.instance.GetTimerTMP(),
-                            UIManager.instance.GetStartLevelTimeTMP());
-                        LevelManager.instance.SetLevelTMP(UIManager.instance.GetLevelTMP(),
-                            UIManager.instance.GetStartLevelTMP());
-                        UIManager.instance.EnableSettingsButton();
-                        UIManager.instance.OpenStartScreen();
-                    });
-                });
-            });
+                // DOVirtual.DelayedCall(Random.Range(0.5f, 1f), () =>
+                // {
+                TimeManager.instance.SetTimerTMP(UIManager.instance.GetTimerTMP(),
+                    UIManager.instance.GetStartLevelTimeTMP());
+                LevelManager.instance.SetLevelTMP(UIManager.instance.GetLevelTMP(),
+                    UIManager.instance.GetStartLevelTMP());
+                UIManager.instance.EnableSettingsButton();
+                    // UIManager.instance.CloseLoadingScreen();
+                    // UIManager.instance.CloseTransition(() =>
+                    // {
+                    //     TimeManager.instance.SetTimerTMP(UIManager.instance.GetTimerTMP(),
+                    //         UIManager.instance.GetStartLevelTimeTMP());
+                    //     LevelManager.instance.SetLevelTMP(UIManager.instance.GetLevelTMP(),
+                    //         UIManager.instance.GetStartLevelTMP());
+                    //     UIManager.instance.EnableSettingsButton();
+                    //     // UIManager.instance.OpenStartScreen();
+                    // });
+            //     });
+            // });
         }
 
         private void OnDestroy()

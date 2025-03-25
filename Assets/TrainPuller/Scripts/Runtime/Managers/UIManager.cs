@@ -1,48 +1,56 @@
 using System;
 using System.Collections;
 using DG.Tweening;
+using TemplateProject.Scripts.Runtime.Managers;
 using TMPro;
-using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace TemplateProject.Scripts.Runtime.Managers
+namespace TrainPuller.Scripts.Runtime.Managers
 {
     public class UIManager : MonoBehaviour
     {
         public static UIManager instance;
-        
-        [Header("Cached References")] 
-        [SerializeField] private Image screenTransitionImage;
+
+        [Header("Cached References")] [SerializeField]
+        private Image screenTransitionImage;
+
         [SerializeField] private GameObject loadingScreen;
         [SerializeField] private GameObject startScreen;
         [SerializeField] private GameObject loseScreen;
         [SerializeField] private GameObject levelCompleteConfetti;
         [SerializeField] private GameObject youWinObject;
 
-        [Header("Timer References")] 
-        [SerializeField] private GameObject timerParent;
+        [Header("Timer References")] [SerializeField]
+        private GameObject timerParent;
+
         [SerializeField] private TextMeshProUGUI timerTMP;
         private bool isTimerBlinking;
 
-        [Header("Start Screen References")] 
-        [SerializeField] private TextMeshProUGUI startScreenLevelTMP;
+        [Header("Start Screen References")] [SerializeField]
+        private TextMeshProUGUI startScreenLevelTMP;
+
         [SerializeField] private TextMeshProUGUI startScreenTimerTMP;
 
-        [Header("Lose Screen References")] 
-        [SerializeField] private TextMeshProUGUI loseTitleTMP;
+        [Header("Lose Screen References")] [SerializeField]
+        private TextMeshProUGUI loseTitleTMP;
 
-        [Header("Level Text References")]
-        [SerializeField] private GameObject levelTextParent;
+        [Header("Level Text References")] [SerializeField]
+        private GameObject levelTextParent;
+
         [SerializeField] private TextMeshProUGUI levelTMP;
 
-        [Header("Settings References")] 
-        [SerializeField] private GameObject settingsPanel;
+        [Header("Settings References")] [SerializeField]
+        private GameObject settingsPanel;
+
         [SerializeField] private GameObject settingsButton;
         [SerializeField] private Slider audioSlider;
         [SerializeField] private Slider vibrationSlider;
 
-
+        [Header("Debug Settings")] 
+        [SerializeField] private bool isDebug;
+        private int _debugClickCounter;
+        [SerializeField] private GameObject debugPanel;
         private void Awake()
         {
             InitializeSingleton();
@@ -86,7 +94,7 @@ namespace TemplateProject.Scripts.Runtime.Managers
             startScreen.transform.parent.gameObject.SetActive(true);
             startScreen.transform.DOScale(Vector3.one, 0.25f).SetEase(Ease.OutBack);
         }
-        
+
         public void CloseStartScreen()
         {
             startScreen.transform.DOScale(Vector3.zero, 0.25f).SetEase(Ease.InBack).OnComplete(() =>
@@ -96,7 +104,7 @@ namespace TemplateProject.Scripts.Runtime.Managers
                 HandleTimer();
             });
         }
-        
+
 
         private void HandleTimer()
         {
@@ -139,6 +147,7 @@ namespace TemplateProject.Scripts.Runtime.Managers
 
         private void CloseTimer()
         {
+            return;
             timerParent.transform.DOScale(Vector3.zero, 0.15f).SetEase(Ease.InBack).OnComplete(() =>
             {
                 isTimerBlinking = false;
@@ -159,7 +168,7 @@ namespace TemplateProject.Scripts.Runtime.Managers
 
         private void CloseLevelText()
         {
-            levelTextParent.SetActive(false);
+            //levelTextParent.SetActive(false);
         }
 
         public TextMeshProUGUI GetLevelTMP()
@@ -258,6 +267,27 @@ namespace TemplateProject.Scripts.Runtime.Managers
         public void SetTimeLost()
         {
             loseTitleTMP.text = "Out of Time";
+        }
+
+        public void TryEnableDebug()
+        {
+            if (!isDebug) return;
+            _debugClickCounter++;
+            if(_debugClickCounter >= 3)
+            {
+                OpenDebugMenu();
+            }
+        }
+
+        private void OpenDebugMenu()
+        {
+            debugPanel.SetActive(true);
+        }
+
+        public void CloseDebugMenu()
+        {
+            _debugClickCounter = 0;
+            debugPanel.SetActive(false);
         }
     }
 }

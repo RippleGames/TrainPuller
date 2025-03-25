@@ -339,22 +339,5 @@ namespace TrainPuller.Scripts.Editor
         //
         //     return errorCount == 0;
         // }
-
-        private int DisplayReservedGoalCount(LevelData.GridColorType colorType)
-        {
-            if (_levelCreator.levelGoals == null || _levelCreator.levelGoals.Count == 0)
-                return 0;
-
-            var sameColorGoals = _levelCreator.levelGoals.Where(goal => colorType == goal.colorType);
-            return sameColorGoals.Sum(colorGoal => colorGoal.reservedCount);
-        }
-
-        private int DisplayGoalStatus(LevelData.GridColorType gridColorType)
-        {
-            if (_levelCreator.levelGoals == null || _levelCreator.levelGoals.Count == 0)
-                return 0;
-
-            return _levelCreator.levelGoals.Count(goal => gridColorType == goal.colorType);
-        }
     }
 }

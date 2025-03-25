@@ -2,6 +2,7 @@ using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Mechanic;
 using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Data;
+using TrainPuller.Scripts.Runtime.Models;
 using UnityEngine;
 
 namespace TemplateProject.Scripts.Runtime.Managers

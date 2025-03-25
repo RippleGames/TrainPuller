@@ -90,14 +90,16 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             if (carts.Count == 0) return;
             if (!currentLeader) return;
-            if (!interactionManager) return;
             if (!trainContainer.isAllFull && !isMovingToExit)
             {
+                
+                if (!interactionManager) return;
                 if (!interactionManager.GetCurrentlySelectedCart()) return;
                 if (interactionManager.GetCurrentlySelectedCart() != currentLeader)
                 {
                     if (isTrainMoving)
                     {
+                        Debug.Log("HERERERERERE");
                         isTrainMoving = false;
                         canMoveForward = true;
                         canMoveBackwards = true;
@@ -189,6 +191,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                 < -0.8f => false,
                 _ => isMovingBackwards
             };
+
+            if (interactionManager.GetCurrentlySelectedCart() != currentLeader) return;
 
             if (!canMoveForward && isMovingBackwards)
             {
@@ -331,6 +335,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (trainPath.Count < 2)
             {
                 carts.Reverse();
+                trainContainer.InverseSlotList();
                 currentLeader = carts[0];
                 currentLastCart = carts[^1];
                 trainPath.Clear();
@@ -343,6 +348,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             previousLeader = carts[0];
             carts.Reverse();
+            trainContainer.InverseSlotList();
             currentLeader = carts[0];
             currentLastCart = carts[^1];
             trainPath.Clear();
@@ -363,6 +369,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             currentLeader.gameObject.transform.DOMove(exitBarrierScript.GetPathEnd().position, 2f).OnComplete(() =>
             {
                 transform.gameObject.SetActive(false);
+                GameplayManager.instance.RemoveTrain(this);
             });
             var rotation = Quaternion.LookRotation(exitBarrierScript.GetPathEnd().position);
 
@@ -386,6 +393,8 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             isMovingBackwards = false;
             isTrainMoving = false;
+            canMoveBackwards = true;
+            canMoveForward = true;
             foreach (var cart in carts)
             {
                 cart.isMoving = false;

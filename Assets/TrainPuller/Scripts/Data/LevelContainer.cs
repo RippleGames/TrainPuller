@@ -5,6 +5,7 @@ using TemplateProject.Scripts.Runtime.Managers;
 using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.LevelCreation;
 using TrainPuller.Scripts.Runtime.Managers;
+using TrainPuller.Scripts.Runtime.Models;
 using UnityEngine;
 
 namespace TrainPuller.Scripts.Data
@@ -14,9 +15,7 @@ namespace TrainPuller.Scripts.Data
         [Header("Cached References")] [SerializeField]
         private GridSaveClass[] levelGridBases;
 
-        [SerializeField] private List<GoalScript> levelGoalScripts;
-        [SerializeField] private List<LevelGoal> levelGoals;
-        [SerializeField] public List<CurvySpline> splines;
+        [SerializeField] private List<TrainMovement> trains = new List<TrainMovement>();
 
         [Header("Parameters")] [SerializeField]
         private int gridWidth;
@@ -27,8 +26,10 @@ namespace TrainPuller.Scripts.Data
         [SerializeField] private Vector3 cameraEuler;
         [SerializeField] private float orthoVal;
 
-        public void Init(int width, int height, int time, GridBase[,] gridBases)
+        public void Init(int width, int height, int time, GridBase[,] gridBases, List<TrainMovement> trainMovements)
         {
+            trains.Clear();
+            trains.AddRange(trainMovements);
             CopyGridArray(gridBases);
             gridWidth = width;
             gridHeight = height;
@@ -84,7 +85,7 @@ namespace TrainPuller.Scripts.Data
 
         private void InitializeGameplayManager(GameplayManager gameplayManager)
         {
-            // gameplayManager.SetBuses(levelGoalScripts);
+            gameplayManager.SetTrains(trains);
         }
 
         private void InitializeGridManager(GridManager gridManager)
@@ -129,11 +130,6 @@ namespace TrainPuller.Scripts.Data
         private void InitializeTimer(TimeManager timeManager)
         {
             timeManager.SetTimer(levelTime);
-        }
-
-        public List<LevelGoal> GetLevelGoals()
-        {
-            return levelGoals;
         }
 
         public int GetLevelTime()

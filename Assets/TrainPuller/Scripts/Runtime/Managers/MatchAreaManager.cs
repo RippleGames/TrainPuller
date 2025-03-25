@@ -3,7 +3,7 @@ using DG.Tweening;
 using TemplateProject.Scripts.Runtime.Models;
 using UnityEngine;
 
-namespace TemplateProject.Scripts.Runtime.Managers
+namespace TrainPuller.Scripts.Runtime.Managers
 {
     public class MatchAreaManager : MonoBehaviour
     {
@@ -52,7 +52,7 @@ namespace TemplateProject.Scripts.Runtime.Managers
 
         private void CheckMatchAreas()
         {
-            if (GameplayManager.instance.GetIsChangingGoal()) return;
+            // if (GameplayManager.instance.GetIsChangingGoal()) return;
 
             if (claimedMatchAreas.Count != matchAreas.Count || claimedMatchAreas.Count == 0 ||
                 matchAreas.Count == 0) return;

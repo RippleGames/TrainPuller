@@ -3,6 +3,7 @@ using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
 using DG.Tweening;
 using TMPro;
+using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
 namespace TemplateProject.Scripts.Runtime.Models
@@ -77,7 +78,7 @@ namespace TemplateProject.Scripts.Runtime.Models
 
                 goalParentObject.transform.DOScale(localScale, 0.15f).OnComplete(() =>
                 {
-                    DOVirtual.DelayedCall(0.25f, GameplayManager.instance.MoveToNextGoal);
+                    // DOVirtual.DelayedCall(0.25f, GameplayManager.instance.MoveToNextGoal);
                 });
             });
         }
@@ -85,17 +86,17 @@ namespace TemplateProject.Scripts.Runtime.Models
 
         public void GetStickman(bool reserved)
         {
-            if (GameplayManager.instance.GetIsChangingGoal()) return;
-            
-            HandleCarDoorAnimation();
-            HandleSeat(reserved);
-            AddStickman(1, reserved);
-            IncreaseSeatIndex();
-            
-            if (seatedStickmanCount != 3 || GameplayManager.instance.GetIsChangingGoal()) return;
-            
-            GameplayManager.instance.SetIsChangingGoal(true);
-            DOVirtual.DelayedCall(0.3f, CompleteAnimation);
+            // if (GameplayManager.instance.GetIsChangingGoal()) return;
+            //
+            // HandleCarDoorAnimation();
+            // HandleSeat(reserved);
+            // AddStickman(1, reserved);
+            // IncreaseSeatIndex();
+            //
+            // if (seatedStickmanCount != 3 || GameplayManager.instance.GetIsChangingGoal()) return;
+            //
+            // GameplayManager.instance.SetIsChangingGoal(true);
+            // DOVirtual.DelayedCall(0.3f, CompleteAnimation);
         }
 
         private void HandleCarDoorAnimation()

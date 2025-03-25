@@ -1,4 +1,5 @@
 using TemplateProject.Scripts.Runtime.Managers;
+using TrainPuller.Scripts.Runtime.Models;
 using UnityEngine;
 
 namespace TemplateProject.Scripts.Runtime.Models

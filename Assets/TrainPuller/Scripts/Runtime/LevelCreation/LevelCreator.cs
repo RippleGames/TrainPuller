@@ -40,13 +40,13 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         [SerializeField] private GameObject roadPrefabFour;
         [SerializeField] private LevelContainer currentLevelContainer;
         [SerializeField] private CinemachineVirtualCamera vCam;
+        [SerializeField] private List<TrainMovement> trainParentList;
 
         [Header("Level Settings")] [HideInInspector]
         public int gridWidth;
 
         [HideInInspector] public int gridHeight;
         [HideInInspector] public int levelIndex;
-        [SerializeField] public List<LevelGoal> levelGoals;
         [SerializeField] private int levelTime;
         [SerializeField] private LevelData.GridColorType colorTypes;
         public bool isExit;
@@ -129,7 +129,6 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                 {
                     currentLevelContainer = level.GetComponent<LevelContainer>();
                     AssignCameraSettings();
-                    levelGoals = currentLevelContainer.GetLevelGoals();
                     levelTime = currentLevelContainer.GetLevelTime();
                     _loadedLevel = level;
                 });
@@ -145,7 +144,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         public void ResetLevel()
         {
             RemoveLevel();
-            levelGoals.Clear();
+            trainParentList.Clear();
             _levelData = new LevelData(gridWidth, gridHeight);
             prefabSaver.RemovePrefabFromAddressablesAndDelete(levelIndex);
         }
@@ -218,7 +217,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             HandleTrainsAndCards(_gridBases, cardParent.transform, trainParent.transform, exitParent.transform,
                 barrierParent.transform);
 
-            currentLevelContainer.Init(gridWidth, gridHeight, levelTime, _gridBases);
+            currentLevelContainer.Init(gridWidth, gridHeight, levelTime, _gridBases,trainParentList);
             EditorUtility.SetDirty(currentLevelContainer);
             _currentParentObject = newParentObject;
         }
@@ -226,7 +225,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         private void HandleTrainsAndCards(GridBase[,] gridBaseArray, Transform cardParent, Transform trainCartParent,
             Transform exitParent, Transform barrierParent)
         {
-            var trainParentList = new List<TrainMovement>();
+            trainParentList = new List<TrainMovement>();
             for (var i = 0; i < gridBaseArray.GetLength(0); i++)
             {
                 for (var j = 0; j < gridBaseArray.GetLength(1); j++)
@@ -381,7 +380,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                         var roadBarrier = roadBarrierGameObject.GetComponent<RoadBarrierScript>();
                         roadBarrier.transform.position = gridBaseArray[i, j].transform.position;
                         roadBarrier.transform.rotation = Quaternion.identity;
-                        roadBarrier.transform.SetParent(exitParent);
+                        roadBarrier.transform.SetParent(barrierParent);
                         var rotation = HandleBarrierRotation(i, j);
                         roadBarrier.transform.eulerAngles = rotation;
                         roadBarrier.SetColorType(stackDataColorTypes[1]);

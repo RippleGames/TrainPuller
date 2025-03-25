@@ -2,6 +2,7 @@ using DG.Tweening;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
 using TMPro;
+using TrainPuller.Scripts.Runtime.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,18 +13,19 @@ namespace TrainPuller.Scripts.Runtime.Managers
     {
         public static LevelManager instance;
 
-        [Header("CachedReferences")] 
-        [SerializeField]private TestConfig testConfig;
+        [Header("CachedReferences")] [SerializeField]
+        private TestConfig testConfig;
 
-        [Header("Flags")] 
-        public bool isGamePlayable;
+        [Header("Flags")] public bool isGamePlayable;
         public bool isLevelFailed;
         public bool isTestScene;
 
-        [Header("Parameters")] 
-        [SerializeField]private int levelIndex;
+        [Header("Parameters")] [SerializeField]
+        private int levelIndex;
+
         [SerializeField] private int totalLevelCount;
         [SerializeField] private int totalPlayedLevelCount;
+
 
         private void Awake()
         {
@@ -53,7 +55,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
                 Destroy(gameObject);
             }
         }
-        
+
         private void HandleSaveData()
         {
             if (!isTestScene)
@@ -99,6 +101,25 @@ namespace TrainPuller.Scripts.Runtime.Managers
             PlayerPrefs.SetInt("TotalPlayedLevel", totalPlayedLevelCount);
         }
 
+        public void DecreaseLevel()
+        {
+            levelIndex--;
+            totalPlayedLevelCount--;
+            if (levelIndex <= 0)
+            {
+                levelIndex = 0;
+            }
+
+            if (totalPlayedLevelCount <= 0)
+            {
+                totalPlayedLevelCount = 0;
+            }
+
+            PlayerPrefs.SetInt("CurrentLevel", levelIndex);
+            PlayerPrefs.SetInt("TotalPlayedLevel", totalPlayedLevelCount);
+            RestartLevel();
+        }
+
         public void RestartLevel()
         {
             LoadLevel();
@@ -119,12 +140,6 @@ namespace TrainPuller.Scripts.Runtime.Managers
             levelTMP.text = "Level " + totalPlayedLevelCount;
             startLevelTMP.text = "LEVEL " + totalPlayedLevelCount;
             UIManager.instance.OpenLevelText();
-        }
-
-        [ContextMenu("Increase Level")]
-        public void IncreaseLevel()
-        {
-            LevelIncrease();
         }
     }
 }

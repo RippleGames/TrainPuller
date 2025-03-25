@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
@@ -8,12 +9,13 @@ namespace TrainPuller.Scripts.Runtime.Models
 {
     public class TrainContainer : MonoBehaviour
     {
-        [FormerlySerializedAs("cardSlot")] [SerializeField]
-        private List<CardSlot> cardSlots = new List<CardSlot>();
+        [SerializeField] private List<CardSlot> cardSlots = new List<CardSlot>();
 
         [SerializeField] private List<CardSlot> fullCarSlots = new List<CardSlot>();
         public TrainMovement trainMovement;
         public bool isAllFull;
+        private Queue<CardScript> _cardQueue = new Queue<CardScript>();
+        private Coroutine _cardTakeCoroutine;
 
         public void SetCartSlots(List<CartScript> carts)
         {
@@ -23,14 +25,20 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
         }
 
+        public void InverseSlotList()
+        {
+            cardSlots.Reverse();
+        }
 
         private CardSlot GetClosestSlot(Transform cardTransform)
         {
             if (!cardTransform) return null;
             if (cardSlots.Count > 0)
             {
-                var nearestSlot = cardSlots.OrderBy(obj=> (cardTransform.position - obj.cartSlotTransform.position).sqrMagnitude).FirstOrDefault(x => x.isEmpty);
-              
+                var nearestSlot = cardSlots
+                    .OrderBy(x => Vector3.Distance(x.cartSlotTransform.position, cardTransform.position))
+                    .FirstOrDefault(x => x.isEmpty);
+
 
                 fullCarSlots.Add(nearestSlot);
                 cardSlots.Remove(nearestSlot);
@@ -38,6 +46,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 {
                     isAllFull = true;
                 }
+
                 return nearestSlot;
             }
 
@@ -48,27 +57,70 @@ namespace TrainPuller.Scripts.Runtime.Models
         public void TakeCard(CardScript takenCard)
         {
             if (isAllFull) return;
-            var emptySlot = GetClosestSlot(takenCard.gameObject.transform);
+            var emptySlot = GetClosestSlot(takenCard.transform);
             if (emptySlot == null) return;
-            if (takenCard == null) return;
+            if (!takenCard) return;
+
             emptySlot.isEmpty = false;
-            takenCard.transform.SetParent(emptySlot.cartSlotTransform);
-            var midPoint = (takenCard.transform.localPosition + emptySlot.cartSlotTransform.localPosition) / 2;
-            midPoint.y += 1f;
-            var path = new[] { takenCard.transform.localPosition, midPoint, Vector3.zero };
+            StartCoroutine(MoveCardToSlot(takenCard, emptySlot));
+        }
 
-            takenCard.transform.DOLocalPath(path, 0.5f, PathType.CatmullRom)
-                .SetEase(Ease.InSine).OnComplete(() =>
-                {
-                    var oldScale = takenCard.transform.localScale;
-                    takenCard.transform.DOScale(oldScale * 1.1f, 0.15f).OnComplete(() =>
-                    {
-                        takenCard.transform.DOScale(oldScale, 0.15f);
+        private IEnumerator MoveCardToSlot(CardScript takenCard, CardSlot targetSlot)
+        {
+            var cardTransform = takenCard.transform;
+            var slotTransform = targetSlot.cartSlotTransform;
 
-                    });
+            var startPos = cardTransform.position;
+            var endPos = slotTransform.position;
+            var midPoint = (startPos + endPos) / 2;
+            midPoint.y += 2f;
 
-                });
-            takenCard.transform.DOLocalRotate(new Vector3(0f, 90f, 90f), 0.75f).SetEase(Ease.InSine);
+            var worldTargetRotation = slotTransform.rotation * Quaternion.Euler(0f, 90f, 90f);
+
+            var duration = 0.35f;
+            var elapsedTime = 0f;
+
+            while (elapsedTime < duration)
+            {
+                elapsedTime += Time.deltaTime;
+                var t = elapsedTime / duration;
+
+                var updatedSlotPosition = slotTransform.position;
+                var currentTarget = Vector3.Lerp(Vector3.Lerp(startPos, midPoint, t), updatedSlotPosition, t);
+                cardTransform.position = currentTarget;
+
+                cardTransform.rotation = Quaternion.Slerp(cardTransform.rotation, worldTargetRotation, t);
+
+                yield return null;
+            }
+
+            var oldScale = cardTransform.localScale;
+            cardTransform.DOScale(oldScale * 1.2f, 0.1f).OnComplete(() => { cardTransform.DOScale(oldScale, 0.1f); });
+            cardTransform.SetParent(slotTransform);
+            cardTransform.localRotation = Quaternion.Euler(0f, 90f, 90f);
+            cardTransform.localPosition = Vector3.zero;
+        }
+
+        public void TakeCardWithDelay(CardScript takenCard)
+        {
+            if (_cardQueue.Contains(takenCard)) return;
+            _cardQueue.Enqueue(takenCard);
+            if (_cardQueue.Count == 1 && _cardTakeCoroutine == null)
+            {
+                _cardTakeCoroutine = StartCoroutine(ProcessCardQueue());
+            }
+        }
+
+        private IEnumerator ProcessCardQueue()
+        {
+            while (_cardQueue.Count > 0)
+            {
+                var card = _cardQueue.Dequeue();
+                TakeCard(card);
+                yield return new WaitForSeconds(0.05f);
+            }
+
+            _cardTakeCoroutine = null;
         }
     }
 }

@@ -1,8 +1,9 @@
 using System;
+using TemplateProject.Scripts.Runtime.Managers;
 using TMPro;
 using UnityEngine;
 
-namespace TemplateProject.Scripts.Runtime.Managers
+namespace TrainPuller.Scripts.Runtime.Managers
 {
     public class TimeManager : MonoBehaviour
     {        
@@ -32,6 +33,7 @@ namespace TemplateProject.Scripts.Runtime.Managers
         private void HandleTimer()
         {
             if (!isTimerActive) return;
+            if(!timerTMP) return;
             levelTime -= Time.deltaTime;
             timerTMP.text = TimeSpan.FromSeconds((int)levelTime).ToString(@"m\:ss");
             

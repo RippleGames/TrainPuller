@@ -1,15 +1,13 @@
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
-using TemplateProject.Scripts.Runtime.Managers;
 using UnityEngine;
 
-namespace TemplateProject.Scripts.Runtime.Models
+namespace TrainPuller.Scripts.Runtime.Models
 {
     public class GridBase : MonoBehaviour
     {
         [Header("Cached References")]
-        [SerializeField] private Renderer gridRenderer;
-        [SerializeField] private GameObject wallObject;
+        // [SerializeField] private Renderer gridRenderer;
+        // [SerializeField] private GameObject wallObject;
         [SerializeField] private GridBase parent;
         [SerializeField] private List<GridBase> adjacentCells;
         [SerializeField] private GameObject associatedRoadPrefab;

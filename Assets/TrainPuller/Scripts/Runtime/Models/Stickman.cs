@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
+using TrainPuller.Scripts.Runtime.Managers;
+using TrainPuller.Scripts.Runtime.Models;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -79,19 +81,19 @@ namespace TemplateProject.Scripts.Runtime.Models
             transform.SetParent(null);
             isMoving = true;
             DissociateStickman();
-            var currentBus = GameplayManager.instance.GetCurrentBus();
-            GameplayManager.instance.AddStickmanThroughBus(this);
+            // var currentBus = GameplayManager.instance.GetCurrentBus();
+            // GameplayManager.instance.AddStickmanThroughBus(this);
 
-            if (path != null)
-            {
-                var pathPositions = HandlePathPositions(path, currentBus.GetEntranceTransform().position);
-                stickmanMovement.Run(pathPositions, JumpToBus);
-            }
-            else
-            {
-                var pathPositions = new[] { transform.position, currentBus.GetEntranceTransform().position };
-                stickmanMovement.Run(pathPositions, JumpToBus);
-            }
+            // if (path != null)
+            // {
+            //     var pathPositions = HandlePathPositions(path, currentBus.GetEntranceTransform().position);
+            //     stickmanMovement.Run(pathPositions, JumpToBus);
+            // }
+            // else
+            // {
+            //     var pathPositions = new[] { transform.position, currentBus.GetEntranceTransform().position };
+            //     stickmanMovement.Run(pathPositions, JumpToBus);
+            // }
         }
 
         private void DissociateStickman()
@@ -115,8 +117,8 @@ namespace TemplateProject.Scripts.Runtime.Models
                 thisTransform.rotation);
             Destroy(vfx, 2f);
             gameObject.SetActive(false);
-            GameplayManager.instance.RemoveStickmanThroughBus(this);
-            GameplayManager.instance.GetCurrentBus().GetStickman(isReserved);
+            // GameplayManager.instance.RemoveStickmanThroughBus(this);
+            // GameplayManager.instance.GetCurrentBus().GetStickman(isReserved);
         }
 
 

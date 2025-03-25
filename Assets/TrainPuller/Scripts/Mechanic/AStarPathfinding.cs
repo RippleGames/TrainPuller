@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using TemplateProject.Scripts.Runtime.Models;
+using TrainPuller.Scripts.Runtime.Models;
 using UnityEngine;
 
 namespace TemplateProject.Scripts.Mechanic

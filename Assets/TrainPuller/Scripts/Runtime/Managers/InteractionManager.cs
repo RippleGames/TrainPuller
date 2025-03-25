@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Data;
 using TrainPuller.Scripts.Runtime.Models;
@@ -39,6 +38,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
             if (Input.GetMouseButtonDown(0) && !currentlySelectedCart && !isHolding)
             {
+                HandleTimerStart();
                 ProcessInteraction();
                 isHolding = true;
             }
@@ -57,6 +57,14 @@ namespace TrainPuller.Scripts.Runtime.Managers
             if (currentlySelectedCart && isHolding)
             {
                 MoveObjectAlongGrid();
+            }
+        }
+
+        private void HandleTimerStart()
+        {
+            if (!TimeManager.instance.GetIsTimerActive())
+            {
+                TimeManager.instance.StartTimer();
             }
         }
 
@@ -271,7 +279,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             return cells;
         }
         
-        public bool GetCurrentlySelectedCart()
+        public CartScript GetCurrentlySelectedCart()
         {
             return currentlySelectedCart;
         }

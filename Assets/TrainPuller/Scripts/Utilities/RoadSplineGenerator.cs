@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using FluffyUnderware.Curvy;
 using TemplateProject.Scripts.Runtime.Models;
+using TrainPuller.Scripts.Runtime.Models;
 
 namespace TemplateProject.Scripts.Utilities
 {

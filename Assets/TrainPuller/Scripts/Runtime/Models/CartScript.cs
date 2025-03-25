@@ -56,7 +56,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 }
             }
 
-            if (!(Vector3.Distance(transform.position, targetPos) <= 1f)) return;
+            if (!(Vector3.Distance(transform.position, targetPos) <= 2f)) return;
 
             if (interactionManager.IsPositionOnTrail(targetPos))
             {
@@ -82,7 +82,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void UpdateRotation(CartScript follower, Vector3 targetPosition)
         {
-            if(trainMovement.isMovingToExit) return;
+            if (trainMovement.isMovingToExit) return;
             var followerPosition = follower.transform.position;
             var direction = ((targetPosition + followerPosition) / 2 - followerPosition).normalized;
 
@@ -107,7 +107,6 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
 
             if (Quaternion.Angle(follower.transform.rotation, targetRotation) > 120f) return;
-            Debug.Log("Rotate Continue");
             follower.transform.rotation = Quaternion.RotateTowards(
                 follower.transform.rotation,
                 targetRotation,
@@ -195,7 +194,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                     {
                         var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor);
                         if (!card) return;
-                        trainContainer.TakeCard(card);
+                        trainContainer.TakeCardWithDelay(card);
                     }
                 }
             }
@@ -212,7 +211,11 @@ namespace TrainPuller.Scripts.Runtime.Models
                         }
                         else
                         {
-                            trainMovement.HandleFrontCollision();
+                            if (!interactionManager) return;
+                            if (interactionManager.GetCurrentlySelectedCart() == this)
+                            {
+                                trainMovement.HandleFrontCollision();
+                            }
                         }
                     }
                 }
@@ -272,7 +275,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                     {
                         var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor);
                         if (!card) return;
-                        trainContainer.TakeCard(card);
+                        trainContainer.TakeCardWithDelay(card);
                     }
                 }
             }
