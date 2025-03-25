@@ -5,8 +5,11 @@ using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Data.Config;
 using TemplateProject.Scripts.Runtime.Managers;
 using TrainPuller.Scripts.Runtime.Models;
+
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
+#endif
 using UnityEngine;
 
 namespace TrainPuller.Scripts.Runtime.Managers
@@ -26,8 +29,9 @@ namespace TrainPuller.Scripts.Runtime.Managers
         [Header("Parameters")] [AudioClipName] public string levelFailSound;
         [AudioClipName] public string levelCompleteSound;
 
-        [Header("Game Flags")]
-        [SerializeField] private bool isAudioOn;
+        [Header("Game Flags")] [SerializeField]
+        private bool isAudioOn;
+
         [SerializeField] private bool isVibrationOn;
         private bool _initialSettingsSet = true;
         private bool _isInitialBusArrived;
@@ -35,6 +39,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
         [Header("Actions")] public Action onBusChangeDone;
         public Action onGameLost;
 
+#if UNITY_EDITOR
 
         private void OnEnable()
         {
@@ -59,6 +64,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
                 EditorApplication.playModeStateChanged += GoToLevelCreator;
             }
         }
+#endif
 
         private void Awake()
         {

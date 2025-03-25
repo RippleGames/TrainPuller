@@ -1,10 +1,12 @@
+#if UNITY_EDITOR
+
 using System.IO;
 using Newtonsoft.Json;
 using TemplateProject.Scripts.Data;
 using UnityEditor;
 using UnityEngine;
 
-namespace TemplateProject.Scripts.Runtime.LevelCreation
+namespace TrainPuller.Scripts.Runtime.LevelCreation
 {
     public static class LevelSaveSystem
     {
@@ -45,9 +47,7 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
 
             var json = JsonConvert.SerializeObject(levelGrid);
             File.WriteAllText(filePath, json);
-#if UNITY_EDITOR
             AssetDatabase.Refresh();
-#endif
         }
 
         static void BackupLevel(int levelIndex)
@@ -72,3 +72,4 @@ namespace TemplateProject.Scripts.Runtime.LevelCreation
         }
     }
 }
+#endif

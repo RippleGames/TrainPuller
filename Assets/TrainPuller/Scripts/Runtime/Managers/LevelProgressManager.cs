@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TemplateProject.Scripts.Utilities;
-using UnityEditor.AddressableAssets;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor.AddressableAssets;
+#endif
 
-namespace TemplateProject.Scripts.Runtime.Managers
+namespace TrainPuller.Scripts.Runtime.Managers
 {
     public class LevelProgressManager : MonoBehaviour
     {
@@ -29,9 +34,22 @@ namespace TemplateProject.Scripts.Runtime.Managers
             CreateMap();
         }
 
-        private void GetData()
+        private async void GetData()
         {
-            levelCount = AddressableAssetSettingsDefaultObject.Settings.FindGroup("LevelsGroup").entries.Count;
+            levelCount = await GetAddressableGroupEntryCount("LevelsGroup");
+        }
+
+        private async Task<int> GetAddressableGroupEntryCount(string label)
+        {
+            AsyncOperationHandle<IList<UnityEngine.ResourceManagement.ResourceLocations.IResourceLocation>> handle =
+                Addressables.LoadResourceLocationsAsync(label);
+
+            await handle.Task;
+
+            int count = handle.Status == AsyncOperationStatus.Succeeded ? handle.Result.Count : 0;
+
+            Addressables.Release(handle);
+            return count;
         }
 
         private void CreateMap()

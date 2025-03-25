@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using Cinemachine;
-using FluffyUnderware.Curvy;
 using TemplateProject.Scripts.Runtime.Managers;
-using TemplateProject.Scripts.Runtime.Models;
-using TrainPuller.Scripts.Runtime.LevelCreation;
 using TrainPuller.Scripts.Runtime.Managers;
 using TrainPuller.Scripts.Runtime.Models;
 using UnityEngine;

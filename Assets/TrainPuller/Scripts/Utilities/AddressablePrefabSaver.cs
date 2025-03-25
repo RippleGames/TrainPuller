@@ -1,10 +1,11 @@
+#if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
-namespace TemplateProject.Scripts.Utilities
+namespace TrainPuller.Scripts.Utilities
 {
     public class AddressablePrefabSaver : MonoBehaviour
     {
@@ -93,3 +94,4 @@ namespace TemplateProject.Scripts.Utilities
         }
     }
 }
+#endif
