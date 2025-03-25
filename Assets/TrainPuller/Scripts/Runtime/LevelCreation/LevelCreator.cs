@@ -87,7 +87,8 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         public void SaveLevel()
         {
             var cam = Camera.main;
-            currentLevelContainer.SetCameraSettings(cam.transform.position,cam.transform.rotation.eulerAngles,cam.orthographicSize);
+            currentLevelContainer.SetCameraSettings(cam.transform.position, cam.transform.rotation.eulerAngles,
+                cam.orthographicSize);
             EditorUtility.SetDirty(currentLevelContainer);
             prefabSaver.SaveAndAssignPrefab(_currentParentObject, levelIndex);
             EditorUtility.SetDirty(prefabSaver);
@@ -534,7 +535,18 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                             var neighbors = gridBaseArray[i, j].GetNeighbors();
                             if (!forwardsDone)
                             {
-                                if (neighbors.Count == 2)
+                                if (neighbors.Count == 1)
+                                {
+                                    var trailObject =
+                                        PrefabUtility.InstantiatePrefab(roadPrefabForward) as GameObject;
+                                    trailObject.transform.position = gridBaseArray[i, j].transform.position;
+                                    trailObject.transform.rotation = Quaternion.identity;
+                                    trailObject.transform.eulerAngles =
+                                        new Vector3(0, neighbors[0].GetXAxis() == i ? 90f : 0f, 0);
+                                    trailObject.transform.SetParent(parent);
+                                    gridBaseArray[i, j].SetRoadPrefab(trailObject, true);
+                                }
+                                else if (neighbors.Count == 2)
                                 {
                                     if (neighbors[0].GetXAxis() == neighbors[1].GetXAxis())
                                     {
