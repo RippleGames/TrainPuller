@@ -91,7 +91,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (carts.Count == 0) return;
             if (!currentLeader) return;
             if (!interactionManager) return;
-            if (!trainContainer.isAllFull)
+            if (!trainContainer.isAllFull && !isMovingToExit)
             {
                 if (!interactionManager.GetCurrentlySelectedCart()) return;
                 if (interactionManager.GetCurrentlySelectedCart() != currentLeader)
@@ -134,7 +134,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void DetectMovementDirection()
         {
-            if (trainContainer.isAllFull)
+            if (trainContainer.isAllFull && isMovingToExit)
             {
                 isMovingBackwards = false;
                 canMoveForward = true;

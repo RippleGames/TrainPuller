@@ -17,7 +17,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         public void SetCartSlots(List<CartScript> carts)
         {
-            foreach (var cart in trainMovement.carts)
+            foreach (var cart in carts)
             {
                 cardSlots.AddRange(cart.GetCardSlots());
             }
@@ -29,7 +29,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (!cardTransform) return null;
             if (cardSlots.Count > 0)
             {
-                var nearestSlot = cardSlots.OrderBy(obj => (cardTransform.position - obj.cartSlotTransform.position).sqrMagnitude).FirstOrDefault();
+                var nearestSlot = cardSlots.OrderBy(obj=> (cardTransform.position - obj.cartSlotTransform.position).sqrMagnitude).FirstOrDefault(x => x.isEmpty);
               
 
                 fullCarSlots.Add(nearestSlot);
