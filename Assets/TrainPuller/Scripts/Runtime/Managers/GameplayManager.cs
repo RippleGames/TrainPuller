@@ -92,7 +92,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             allTrains.Remove(trainMovement);
             competedTrains.Add(trainMovement);
 
-            if (allTrains.Count <= 0)
+            if (allTrains.Count <= 0 && LevelManager.instance.isGamePlayable)
             {
                 WinGame();
             }
@@ -143,19 +143,21 @@ namespace TrainPuller.Scripts.Runtime.Managers
             {
                 AudioManager.instance.PlaySound(levelCompleteSound);
             }
+#if UNITY_EDITOR
 
             DOVirtual.DelayedCall(3f, () =>
             {
-#if UNITY_EDITOR
                 if (LevelManager.instance.isTestScene)
                 {
                     EditorApplication.isPlaying = false;
                     EditorApplication.playModeStateChanged += GoToLevelCreator;
                     return;
                 }
-#endif
-                LevelManager.instance.LevelIncrease();
+                // LevelManager.instance.LevelIncrease();
             });
+            
+#endif
+
         }
 
         public void LoseGame(bool isTimeLose)

@@ -28,30 +28,15 @@ namespace TemplateProject.Scripts.Utilities
         public AsyncOperationHandle<GameObject>? currentHandle;
 #endif
 
-        private void Start()
+        private async void Start()
         {
+            await Addressables.InitializeAsync().Task;
             var prefabAddress = $"Level_{LevelManager.instance.GetLevelIndex()}";
             LoadPrefab(prefabAddress);
             AssignLevelCount();
 
         }
-
-        public static class AddressableHelper
-        {
-            public static async Task<int> GetAddressableGroupEntryCount(string label)
-            {
-                AsyncOperationHandle<IList<UnityEngine.ResourceManagement.ResourceLocations.IResourceLocation>> handle =
-                    Addressables.LoadResourceLocationsAsync(label);
-
-                await handle.Task;
-
-                int count = handle.Status == AsyncOperationStatus.Succeeded ? handle.Result.Count : 0;
-
-                Addressables.Release(handle);
-                return count;
-            }
-        }
-
+        
         private async void AssignLevelCount()
         {
             int count = await GetAddressableGroupEntryCount(levelGroupName);
