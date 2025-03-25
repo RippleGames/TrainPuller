@@ -82,6 +82,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void UpdateRotation(CartScript follower, Vector3 targetPosition)
         {
+            if(trainMovement.isMovingToExit) return;
             var followerPosition = follower.transform.position;
             var direction = ((targetPosition + followerPosition) / 2 - followerPosition).normalized;
 
@@ -106,6 +107,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
 
             if (Quaternion.Angle(follower.transform.rotation, targetRotation) > 120f) return;
+            Debug.Log("Rotate Continue");
             follower.transform.rotation = Quaternion.RotateTowards(
                 follower.transform.rotation,
                 targetRotation,

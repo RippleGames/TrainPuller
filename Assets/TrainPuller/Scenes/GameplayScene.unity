@@ -680,6 +680,7 @@ MonoBehaviour:
   gameplayManager: {fileID: 879515033}
   gridManager: {fileID: 1236546065}
   timeManager: {fileID: 479235217}
+  virtualCamera: {fileID: 772053211}
   levelGroupName: LevelsGroup
 --- !u!1 &92222930
 GameObject:

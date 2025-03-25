@@ -36,6 +36,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         public GameObject backwardsEndPrefab;
         public GameObject backwardsEndObject;
         private bool hasMorePathToMove = true;
+        public bool isMovingToExit;
 
         private void Start()
         {
@@ -90,22 +91,26 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (carts.Count == 0) return;
             if (!currentLeader) return;
             if (!interactionManager) return;
-            if (!interactionManager.GetCurrentlySelectedCart()) return;
-            if (interactionManager.GetCurrentlySelectedCart() != currentLeader)
+            if (!trainContainer.isAllFull)
             {
-                if (isTrainMoving)
+                if (!interactionManager.GetCurrentlySelectedCart()) return;
+                if (interactionManager.GetCurrentlySelectedCart() != currentLeader)
                 {
-                    isTrainMoving = false;
-                    canMoveForward = true;
-                    canMoveBackwards = true;
-                    foreach (var cart in carts)
+                    if (isTrainMoving)
                     {
-                        cart.isMoving = false;
+                        isTrainMoving = false;
+                        canMoveForward = true;
+                        canMoveBackwards = true;
+                        foreach (var cart in carts)
+                        {
+                            cart.isMoving = false;
+                        }
                     }
-                }
 
-                return;
+                    return;
+                }
             }
+
 
             if (_isLeaderChanging) return;
 
@@ -129,6 +134,15 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void DetectMovementDirection()
         {
+            if (trainContainer.isAllFull)
+            {
+                isMovingBackwards = false;
+                canMoveForward = true;
+                canMoveBackwards = true;
+                isTrainMoving = true;
+                return;
+            }
+
             if (_isLeaderChanging) return;
             if (!currentLeader || carts.Count < 2) return;
             if (trainPath.Count < 2) return;
@@ -153,18 +167,19 @@ namespace TrainPuller.Scripts.Runtime.Models
             var isMouseBehindLeader = Vector3.Dot(movementDirection, -currentLeader.transform.forward) > 0.5f;
 
             var leaderDistance = Vector3.Distance(carts[0].transform.position, carts[1].transform.position);
-            
+
             if (leaderDistance < cartSpacing * 0.65f && isMovingBackwards)
             {
                 return;
             }
+
             if (dotWithTrainPath < 0 || isMouseBehindLeader)
             {
-                isMovingBackwards = true; 
+                isMovingBackwards = true;
             }
             else
             {
-                isMovingBackwards = dotWithTrainPath < 0; 
+                isMovingBackwards = dotWithTrainPath < 0;
             }
 
 
@@ -344,10 +359,27 @@ namespace TrainPuller.Scripts.Runtime.Models
             isTrainMoving = true;
             canMoveBackwards = true;
             canMoveForward = true;
+            isMovingToExit = true;
             currentLeader.gameObject.transform.DOMove(exitBarrierScript.GetPathEnd().position, 2f).OnComplete(() =>
             {
                 transform.gameObject.SetActive(false);
             });
+            var rotation = Quaternion.LookRotation(exitBarrierScript.GetPathEnd().position);
+
+            var yAngle = rotation.eulerAngles.y;
+            if (yAngle > 180f)
+                yAngle -= 360f;
+
+            var closestAngle = yAngle switch
+            {
+                >= -135f and < -45f => -90f,
+                >= -45f and < 45f => 0f,
+                >= 45f and < 135f => 90f,
+                _ => 180f
+            };
+
+            rotation = Quaternion.Euler(new Vector3(0f, closestAngle, 0f));
+            currentLeader.gameObject.transform.DORotateQuaternion(rotation, 0.15f);
         }
 
         public void StopMovement()

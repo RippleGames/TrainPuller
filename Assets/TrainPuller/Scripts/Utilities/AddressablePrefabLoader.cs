@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Cinemachine;
 using DG.Tweening;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
@@ -15,11 +16,13 @@ namespace TrainPuller.Scripts.Utilities
 {
     public class AddressablePrefabLoader : MonoBehaviour
     {
-        [Header("Cached References")] 
-        [SerializeField] private InteractionManager interactionManager;
+        [Header("Cached References")] [SerializeField]
+        private InteractionManager interactionManager;
+
         [SerializeField] private GameplayManager gameplayManager;
         [SerializeField] private GridManager gridManager;
         [SerializeField] private TimeManager timeManager;
+        [SerializeField] private CinemachineVirtualCamera virtualCamera;
         private GameObject _loadedPrefabInstance;
 
         [Header("Variables")] public string levelGroupName = "LevelsGroup";
@@ -56,7 +59,8 @@ namespace TrainPuller.Scripts.Utilities
                 _loadedPrefabInstance = Instantiate(handle.Result);
                 if (_loadedPrefabInstance.TryGetComponent(out LevelContainer levelContainer))
                 {
-                    levelContainer.InitializeVariables(interactionManager,gameplayManager, gridManager, timeManager);
+                    levelContainer.InitializeVariables(interactionManager, gameplayManager, gridManager, timeManager,
+                        virtualCamera);
                 }
 
                 HandleTransitions();
@@ -81,7 +85,6 @@ namespace TrainPuller.Scripts.Utilities
             var handle = Addressables.LoadAssetAsync<GameObject>(prefabAddress);
             handle.Completed += OnPrefabLoadedEditor;
             currentHandle = handle;
-            
         }
 
         private void OnPrefabLoadedEditor(AsyncOperationHandle<GameObject> handle)
@@ -113,7 +116,8 @@ namespace TrainPuller.Scripts.Utilities
                     {
                         TimeManager.instance.SetTimerTMP(UIManager.instance.GetTimerTMP(),
                             UIManager.instance.GetStartLevelTimeTMP());
-                        LevelManager.instance.SetLevelTMP(UIManager.instance.GetLevelTMP(),UIManager.instance.GetStartLevelTMP());
+                        LevelManager.instance.SetLevelTMP(UIManager.instance.GetLevelTMP(),
+                            UIManager.instance.GetStartLevelTMP());
                         UIManager.instance.EnableSettingsButton();
                         UIManager.instance.OpenStartScreen();
                     });

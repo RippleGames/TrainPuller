@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Linq;
+using Cinemachine;
 using FluffyUnderware.Curvy;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.LevelCreation;
@@ -37,6 +38,8 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         [SerializeField] private GameObject roadPrefabLeft;
         [SerializeField] private GameObject roadPrefabTri;
         [SerializeField] private GameObject roadPrefabFour;
+        [SerializeField] private LevelContainer currentLevelContainer;
+        [SerializeField] private CinemachineVirtualCamera vCam;
 
         [Header("Level Settings")] [HideInInspector]
         public int gridWidth;
@@ -83,6 +86,9 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
 
         public void SaveLevel()
         {
+            var cam = Camera.main;
+            currentLevelContainer.SetCameraSettings(cam.transform.position,cam.transform.rotation.eulerAngles,cam.orthographicSize);
+            EditorUtility.SetDirty(currentLevelContainer);
             prefabSaver.SaveAndAssignPrefab(_currentParentObject, levelIndex);
             EditorUtility.SetDirty(prefabSaver);
             LevelSaveSystem.SaveLevel(_levelData, levelIndex);
@@ -120,11 +126,19 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             _loadedLevel = prefabLoader.ManualPrefabLoader(prefabName,
                 (level) =>
                 {
-                    var container = level.GetComponent<LevelContainer>();
-                    levelGoals = container.GetLevelGoals();
-                    levelTime = container.GetLevelTime();
+                    currentLevelContainer = level.GetComponent<LevelContainer>();
+                    AssignCameraSettings();
+                    levelGoals = currentLevelContainer.GetLevelGoals();
+                    levelTime = currentLevelContainer.GetLevelTime();
                     _loadedLevel = level;
                 });
+        }
+
+        private void AssignCameraSettings()
+        {
+            vCam.transform.position = currentLevelContainer.GetCameraPos();
+            vCam.transform.eulerAngles = currentLevelContainer.GetCameraEuler();
+            vCam.m_Lens.OrthographicSize = currentLevelContainer.GetCameraOrthoSize();
         }
 
         public void ResetLevel()
@@ -153,7 +167,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             }
 
             var newParentObject = new GameObject("Level_" + levelIndex);
-            var levelContainer = newParentObject.AddComponent<LevelContainer>();
+            currentLevelContainer = newParentObject.AddComponent<LevelContainer>();
             newParentObject.transform.tag = "LevelParent";
             var gridParentObject = new GameObject("GridParent");
             gridParentObject.transform.SetParent(newParentObject.transform);
@@ -203,8 +217,8 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             HandleTrainsAndCards(_gridBases, cardParent.transform, trainParent.transform, exitParent.transform,
                 barrierParent.transform);
 
-            levelContainer.Init(gridWidth, gridHeight, levelTime, _gridBases);
-            EditorUtility.SetDirty(levelContainer);
+            currentLevelContainer.Init(gridWidth, gridHeight, levelTime, _gridBases);
+            EditorUtility.SetDirty(currentLevelContainer);
             _currentParentObject = newParentObject;
         }
 

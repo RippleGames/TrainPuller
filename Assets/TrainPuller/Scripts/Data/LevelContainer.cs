@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cinemachine;
 using FluffyUnderware.Curvy;
 using TemplateProject.Scripts.Runtime.Managers;
 using TemplateProject.Scripts.Runtime.Models;
@@ -22,6 +23,9 @@ namespace TrainPuller.Scripts.Data
 
         [SerializeField] private int gridHeight;
         [SerializeField] private int levelTime;
+        [SerializeField] private Vector3 cameraPosition;
+        [SerializeField] private Vector3 cameraEuler;
+        [SerializeField] private float orthoVal;
 
         public void Init(int width, int height, int time, GridBase[,] gridBases)
         {
@@ -31,6 +35,12 @@ namespace TrainPuller.Scripts.Data
             levelTime = time;
         }
 
+        public void SetCameraSettings(Vector3 pos, Vector3 euler, float val)
+        {
+            cameraPosition = pos;
+            cameraEuler = euler;
+            orthoVal = val;
+        }
         private void CopyGridArray(GridBase[,] gridBases)
         {
             levelGridBases = new GridSaveClass[gridBases.GetLength(0)];
@@ -50,12 +60,20 @@ namespace TrainPuller.Scripts.Data
 
         public void InitializeVariables(InteractionManager interactionManager, GameplayManager gameplayManager,
             GridManager gridManager,
-            TimeManager timeManager)
+            TimeManager timeManager, CinemachineVirtualCamera virtualCamera)
         {
             InitializeInteractionManager(interactionManager);
             InitializeGameplayManager(gameplayManager);
             InitializeGridManager(gridManager);
             InitializeTimer(timeManager);
+            InitializeCamera(virtualCamera);
+        }
+
+        private void InitializeCamera(CinemachineVirtualCamera virtualCamera)
+        {
+            virtualCamera.transform.position = cameraPosition;
+            virtualCamera.transform.eulerAngles = cameraEuler;
+            virtualCamera.m_Lens.OrthographicSize = orthoVal;
         }
 
         private void InitializeInteractionManager(InteractionManager interactionManager)
@@ -121,6 +139,21 @@ namespace TrainPuller.Scripts.Data
         public int GetLevelTime()
         {
             return levelTime;
+        }
+
+        public Vector3 GetCameraPos()
+        {
+            return cameraPosition;
+        }
+
+        public Vector3 GetCameraEuler()
+        {
+            return cameraEuler;
+        }
+
+        public float GetCameraOrthoSize()
+        {
+            return orthoVal;
         }
     }
 
