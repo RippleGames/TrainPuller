@@ -41,14 +41,14 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             if (_isBarrierOpen) return;
             _isBarrierOpen = true;
-            barrierObject.transform.DORotate(new Vector3(-90f, 0f, 0f), 0.15f);
+            barrierObject.transform.DOLocalRotate(new Vector3(-90f, 0f, 0f), 0.15f);
         }
 
         private void CloseBarrier()
         {
             if (!_isBarrierOpen) return;
             _isBarrierOpen = false;
-            barrierObject.transform.DORotate(new Vector3(0, 0f, 0f), 0.15f);
+            barrierObject.transform.DOLocalRotate(new Vector3(0, 0f, 0f), 0.15f);
         }
 
         public void SetColorType(LevelData.GridColorType color)
@@ -99,6 +99,16 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (other.CompareTag("TrainCart"))
             {
                 TryCloseBarrier();
+            }
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            if (other.CompareTag("TrainCart"))
+            {
+                if (!_isTimerActive) return;
+                _isTimerActive = false;
+                _closeTimer = 0;
             }
         }
 

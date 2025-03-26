@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using TemplateProject.Scripts.Data;
-using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace TrainPuller.Scripts.Runtime.Models
 {
@@ -16,6 +14,9 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] public Vector2Int currentGridCell;
         [SerializeField] private LevelData.GridColorType cartColor;
         [SerializeField] private List<CardSlot> cardSlots;
+        [SerializeField] private Outline outline;
+        [SerializeField] private GameObject confettiObject;
+        [SerializeField] private GameObject cartCover;
 
         [SerializeField] private Queue<Vector2Int> pathQueue = new();
         private Vector3 _movementTarget;
@@ -46,7 +47,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void MoveTowardsTarget()
         {
-            var targetPos = interactionManager.GetProjectedMousePositionOnTrail();
+            var targetPos = interactionManager.GetProjectedMousePositionOnTrail(false);
 
             if (!trainMovement.isTrainMoving)
             {
@@ -56,8 +57,13 @@ namespace TrainPuller.Scripts.Runtime.Models
                 }
             }
 
-            if (!(Vector3.Distance(transform.position, targetPos) <= 2f)) return;
+            if (!(Vector3.Distance(transform.position, targetPos) <= 1.75f))
+            {
+                targetPos = interactionManager.GetProjectedMousePositionOnTrail(true);
+            }
 
+
+            if (!(Vector3.Distance(transform.position, targetPos) <= 1.75f)) return;
             if (interactionManager.IsPositionOnTrail(targetPos))
             {
                 UpdateRotation(this, targetPos);
@@ -66,12 +72,6 @@ namespace TrainPuller.Scripts.Runtime.Models
                     (!trainMovement.isMovingBackwards && trainMovement.canMoveForward))
                 {
                     transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
-                }
-
-                if (Vector3.Distance(transform.position, _movementTarget) < 0.1f &&
-                    Vector3.Distance(transform.position, targetPos) <= 0.1f)
-                {
-                    MoveToNextGridCell();
                 }
             }
             else
@@ -89,8 +89,9 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (direction.magnitude < 0.01f) return;
 
             direction.y = 0;
-            var movementDirection = (targetPosition - transform.position).normalized;
-            var dot = Vector3.Dot(transform.forward, movementDirection);
+            var cartTransform = transform;
+            var movementDirection = (targetPosition - cartTransform.position).normalized;
+            var dot = Vector3.Dot(cartTransform.forward, movementDirection);
 
             var targetRotation = Quaternion.LookRotation(direction);
             var angleDifference = Vector3.SignedAngle(follower.transform.forward, direction, Vector3.up);
@@ -110,37 +111,14 @@ namespace TrainPuller.Scripts.Runtime.Models
             follower.transform.rotation = Quaternion.RotateTowards(
                 follower.transform.rotation,
                 targetRotation,
-                30f * moveSpeed * Time.fixedDeltaTime
+                90f * moveSpeed * Time.fixedDeltaTime
             );
         }
 
 
         public void AddToPath(Vector2Int newGridCell)
         {
-            if (!pathQueue.Contains(newGridCell) && !pathQueue.Contains(currentGridCell))
-            {
-                pathQueue.Enqueue(newGridCell);
-                if (!isMoving)
-                {
-                    MoveToNextGridCell();
-                }
-            }
-        }
-
-        private void MoveToNextGridCell()
-        {
-            if (pathQueue.Count <= 0) return;
-            var nextGridCell = pathQueue.Dequeue();
-            _movementTarget = GetWorldPositionFromGrid(nextGridCell);
-            currentGridCell = nextGridCell;
-            isMoving = true;
-            trainMovement.isTrainMoving = true;
-        }
-
-        private Vector3 GetWorldPositionFromGrid(Vector2Int gridPos)
-        {
-            var gridBase = gridBases[gridPos.x, gridPos.y];
-            return gridBase.transform.position;
+            currentGridCell = newGridCell;
         }
 
 
@@ -181,6 +159,11 @@ namespace TrainPuller.Scripts.Runtime.Models
         public LevelData.GridColorType GetCartColor()
         {
             return cartColor;
+        }
+
+        public void ChangeOutlineColor(Color color)
+        {
+            outline.OutlineColor = color;
         }
 
         private void OnTriggerEnter(Collider other)
@@ -231,16 +214,16 @@ namespace TrainPuller.Scripts.Runtime.Models
                 }
             }
 
-            if (other.CompareTag("BackwardsEnd"))
-            {
-                if (other.TryGetComponent(out BackwardsEnd backwardsEnd))
-                {
-                    if (backwardsEnd.GetTrainMovement() == trainMovement)
-                    {
-                        trainMovement.HandleBackwardsMovement();
-                    }
-                }
-            }
+            // if (other.CompareTag("BackwardsEnd"))
+            // {
+            //     if (other.TryGetComponent(out BackwardsEnd backwardsEnd))
+            //     {
+            //         if (backwardsEnd.GetTrainMovement() == trainMovement)
+            //         {
+            //             trainMovement.HandleBackwardsMovement();
+            //         }
+            //     }
+            // }
 
             if (other.CompareTag("RoadBarrier"))
             {
@@ -302,6 +285,30 @@ namespace TrainPuller.Scripts.Runtime.Models
         public List<CardSlot> GetCardSlots()
         {
             return cardSlots;
+        }
+
+        public bool IsAdjacent(Vector2Int futureGridCell)
+        {
+            return currentGridCell.x - futureGridCell.x <= 1 || currentGridCell.y - futureGridCell.y <= 1;
+        }
+
+        public void BlastConfetti()
+        {
+            confettiObject.SetActive(true);
+        }
+
+        public void CloseCartCover()
+        {
+            
+            cartCover.SetActive(true);
+            foreach (var slot in cardSlots)
+            {
+                slot.cartSlotTransform.DOScaleY(0f, 0.15f);
+            }
+            cartCover.transform.DOScale(Vector3.one, 0.15f).OnComplete(() =>
+            {
+                cartCover.transform.DOLocalRotate(new Vector3(0f, -90f, 0f), 0.15f).SetEase(Ease.OutBounce);
+            });
         }
     }
 }

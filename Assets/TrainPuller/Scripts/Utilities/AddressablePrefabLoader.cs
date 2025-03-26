@@ -131,7 +131,7 @@ namespace TemplateProject.Scripts.Utilities
                 TimeManager.instance.SetTimerTMP(UIManager.instance.GetTimerTMP(),
                     UIManager.instance.GetStartLevelTimeTMP());
                 LevelManager.instance.SetLevelTMP(UIManager.instance.GetLevelTMP(), UIManager.instance.GetStartLevelTMP());
-                UIManager.instance.EnableSettingsButton();
+                // UIManager.instance.EnableSettingsButton();
                 // UIManager.instance.OpenStartScreen();
             });
         }

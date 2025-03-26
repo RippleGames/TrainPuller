@@ -114,6 +114,7 @@ MonoBehaviour:
   - {fileID: 505549768222579364}
   gameColors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
   cardColor: 0
+  outline: {fileID: 7682416172938390415}
 --- !u!114 &7682416172938390415
 MonoBehaviour:
   m_ObjectHideFlags: 0

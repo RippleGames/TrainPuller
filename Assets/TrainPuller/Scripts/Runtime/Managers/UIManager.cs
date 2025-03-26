@@ -65,7 +65,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
         {
             CloseTimer();
             CloseLevelText();
-            DisableSettingsButton();
+            // DisableSettingsButton();
             var color = screenTransitionImage.color;
             screenTransitionImage.DOColor(new Color(color.r, color.g, color.b, 1f), 0.5f).OnComplete(() =>
             {

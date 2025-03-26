@@ -1,8 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using TemplateProject.Scripts.Data;
-using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Data;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
@@ -18,8 +18,10 @@ namespace TrainPuller.Scripts.Runtime.Models
         public TrainContainer trainContainer;
         public InteractionManager interactionManager;
         public LevelData.GridColorType cartsColor;
+
         [SerializeField] public CartScript currentLeader;
-        public CartScript previousLeader;
+
+        // public CartScript previousLeader;
         [SerializeField] public CartScript currentLastCart;
         [SerializeField] public List<Vector3> trainPath = new List<Vector3>();
         public bool isMovingBackwards;
@@ -32,11 +34,14 @@ namespace TrainPuller.Scripts.Runtime.Models
         private float _stopDelay = 0.5f;
         private bool _isLeaderChanged;
         private bool _isLeaderChanging;
+
         private float _positionThreshold = 0.01f;
-        public GameObject backwardsEndPrefab;
-        public GameObject backwardsEndObject;
+
+        // public GameObject backwardsEndPrefab;
+        // public GameObject backwardsEndObject;
         private bool hasMorePathToMove = true;
         public bool isMovingToExit;
+        public Color outlineColor = Color.black;
 
         private void Start()
         {
@@ -57,11 +62,11 @@ namespace TrainPuller.Scripts.Runtime.Models
             HandlePathInitial();
 
 
-            var backwardsEnd = Instantiate(backwardsEndPrefab, carts[^1].transform.position, Quaternion.identity,
-                    transform)
-                .GetComponent<BackwardsEnd>();
-            backwardsEndObject = backwardsEnd.gameObject;
-            backwardsEnd.SetTrainMovement(this);
+            // var backwardsEnd = Instantiate(backwardsEndPrefab, carts[^1].transform.position, Quaternion.identity,
+            //         transform)
+            //     .GetComponent<BackwardsEnd>();
+            // backwardsEndObject = backwardsEnd.gameObject;
+            // backwardsEnd.SetTrainMovement(this);
         }
 
         private void HandlePathInitial()
@@ -92,14 +97,12 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (!currentLeader) return;
             if (!trainContainer.isAllFull && !isMovingToExit)
             {
-                
                 if (!interactionManager) return;
                 if (!interactionManager.GetCurrentlySelectedCart()) return;
                 if (interactionManager.GetCurrentlySelectedCart() != currentLeader)
                 {
                     if (isTrainMoving)
                     {
-                        Debug.Log("HERERERERERE");
                         isTrainMoving = false;
                         canMoveForward = true;
                         canMoveBackwards = true;
@@ -149,7 +152,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (!currentLeader || carts.Count < 2) return;
             if (trainPath.Count < 2) return;
 
-            var targetPosition = interactionManager.GetProjectedMousePositionOnTrail();
+            var targetPosition = interactionManager.GetProjectedMousePositionOnTrail(false);
             var movementDirection = (targetPosition - currentLeader.transform.position).normalized;
 
             if (movementDirection.magnitude < 0.01f) return;
@@ -168,12 +171,6 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             var isMouseBehindLeader = Vector3.Dot(movementDirection, -currentLeader.transform.forward) > 0.5f;
 
-            var leaderDistance = Vector3.Distance(carts[0].transform.position, carts[1].transform.position);
-
-            if (leaderDistance < cartSpacing * 0.65f && isMovingBackwards)
-            {
-                return;
-            }
 
             if (dotWithTrainPath < 0 || isMouseBehindLeader)
             {
@@ -187,12 +184,20 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             isMovingBackwards = dotWithPreviousCart switch
             {
-                >= 0.8f => true,
-                < -0.8f => false,
+                >= 0f => true,
+                < -0f => false,
                 _ => isMovingBackwards
             };
 
-            if (interactionManager.GetCurrentlySelectedCart() != currentLeader) return;
+            if (isMovingBackwards)
+            {
+                canMoveBackwards = false;
+                isTrainMoving = false;
+                foreach (var cart in carts)
+                {
+                    cart.isMoving = false;
+                }
+            }
 
             if (!canMoveForward && isMovingBackwards)
             {
@@ -243,7 +248,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             if (trainPath.Count <= 500) return;
             trainPath.RemoveAt(0);
-            backwardsEndObject.transform.position = trainPath[0];
+            // backwardsEndObject.transform.position = trainPath[0];
         }
 
 
@@ -325,9 +330,9 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (selectedCart == carts[0])
             {
                 currentLeader = carts[0];
-                previousLeader = currentLeader;
+                // previousLeader = currentLeader;
                 currentLastCart = carts[^1];
-                backwardsEndObject.transform.position = currentLastCart.transform.position;
+                // backwardsEndObject.transform.position = currentLastCart.transform.position;
                 _isLeaderChanging = false;
                 return;
             }
@@ -340,20 +345,20 @@ namespace TrainPuller.Scripts.Runtime.Models
                 currentLastCart = carts[^1];
                 trainPath.Clear();
                 HandlePathInitial();
-                backwardsEndObject.transform.position = currentLastCart.transform.position;
+                // backwardsEndObject.transform.position = currentLastCart.transform.position;
                 _isLeaderChanging = false;
                 return;
             }
 
 
-            previousLeader = carts[0];
+            // previousLeader = carts[0];
             carts.Reverse();
             trainContainer.InverseSlotList();
             currentLeader = carts[0];
             currentLastCart = carts[^1];
             trainPath.Clear();
             HandlePathInitial();
-            backwardsEndObject.transform.position = currentLastCart.transform.position;
+            // backwardsEndObject.transform.position = currentLastCart.transform.position;
             _isLeaderChanged = !_isLeaderChanged;
             _isLeaderChanging = false;
         }
@@ -433,6 +438,131 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             canMoveBackwards = false;
             isTrainMoving = false;
+        }
+
+        public void ChangeOutlineColor(Color color)
+        {
+            outlineColor = color;
+            foreach (var cart in carts)
+            {
+                cart.ChangeOutlineColor(color);
+            }
+
+            foreach (var card in trainContainer.GetTakenCards())
+            {
+                card.SetOutlineColor(color);
+            }
+        }
+
+        public Color GetOutlineColor()
+        {
+            return outlineColor;
+        }
+
+        public void TryBlastConfetti()
+        {
+            StartCoroutine(BlastCartConfetti());
+        }
+
+        private IEnumerator BlastCartConfetti()
+        {
+            var newCartList = new List<CartScript>();
+            newCartList.AddRange(carts);
+            foreach (var cart in newCartList)
+            {
+                cart.CloseCartCover();
+                yield return new WaitForSeconds(0.1f);
+                cart.BlastConfetti();
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+
+        public void TryDoScaleEffect()
+        {
+            foreach (var cart in carts)
+            {
+                var oldScale = cart.transform.localScale;
+                cart.transform.DOScale(oldScale * 1.2f, 0.15f).OnComplete(() =>
+                {
+                    cart.transform.DOScale(oldScale, 0.15f);
+                });
+            }
+        }
+
+        public void HandleCartPositioning()
+        {
+            var tempCartDict = new Dictionary<CartScript, int>();
+
+            foreach (var cart in carts)
+            {
+                var adjacentCartCount = GetAdjacentCartCount(cart);
+                tempCartDict.Add(cart, adjacentCartCount);
+            }
+
+            var headCart = tempCartDict.FirstOrDefault(x => x.Value == 1);
+            ArrangeCarts(headCart.Key);
+        }
+
+        private void ArrangeCarts(CartScript headCart)
+        {
+            var newList = new List<CartScript>();
+            newList.Add(headCart);
+            var currentlyCheckingCart = headCart;
+            carts.Remove(headCart);
+            while (carts.Count > 0)
+            {
+                var currentlyCheckingCartGridCell = currentlyCheckingCart.currentGridCell;
+                foreach (var cart in carts)
+                {
+                    if (newList.Contains(cart)) continue;
+                    var gridCell = cart.currentGridCell;
+                    if (Mathf.Abs(currentlyCheckingCartGridCell.x - gridCell.x) == 1 &&
+                        currentlyCheckingCartGridCell.y == gridCell.y)
+                    {
+                        newList.Add(cart);
+                        currentlyCheckingCart = cart;
+                        carts.Remove(cart);
+                        break;
+                    }
+
+                    if (Mathf.Abs(currentlyCheckingCartGridCell.y - gridCell.y) == 1 &&
+                        currentlyCheckingCartGridCell.x == gridCell.x)
+                    {
+                        newList.Add(cart);
+                        currentlyCheckingCart = cart;
+                        carts.Remove(cart);
+                        break;
+                    }
+                }
+            }
+
+            carts.Clear();
+            carts.AddRange(newList);
+        }
+
+        private int GetAdjacentCartCount(CartScript checkingCart)
+        {
+            var count = 0;
+            var checkingGridCell = checkingCart.currentGridCell;
+            foreach (var cart in carts)
+            {
+                if (cart == checkingCart) continue;
+                var comparingCartGridCell = cart.currentGridCell;
+                if (Mathf.Abs(checkingGridCell.x - comparingCartGridCell.x) == 1 &&
+                    checkingGridCell.y == comparingCartGridCell.y)
+                {
+                    count++;
+                    continue;
+                }
+
+                if (Mathf.Abs(checkingGridCell.y - comparingCartGridCell.y) == 1 &&
+                    checkingGridCell.x == comparingCartGridCell.x)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
     }
 }

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using TemplateProject.Scripts.Runtime.Models;
 using TrainPuller.Scripts.Data;
 using TrainPuller.Scripts.Runtime.Models;
 using UnityEngine;
@@ -11,18 +10,20 @@ namespace TrainPuller.Scripts.Runtime.Managers
     {
         [Header("Cached References")] private Camera _mainCam;
         [SerializeField] private CartScript currentlySelectedCart;
+        [SerializeField] LevelContainer levelContainer;
+        public LineRenderer lineRenderer;
 
         [Header("Parameters")] public LayerMask trainCartLayer;
-
-        [Header("Flags")] public bool isHolding;
-        private GridBase[,] _gridBases;
         public HashSet<Vector2Int> trailPositions;
         public HashSet<Vector2Int> gridPositions;
-        [SerializeField] LevelContainer levelContainer;
+        private GridBase[,] _gridBases;
+
+        [Header("Flags")] public bool isHolding;
+
 
         public void InitializeInteractionManager()
         {
-            AssignMainCam();            
+            AssignMainCam();
             _gridBases = levelContainer.GetGridBases();
             trailPositions = GetTrailPositions();
             gridPositions = GetGridPositions();
@@ -35,7 +36,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void Update()
         {
-
+            if (!LevelManager.instance.isGamePlayable) return;
             if (Input.GetMouseButtonDown(0) && !currentlySelectedCart && !isHolding)
             {
                 HandleTimerStart();
@@ -43,20 +44,53 @@ namespace TrainPuller.Scripts.Runtime.Managers
                 isHolding = true;
             }
 
+
+            if (Input.GetMouseButton(0))
+            {
+                if (currentlySelectedCart && isHolding)
+                {
+                    HandleLeaderChange();
+                }
+            }
+
             if (Input.GetMouseButtonUp(0))
             {
                 isHolding = false;
-                
+
                 if (currentlySelectedCart)
                 {
                     currentlySelectedCart.StopMovement();
+                    currentlySelectedCart.trainMovement.ChangeOutlineColor(Color.black);
                     currentlySelectedCart = null;
                 }
+
+                lineRenderer.enabled = false;
             }
+
 
             if (currentlySelectedCart && isHolding)
             {
                 MoveObjectAlongGrid();
+            }
+        }
+
+        private void HandleLeaderChange()
+        {
+            var ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+            if (!TryRayCast(ray, out var hitInfo, trainCartLayer)) return;
+            if (!hitInfo.transform || !hitInfo.transform.CompareTag("TrainCart")) return;
+            if (!hitInfo.transform.gameObject.TryGetComponent(out CartScript cartScript)) return;
+            var trainMovement = cartScript.GetTrainMovement();
+            if (trainMovement.carts[0] != cartScript && trainMovement.carts[^1] != cartScript) return;
+            if (currentlySelectedCart == trainMovement.carts[0] && cartScript == trainMovement.carts[^1])
+            {
+                trainMovement.MakeLeader(cartScript);
+                if (!cartScript.interactionManager)
+                {
+                    cartScript.interactionManager = this;
+                }
+
+                currentlySelectedCart = cartScript;
             }
         }
 
@@ -68,19 +102,37 @@ namespace TrainPuller.Scripts.Runtime.Managers
             }
         }
 
-        public Vector3 GetProjectedMousePositionOnTrail()
+        public Vector3 GetProjectedMousePositionOnTrail(bool isTooFar)
         {
             var mouseWorldPos = GetMouseWorldPosition();
+
             var nearestGridPos = GetNearestGridCell(mouseWorldPos, true);
+            if (isTooFar)
+            {
+                var newMouseWorldPos = mouseWorldPos;
+                var gridWorldPos = GetWorldPositionFromGrid(nearestGridPos);
+                var dir = gridWorldPos - newMouseWorldPos;
+                var distance = Vector3.Distance(newMouseWorldPos, gridWorldPos);
+                newMouseWorldPos += dir.normalized * (distance / 2);
+                var futureGridCell = GetNearestGridCell(newMouseWorldPos, true);
+                if (currentlySelectedCart.IsAdjacent(futureGridCell))
+                {
+                    mouseWorldPos = newMouseWorldPos;
+                }
+            }
 
             if (!trailPositions.Contains(nearestGridPos)) return GetNearestTrailPosition(mouseWorldPos);
             var projectedPos =
                 ProjectPositionOnTrail(mouseWorldPos, nearestGridPos);
-            return projectedPos;
+            if (currentlySelectedCart)
+            {
+                currentlySelectedCart.AddToPath(nearestGridPos);
+            }
 
+            return projectedPos;
         }
 
-        public Vector3 GetNearestTrailPosition(Vector3 position)
+        private Vector3 GetNearestTrailPosition(Vector3 position)
         {
             var nearestTrailPos = Vector2Int.zero;
             var minDistance = float.MaxValue;
@@ -106,7 +158,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             var neighbors = currentGrid.GetNeighbors();
 
             var isHorizontal = false;
-            var isVertical = false; 
+            var isVertical = false;
 
             foreach (var neighbor in neighbors)
             {
@@ -158,6 +210,26 @@ namespace TrainPuller.Scripts.Runtime.Managers
             {
                 currentlySelectedCart.AddToPath(targetGridPos);
             }
+
+            UpdateLineRenderer(mouseWorldPos);
+        }
+
+        private void UpdateLineRenderer(Vector3 mouseWorldPos)
+        {
+            if (!currentlySelectedCart)
+            {
+                lineRenderer.enabled = false;
+                return;
+            }
+
+            if (!lineRenderer.enabled)
+            {
+                lineRenderer.enabled = true;
+            }
+
+            var selectedCartPos = currentlySelectedCart.transform.position;
+            lineRenderer.SetPosition(0, new Vector3(selectedCartPos.x, 1f, selectedCartPos.z));
+            lineRenderer.SetPosition(1, new Vector3(mouseWorldPos.x, 1f, mouseWorldPos.z));
         }
 
         public Vector2Int GetNearestGridCell(Vector3 worldPos, bool inTrail)
@@ -224,7 +296,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void ProcessInteraction()
         {
-            if(currentlySelectedCart) return;
+            if (currentlySelectedCart) return;
             var ray = _mainCam.ScreenPointToRay(Input.mousePosition);
             if (!TryRayCast(ray, out var hitInfo, trainCartLayer)) return;
             if (!hitInfo.transform || !hitInfo.transform.CompareTag("TrainCart")) return;
@@ -246,6 +318,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             currentlySelectedCart.isMoving = true;
             currentlySelectedCart.trainMovement.isTrainMoving = true;
             currentlySelectedCart.interactionManager = this;
+            currentlySelectedCart.trainMovement.ChangeOutlineColor(Color.white);
         }
 
         private HashSet<Vector2Int> GetTrailPositions()
@@ -278,7 +351,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
             return cells;
         }
-        
+
         public CartScript GetCurrentlySelectedCart()
         {
             return currentlySelectedCart;
@@ -291,6 +364,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         public void HandleExit()
         {
+            lineRenderer.enabled = false;
             currentlySelectedCart = null;
             isHolding = false;
         }

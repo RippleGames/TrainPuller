@@ -15,14 +15,23 @@ namespace TrainPuller.Scripts.Runtime.Models
         public TrainMovement trainMovement;
         public bool isAllFull;
         private Queue<CardScript> _cardQueue = new Queue<CardScript>();
+        [SerializeField] private List<CardScript> takenCards;
         private Coroutine _cardTakeCoroutine;
 
         public void SetCartSlots(List<CartScript> carts)
         {
-            foreach (var cart in carts)
+            for (var i = 0; i < carts.Count; i++)
             {
+                var cart = carts[i];
+
+                if (i != 0)
+                {
+                    cart.GetCardSlots().Reverse();
+                }
+
                 cardSlots.AddRange(cart.GetCardSlots());
             }
+            // InverseSlotList();
         }
 
         public void InverseSlotList()
@@ -35,9 +44,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (!cardTransform) return null;
             if (cardSlots.Count > 0)
             {
-                var nearestSlot = cardSlots
-                    .OrderBy(x => Vector3.Distance(x.cartSlotTransform.position, cardTransform.position))
-                    .FirstOrDefault(x => x.isEmpty);
+                var nearestSlot = cardSlots.FirstOrDefault(x => x.isEmpty);
 
 
                 fullCarSlots.Add(nearestSlot);
@@ -45,6 +52,12 @@ namespace TrainPuller.Scripts.Runtime.Models
                 if (cardSlots.Count <= 0)
                 {
                     isAllFull = true;
+                    DOVirtual.DelayedCall(_cardQueue.Count * 0.4f, () =>
+                    {
+                        trainMovement.TryBlastConfetti();
+                        DOVirtual.DelayedCall(trainMovement.carts.Count * 0.2f,
+                            () => { trainMovement.TryDoScaleEffect(); });
+                    });
                 }
 
                 return nearestSlot;
@@ -94,6 +107,12 @@ namespace TrainPuller.Scripts.Runtime.Models
                 yield return null;
             }
 
+            takenCard.SetOutlineColor(trainMovement.GetOutlineColor());
+            if (!takenCards.Contains(takenCard))
+            {
+                takenCards.Add(takenCard);
+            }
+
             var oldScale = cardTransform.localScale;
             cardTransform.DOScale(oldScale * 1.2f, 0.1f).OnComplete(() => { cardTransform.DOScale(oldScale, 0.1f); });
             cardTransform.SetParent(slotTransform);
@@ -121,6 +140,11 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
 
             _cardTakeCoroutine = null;
+        }
+
+        public List<CardScript> GetTakenCards()
+        {
+            return takenCards;
         }
     }
 }

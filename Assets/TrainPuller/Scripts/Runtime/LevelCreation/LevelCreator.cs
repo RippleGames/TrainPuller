@@ -216,9 +216,18 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             HandleTrainsAndCards(_gridBases, cardParent.transform, trainParent.transform, exitParent.transform,
                 barrierParent.transform);
 
+            HandleTrainPositioning();
             currentLevelContainer.Init(gridWidth, gridHeight, levelTime, _gridBases,trainParentList);
             EditorUtility.SetDirty(currentLevelContainer);
             _currentParentObject = newParentObject;
+        }
+
+        private void HandleTrainPositioning()
+        {
+            foreach (var train in trainParentList)
+            {
+                train.HandleCartPositioning();
+            }
         }
 
         private void HandleTrainsAndCards(GridBase[,] gridBaseArray, Transform cardParent, Transform trainCartParent,
@@ -246,7 +255,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 trainParent.transform.SetParent(trainCartParent.transform);
                                 var trainMovement = trainParent.AddComponent<TrainMovement>();
                                 var trainContainer = trainParent.AddComponent<TrainContainer>();
-                                trainMovement.backwardsEndPrefab = backwardsEndPrefab;
+                                // trainMovement.backwardsEndPrefab = backwardsEndPrefab;
                                 trainContainer.trainMovement = trainMovement;
                                 trainMovement.trainContainer = trainContainer;
                                 trainMovement.speed = 30f;
@@ -272,8 +281,8 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                         trainParent.transform.SetParent(trainCartParent.transform);
                                         var newTrainMovement = trainParent.AddComponent<TrainMovement>();
                                         trainContainer = trainParent.AddComponent<TrainContainer>();
-                                        newTrainMovement.backwardsEndPrefab = backwardsEndPrefab;
-                                        trainContainer.trainMovement = trainMovement;
+                                        // newTrainMovement.backwardsEndPrefab = backwardsEndPrefab;
+                                        trainContainer.trainMovement = newTrainMovement;
                                         newTrainMovement.trainContainer = trainContainer;
                                         newTrainMovement.speed = 30f;
                                         newTrainMovement.cartSpacing = 1;

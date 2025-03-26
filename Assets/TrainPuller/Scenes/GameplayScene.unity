@@ -431,7 +431,7 @@ MonoBehaviour:
   loseTitleTMP: {fileID: 4848380916751807892}
   levelTextParent: {fileID: 7375480707992523842}
   levelTMP: {fileID: 7638944380489342519}
-  settingsPanel: {fileID: 3373947725196062467}
+  settingsPanel: {fileID: 4031821146327066489}
   settingsButton: {fileID: 9216957986410545757}
   audioSlider: {fileID: 4201546099607900458}
   vibrationSlider: {fileID: 8883937508120488325}
@@ -1369,7 +1369,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.23
+    m_Strength: 0.75
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
@@ -1418,13 +1418,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1190825858}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.6671177, y: -0, z: -0, w: 0.7449523}
+  m_LocalRotation: {x: 0.5371765, y: -0, z: -0, w: 0.84347}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 470688869}
-  m_LocalEulerAnglesHint: {x: 83.69, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 64.983, y: 0, z: 0}
 --- !u!114 &1190825861
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2391,6 +2391,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1836405168}
   - component: {fileID: 1836405169}
+  - component: {fileID: 1836405170}
   m_Layer: 0
   m_Name: InteractionManager
   m_TagString: Untagged
@@ -2426,11 +2427,125 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentlySelectedCart: {fileID: 0}
+  levelContainer: {fileID: 0}
+  lineRenderer: {fileID: 1836405170}
   trainCartLayer:
     serializedVersion: 2
     m_Bits: 128
   isHolding: 0
-  levelContainer: {fileID: 0}
+--- !u!120 &1836405170
+LineRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1836405167}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 1
+  m_Positions:
+  - {x: 0, y: -1, z: 0}
+  - {x: 0, y: -1, z: 0}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0.0018157959
+        value: 0.1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.9891107
+        value: 0.3
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 0.31764707, b: 0, a: 0.78431374}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: 0
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 90
+    numCapVertices: 90
+    alignment: 0
+    textureMode: 1
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_MaskInteraction: 0
+  m_UseWorldSpace: 1
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!1 &1857247361
 GameObject:
   m_ObjectHideFlags: 0
@@ -3260,10 +3375,10 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: TemplateProject.Scripts.Runtime.Managers.UIManager,
+      - m_Target: {fileID: 1205465981}
+        m_TargetAssemblyTypeName: TrainPuller.Scripts.Runtime.Managers.LevelManager,
           Assembly-CSharp
-        m_MethodName: RestartButton
+        m_MethodName: RestartLevel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4614,8 +4729,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: BusJamClone.Scripts.Runtime.Managers.UIManager,
+      - m_Target: {fileID: 398201138}
+        m_TargetAssemblyTypeName: TrainPuller.Scripts.Runtime.Managers.UIManager,
           Assembly-CSharp
         m_MethodName: CloseSettingsMenu
         m_Mode: 1
@@ -5148,7 +5263,7 @@ GameObject:
   - component: {fileID: 3333411831843926187}
   - component: {fileID: 7644371352570415253}
   m_Layer: 5
-  m_Name: Inner Glow (Background)
+  m_Name: SettingsChildPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5285,21 +5400,10 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Ricimi.SpriteSwapper, Assembly-CSharp
-        m_MethodName: SwapSprite
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Ricimi.ColorSwapper, Assembly-CSharp
-        m_MethodName: SwapColor
+      - m_Target: {fileID: 879515033}
+        m_TargetAssemblyTypeName: TrainPuller.Scripts.Runtime.Managers.GameplayManager,
+          Assembly-CSharp
+        m_MethodName: ToggleAudio
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -8504,8 +8608,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: BusJamClone.Scripts.Runtime.Managers.UIManager,
+      - m_Target: {fileID: 398201138}
+        m_TargetAssemblyTypeName: TrainPuller.Scripts.Runtime.Managers.UIManager,
           Assembly-CSharp
         m_MethodName: OpenSettingsMenu
         m_Mode: 1
@@ -8793,8 +8897,8 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: BusJamClone.Scripts.Runtime.Managers.UIManager,
+      - m_Target: {fileID: 879515033}
+        m_TargetAssemblyTypeName: TrainPuller.Scripts.Runtime.Managers.GameplayManager,
           Assembly-CSharp
         m_MethodName: ToggleVibration
         m_Mode: 1
@@ -8881,7 +8985,7 @@ RectTransform:
   m_GameObject: {fileID: 4031821146327066489}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8120082889026125229}
@@ -9000,7 +9104,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
