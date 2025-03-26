@@ -305,6 +305,7 @@ MonoBehaviour:
   outline: {fileID: 264395197263126930}
   confettiObject: {fileID: 4289250215458813365}
   cartCover: {fileID: 3051008751018653164}
+  crashParticle: {fileID: 180954, guid: 13e43982d1a0a9d40909a898f9762727, type: 3}
   moveSpeed: 10
   isMoving: 0
   interactionManager: {fileID: 0}

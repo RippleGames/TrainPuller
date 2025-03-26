@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using TemplateProject.Scripts.Data;
+using TemplateProject.Scripts.Runtime.Managers;
 using TrainPuller.Scripts.Data;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
@@ -365,6 +366,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         public void GetOutFromExit(ExitBarrierScript exitBarrierScript)
         {
+            if(isMovingToExit) return;
             interactionManager.HandleExit();
             transform.SetParent(null);
             isTrainMoving = true;
@@ -414,8 +416,27 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         public void HandleFrontCollision()
         {
+            if (VibrationManager.instance)
+            {
+                VibrationManager.instance.Heavy();
+            }
+
+            StartCoroutine(ShakeTrain());
             isTrainMoving = false;
             canMoveForward = false;
+        }
+
+        private IEnumerator ShakeTrain()
+        {
+            var newList = new List<CartScript>();
+            newList.AddRange(carts);
+            foreach (var cart in newList)
+            {
+                cart.transform.DOShakeRotation(0.15f, new Vector3(0f, 0f, 15f), 4, 90f, true,
+                    ShakeRandomnessMode.Harmonic);
+                yield return new WaitForSeconds(0.05f);
+            }
+            
         }
 
         public void HandleBackwardsMovement()

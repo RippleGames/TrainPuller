@@ -17,6 +17,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private Outline outline;
         [SerializeField] private GameObject confettiObject;
         [SerializeField] private GameObject cartCover;
+        [SerializeField] private GameObject crashParticle;
 
         [SerializeField] private Queue<Vector2Int> pathQueue = new();
         private Vector3 _movementTarget;
@@ -198,6 +199,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                             if (interactionManager.GetCurrentlySelectedCart() == this)
                             {
                                 trainMovement.HandleFrontCollision();
+                                HandleCrashParticle(other.ClosestPoint(transform.position));
                             }
                         }
                     }
@@ -209,8 +211,11 @@ namespace TrainPuller.Scripts.Runtime.Models
                     {
                         trainMovement.GetOutFromExit(exitBarrierScript);
                     }
-
-                    trainMovement.HandleFrontCollision();
+                    else
+                    {
+                        trainMovement.HandleFrontCollision();
+                        HandleCrashParticle(other.ClosestPoint(transform.position));
+                    }
                 }
             }
 
@@ -236,15 +241,24 @@ namespace TrainPuller.Scripts.Runtime.Models
                             if (!roadBarrierScript.TryOpenBarrier(trainMovement.cartsColor))
                             {
                                 trainMovement.HandleFrontCollision();
+                                HandleCrashParticle(other.ClosestPoint(transform.position));
                             }
                         }
                         else
                         {
                             trainMovement.HandleFrontCollision();
+                            HandleCrashParticle(other.ClosestPoint(transform.position));
                         }
                     }
                 }
             }
+        }
+
+        private void HandleCrashParticle(Vector3 closestPoint)
+        {
+            var particle = Instantiate(crashParticle, new Vector3(closestPoint.x, 0.5f, closestPoint.z),
+                Quaternion.identity);
+            Destroy(particle, 1f);
         }
 
         private void OnTriggerStay(Collider other)
@@ -299,12 +313,12 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         public void CloseCartCover()
         {
-            
             cartCover.SetActive(true);
             foreach (var slot in cardSlots)
             {
                 slot.cartSlotTransform.DOScaleY(0f, 0.15f);
             }
+
             cartCover.transform.DOScale(Vector3.one, 0.15f).OnComplete(() =>
             {
                 cartCover.transform.DOLocalRotate(new Vector3(0f, -90f, 0f), 0.15f).SetEase(Ease.OutBounce);
