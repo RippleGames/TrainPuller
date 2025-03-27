@@ -179,12 +179,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Level
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1735e9a515a1ba42b29456527a19940
-    m_Address: Level_30
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Level
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f1e59158058d0440a9db323935105ef5
     m_Address: Level_12
     m_ReadOnly: 0

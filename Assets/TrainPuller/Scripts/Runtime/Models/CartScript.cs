@@ -19,6 +19,9 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private GameObject cartCover;
         [SerializeField] private GameObject crashParticle;
         [SerializeField] private GameObject onlyOneDirectionSign;
+        [AudioClipName] public string cardPlaceSound;
+        [AudioClipName] public string cartCompleteSound;
+
 
         [SerializeField] private Queue<Vector2Int> pathQueue = new();
         private Vector3 _movementTarget;
@@ -343,7 +346,10 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             cartCover.transform.DOScale(Vector3.one, 0.15f).OnComplete(() =>
             {
-                cartCover.transform.DOLocalRotate(Vector3.zero, 0.15f).SetEase(Ease.OutBounce);
+                cartCover.transform.DOLocalRotate(Vector3.zero, 0.15f).SetEase(Ease.OutBounce).OnComplete(() =>
+                {
+                    AudioManager.instance.PlaySound(cartCompleteSound,true,false,1f,1f);
+                });
             });
         }
     }

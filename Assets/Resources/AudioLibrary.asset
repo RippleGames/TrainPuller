@@ -13,15 +13,15 @@ MonoBehaviour:
   m_Name: AudioLibrary
   m_EditorClassIdentifier: 
   audioClips:
-  - clipName: BusArrived
-    clip: {fileID: 8300000, guid: 558574ec34ab6604cb067e93a9c79a87, type: 3}
-  - clipName: PlaceStickman
-    clip: {fileID: 8300000, guid: 0dde28d5b63bbe948b2a4573aeddbbd7, type: 3}
+  - clipName: TrainPull
+    clip: {fileID: 8300000, guid: 93da06c8b8f3c334693c328eb4d6b8f7, type: 3}
+  - clipName: TrainComplete
+    clip: {fileID: 8300000, guid: 4f3b9552ef824f8418dd7dd3a674c7c6, type: 3}
   - clipName: LevelCompleted
     clip: {fileID: 8300000, guid: 71ba624152b9df14894754d720b54952, type: 3}
   - clipName: LevelFailed
     clip: {fileID: 8300000, guid: 5a62cd38201decc4f8fda24bfd31bbbd, type: 3}
-  - clipName: MatchComplete
-    clip: {fileID: 8300000, guid: 78cf5e6925ee5ff45a6fcf4ea89f2ec5, type: 3}
+  - clipName: CardPlace
+    clip: {fileID: 8300000, guid: 058145d60532b524f9290ec56ec99aec, type: 3}
   - clipName: Pop
     clip: {fileID: 8300000, guid: f05cf28f716a5b74d9e0261729d75ee1, type: 3}

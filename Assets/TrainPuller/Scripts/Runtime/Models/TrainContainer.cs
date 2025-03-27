@@ -2,28 +2,47 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using TemplateProject.Scripts.Data;
+using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace TrainPuller.Scripts.Runtime.Models
 {
     public class TrainContainer : MonoBehaviour
     {
         [SerializeField] private List<CardSlot> cardSlots = new List<CardSlot>();
-
         [SerializeField] private List<CardSlot> fullCarSlots = new List<CardSlot>();
         public TrainMovement trainMovement;
         public bool isAllFull;
         private Queue<CardScript> _cardQueue = new Queue<CardScript>();
         [SerializeField] private List<CardScript> takenCards;
         private Coroutine _cardTakeCoroutine;
+        [Header("Parameters")] [AudioClipName] public string cardPlaceSound;
+        private float _pitch = 1f;
+        private float _glissandoTime = 1f;
+        private float _glissandoTimer;
+        private bool _isGlissandoActive;
+
+        private void Update()
+        {
+            HandleGlissandoReset();
+        }
+
+        private void HandleGlissandoReset()
+        {
+            if (!_isGlissandoActive) return;
+            _glissandoTimer += Time.deltaTime;
+            if (!(_glissandoTimer >= _glissandoTime)) return;
+            _pitch = 1f;
+            _glissandoTimer = 0f;
+            _isGlissandoActive = false;
+        }
 
         public void SetCartSlots(List<CartScript> carts)
         {
             for (var i = 0; i < carts.Count; i++)
             {
                 var cart = carts[i];
-
                 if (i != 0)
                 {
                     cart.GetCardSlots().Reverse();
@@ -31,7 +50,6 @@ namespace TrainPuller.Scripts.Runtime.Models
 
                 cardSlots.AddRange(cart.GetCardSlots());
             }
-            // InverseSlotList();
         }
 
         public void InverseSlotList()
@@ -45,10 +63,9 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (cardSlots.Count > 0)
             {
                 var nearestSlot = cardSlots.FirstOrDefault(x => x.isEmpty);
-
-
                 fullCarSlots.Add(nearestSlot);
                 cardSlots.Remove(nearestSlot);
+
                 if (cardSlots.Count <= 0)
                 {
                     isAllFull = true;
@@ -67,7 +84,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             return null;
         }
 
-        public void TakeCard(CardScript takenCard)
+        private void TakeCard(CardScript takenCard)
         {
             if (isAllFull) return;
             var emptySlot = GetClosestSlot(takenCard.transform);
@@ -80,16 +97,22 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private IEnumerator MoveCardToSlot(CardScript takenCard, CardSlot targetSlot)
         {
+            
+            if (!_isGlissandoActive)
+            {
+                _isGlissandoActive = true;
+            }
+
+            _glissandoTimer = 0f;
+
             var cardTransform = takenCard.transform;
             var slotTransform = targetSlot.cartSlotTransform;
-
             var startPos = cardTransform.position;
             var endPos = slotTransform.position;
             var midPoint = (startPos + endPos) / 2;
             midPoint.y += 2f;
 
             var worldTargetRotation = slotTransform.rotation * Quaternion.Euler(0f, 90f, 90f);
-
             var duration = 0.35f;
             var elapsedTime = 0f;
 
@@ -97,13 +120,10 @@ namespace TrainPuller.Scripts.Runtime.Models
             {
                 elapsedTime += Time.deltaTime;
                 var t = elapsedTime / duration;
-
                 var updatedSlotPosition = slotTransform.position;
                 var currentTarget = Vector3.Lerp(Vector3.Lerp(startPos, midPoint, t), updatedSlotPosition, t);
                 cardTransform.position = currentTarget;
-
                 cardTransform.rotation = Quaternion.Slerp(cardTransform.rotation, worldTargetRotation, t);
-
                 yield return null;
             }
 
@@ -118,6 +138,8 @@ namespace TrainPuller.Scripts.Runtime.Models
             cardTransform.SetParent(slotTransform);
             cardTransform.localRotation = Quaternion.Euler(0f, 90f, 90f);
             cardTransform.localPosition = Vector3.zero;
+            _pitch *= 1.12246f;
+            AudioManager.instance.PlaySound(cardPlaceSound,true,false,1f,_pitch);
         }
 
         public void TakeCardWithDelay(CardScript takenCard)
@@ -142,16 +164,17 @@ namespace TrainPuller.Scripts.Runtime.Models
             _cardTakeCoroutine = null;
         }
 
+
         public List<CardScript> GetTakenCards()
         {
             return takenCards;
         }
     }
-}
 
-[System.Serializable]
-public class CardSlot
-{
-    public Transform cartSlotTransform;
-    public bool isEmpty = true;
+    [System.Serializable]
+    public class CardSlot
+    {
+        public Transform cartSlotTransform;
+        public bool isEmpty = true;
+    }
 }

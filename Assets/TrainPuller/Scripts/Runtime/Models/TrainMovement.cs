@@ -67,6 +67,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 carts[0].transform.eulerAngles.y - 180f, carts[0].transform.eulerAngles.z));
             HandlePathInitial();
 
+            trainContainer.cardPlaceSound = carts[0].cardPlaceSound;
 
             // var backwardsEnd = Instantiate(backwardsEndPrefab, carts[^1].transform.position, Quaternion.identity,
             //         transform)

@@ -94,7 +94,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             totalPlayedLevelCount++;
             if (levelIndex >= totalLevelCount)
             {
-                levelIndex = 0;
+                levelIndex = 11;
             }
 
             PlayerPrefs.SetInt("CurrentLevel", levelIndex);
