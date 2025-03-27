@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +45,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         public bool isMovingToExit;
         public Color outlineColor = Color.black;
 
+
         private void Start()
         {
             SetupCarts();
@@ -59,6 +61,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                 cart.gridBases = levelContainer.GetGridBases();
             }
 
+            CheckTrainRestrictions();
+
             carts[0].transform.rotation = Quaternion.Euler(new Vector3(carts[0].transform.eulerAngles.x,
                 carts[0].transform.eulerAngles.y - 180f, carts[0].transform.eulerAngles.z));
             HandlePathInitial();
@@ -69,6 +73,20 @@ namespace TrainPuller.Scripts.Runtime.Models
             //     .GetComponent<BackwardsEnd>();
             // backwardsEndObject = backwardsEnd.gameObject;
             // backwardsEnd.SetTrainMovement(this);
+        }
+
+        private void CheckTrainRestrictions()
+        {
+            if (carts.Count <= 1) return;
+            if (!carts[0].isOnlyOneDirection) return;
+            carts[0].ActivateDirectionSign();
+            carts[^1].ActivateDirectionSign();
+
+
+            carts[0].isHorizontalLocked =
+                Math.Abs(carts[0].transform.position.x - carts[^1].transform.position.x) < 0.1f;
+            carts[^1].isHorizontalLocked =
+                Math.Abs(carts[0].transform.position.x - carts[^1].transform.position.x) < 0.1f;
         }
 
         private void HandlePathInitial()
@@ -153,8 +171,8 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (_isLeaderChanging) return;
             if (!currentLeader || carts.Count < 2) return;
             if (trainPath.Count < 2) return;
-            if(!interactionManager) return;
-            
+            if (!interactionManager) return;
+
             var targetPosition = interactionManager.GetProjectedMousePositionOnTrail(true);
             var movementDirection = (targetPosition - currentLeader.transform.position).normalized;
 
@@ -293,6 +311,13 @@ namespace TrainPuller.Scripts.Runtime.Models
                 }
             }
 
+            if (currentLeader.isOnlyOneDirection)
+            {
+                if (Vector3.Distance(targetPosition, leader.transform.position) <= cartSpacing*0.9f) return;
+                follower.transform.position = targetPosition;
+                return;
+            }
+
             follower.transform.position = targetPosition;
             UpdateFollowerRotation(follower, leader.transform.position);
         }
@@ -348,7 +373,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 currentLeader = carts[0];
                 currentLastCart = carts[^1];
                 trainPath.Clear();
-                HandlePathInitial();             
+                HandlePathInitial();
                 interactionManager.dragPath.Clear();
                 // backwardsEndObject.transform.position = currentLastCart.transform.position;
                 _isLeaderChanging = false;
@@ -371,7 +396,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         public void GetOutFromExit(ExitBarrierScript exitBarrierScript)
         {
-            if(isMovingToExit) return;
+            if (isMovingToExit) return;
             interactionManager.HandleExit();
             transform.SetParent(null);
             isTrainMoving = true;
@@ -441,7 +466,6 @@ namespace TrainPuller.Scripts.Runtime.Models
                     ShakeRandomnessMode.Harmonic);
                 yield return new WaitForSeconds(0.05f);
             }
-            
         }
 
         public void HandleBackwardsMovement()

@@ -18,6 +18,7 @@ namespace TemplateProject.Scripts.Data
         public bool isTrainSpawned;
         public bool isExit;
         public bool isBarrier;
+        public bool isOneDirection;
     }
 
     [Serializable]
@@ -72,11 +73,12 @@ namespace TemplateProject.Scripts.Data
         public GridCell[,] GetGrid() => gridCells;
         public GridCell GetGridCell(int x, int y) => gridCells[x, y];
 
-        public void SetCellColor(int x, int y, GridColorType stackColor, bool isExit, bool isBarrier, int subIndex)
+        public void SetCellColor(int x, int y, GridColorType stackColor, bool isExit, bool isBarrier, bool isOneDirection, int subIndex)
         {
             var cell = gridCells[x, y];
             cell.isExit = isExit;
             cell.isBarrier = isBarrier;
+            cell.isOneDirection = isOneDirection;
             if (cell.stackData.colorTypes == null)
             {
                 cell.stackData.colorTypes = new List<LevelData.GridColorType>();
@@ -129,6 +131,7 @@ namespace TemplateProject.Scripts.Data
             cell.stackData.colorTypes.Add(LevelData.GridColorType.None);
             cell.isExit = false;
             cell.isBarrier = false;
+            cell.isOneDirection = false;
             gridCells[x, y] = cell;
         }
     }

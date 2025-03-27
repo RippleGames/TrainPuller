@@ -18,12 +18,15 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private GameObject confettiObject;
         [SerializeField] private GameObject cartCover;
         [SerializeField] private GameObject crashParticle;
+        [SerializeField] private GameObject onlyOneDirectionSign;
 
         [SerializeField] private Queue<Vector2Int> pathQueue = new();
         private Vector3 _movementTarget;
         [SerializeField] private float moveSpeed = 10f;
         private Vector3 _movementDirection;
         public bool isMoving;
+        public bool isOnlyOneDirection;
+        public bool isHorizontalLocked;
         public InteractionManager interactionManager;
         public GridBase[,] gridBases;
         private Vector3 _previousLeaderPosition;
@@ -66,14 +69,26 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (Vector3.Distance(transform.position, targetPos) > 1.75f) return;
             if (interactionManager.IsPositionOnTrail(targetPos))
             {
-                
-                UpdateRotation(this, targetPos);
-
-                if ((trainMovement.isMovingBackwards && trainMovement.canMoveBackwards) ||
-                    (!trainMovement.isMovingBackwards && trainMovement.canMoveForward))
+                if (!isOnlyOneDirection)
                 {
-                    transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
+                    UpdateRotation(this, targetPos);
                 }
+
+                if ((!trainMovement.isMovingBackwards || !trainMovement.canMoveBackwards) &&
+                    (trainMovement.isMovingBackwards || !trainMovement.canMoveForward)) return;
+
+                if (isOnlyOneDirection)
+                {
+                    var position = transform.position;
+                    var direction = (targetPos - position).normalized;
+                    var dot = Vector3.Dot(direction, transform.forward);
+                    targetPos = isHorizontalLocked
+                        ? new Vector3(position.x, position.y, dot < 0 ? position.z : targetPos.z)
+                        : new Vector3(dot < 0 ? position.x : targetPos.x, position.y, position.z);
+                }
+
+
+                transform.position = Vector3.Lerp(transform.position, targetPos, (moveSpeed * Time.deltaTime));
             }
             else
             {
@@ -128,7 +143,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             trainMovement = movement;
         }
 
-        public void SetCartProperties(int x, int y, LevelData.GridColorType colorType)
+        public void SetCartProperties(int x, int y, LevelData.GridColorType colorType, bool onlyOneDirection)
         {
             currentGridCell = new Vector2Int(x, y);
             var currentMaterial = colors.activeMaterials[(int)colorType];
@@ -139,6 +154,13 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
 
             cartColor = colorType;
+
+            isOnlyOneDirection = onlyOneDirection;
+        }
+
+        public void ActivateDirectionSign()
+        {
+            onlyOneDirectionSign.transform.localScale = Vector3.one * 2f;
         }
 
         public TrainMovement GetTrainMovement()

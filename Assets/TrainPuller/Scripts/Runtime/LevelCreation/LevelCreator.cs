@@ -50,6 +50,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         [SerializeField] private LevelData.GridColorType colorTypes;
         public bool isExit;
         public bool isBarrier;
+        public bool isOnlyOneDirection;
 
         [Header("Constant Variables")] [SerializeField]
         private float spaceModifier;
@@ -71,7 +72,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
         public void GridButtonAction(int x, int y, int index)
         {
             if (_levelData == null) return;
-            _levelData.SetCellColor(x, y, colorTypes, isExit, isBarrier, index);
+            _levelData.SetCellColor(x, y, colorTypes, isExit, isBarrier, isOnlyOneDirection, index);
             EditorUtility.SetDirty(this);
         }
 
@@ -217,7 +218,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                 barrierParent.transform);
 
             HandleTrainPositioning();
-            currentLevelContainer.Init(gridWidth, gridHeight, levelTime, _gridBases,trainParentList);
+            currentLevelContainer.Init(gridWidth, gridHeight, levelTime, _gridBases, trainParentList);
             EditorUtility.SetDirty(currentLevelContainer);
             _currentParentObject = newParentObject;
         }
@@ -305,7 +306,7 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                                 var trainCartRotation = GetCartRotation(i, j);
                                 trainCart.transform.eulerAngles = trainCartRotation;
                                 var cartScript = trainCart.GetComponent<CartScript>();
-                                cartScript.SetCartProperties(i, j, stackDataColorTypes[1]);
+                                cartScript.SetCartProperties(i, j, stackDataColorTypes[1], _levelData.GetGridCell(i,j).isOneDirection);
                                 if (trainMovement.carts.Contains(cartScript)) continue;
                                 trainMovement.carts.Add(cartScript);
                                 trainMovement.cartCells.Add(_gridBases[i, j]);

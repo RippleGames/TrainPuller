@@ -1,4 +1,4 @@
-using MoreMountains.NiceVibrations;
+using Lofelt.NiceVibrations;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
@@ -33,35 +33,35 @@ namespace TemplateProject.Scripts.Runtime.Managers
         {
             if (!GameplayManager.instance.GetVibration())
                 return;
-            MMVibrationManager.Haptic(HapticTypes.LightImpact);
+            HapticPatterns.PlayPreset(HapticPatterns.PresetType.LightImpact);
         }
 
         public void Medium()
         {
             if (!GameplayManager.instance.GetVibration())
                 return;
-            MMVibrationManager.Haptic(HapticTypes.MediumImpact);
+            HapticPatterns.PlayPreset(HapticPatterns.PresetType.MediumImpact);
         }
 
         public void Heavy()
         {
             if (!GameplayManager.instance.GetVibration())
                 return;
-            MMVibrationManager.Haptic(HapticTypes.HeavyImpact);
+            HapticPatterns.PlayPreset(HapticPatterns.PresetType.HeavyImpact);
         }
 
         public void Win()
         {
             if (!GameplayManager.instance.GetVibration())
                 return;
-            MMVibrationManager.Haptic(HapticTypes.Success);
+            HapticPatterns.PlayPreset(HapticPatterns.PresetType.Success);
         }
         
         public void Fail()
         {
             if (!GameplayManager.instance.GetVibration())
                 return;
-            MMVibrationManager.Haptic(HapticTypes.Failure);
+            HapticPatterns.PlayPreset(HapticPatterns.PresetType.Failure);
         }
     }
 }

@@ -157,6 +157,16 @@ namespace TrainPuller.Scripts.Editor
                         {
                             text += "," + "B";
                         }
+                    }else if (cell.isOneDirection)
+                    {
+                        if (text == "")
+                        {
+                            text += "OD";
+                        }
+                        else
+                        {
+                            text += "," + "OD";
+                        }
                     }
 
                     var buttonRect = GUILayoutUtility.GetRect(new GUIContent(text), style, GUILayout.Width(50),
