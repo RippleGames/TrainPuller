@@ -50,10 +50,12 @@ namespace TrainPuller.Scripts.Utilities
 
             if (entry != null) return;
             entry = settings.CreateOrMoveEntry(assetGUID, group);
+            entry.SetLabel("Level", true, true);
             entry.address = Path.GetFileNameWithoutExtension(prefabPath);
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryAdded, entry, true);
-            AssetDatabase.SaveAssets();
-            Debug.Log($"Prefab assigned to Addressables group: {groupName}");
+            AssetDatabase.SaveAssets();                
+            string labels = string.Join(", ", entry.labels);
+            Debug.Log($"Prefab assigned to Addressables group: {groupName}, with Labels = {labels}");
         }
 
         public void RemovePrefabFromAddressablesAndDelete(int levelIndex)

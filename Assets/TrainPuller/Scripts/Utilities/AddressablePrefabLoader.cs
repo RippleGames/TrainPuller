@@ -21,7 +21,7 @@ namespace TemplateProject.Scripts.Utilities
         [SerializeField] private CinemachineVirtualCamera virtualCamera;
         private GameObject loadedPrefabInstance;
 
-        [Header("Variables")] public string levelGroupName = "LevelsGroup";
+        [Header("Variables")] public string label = "Level";
 
 #if UNITY_EDITOR
         [Header("Editor")] public Action<GameObject> callbackAction;
@@ -33,27 +33,26 @@ namespace TemplateProject.Scripts.Utilities
             await Addressables.InitializeAsync().Task;
             var prefabAddress = $"Level_{LevelManager.instance.GetLevelIndex()}";
             LoadPrefab(prefabAddress);
-            AssignLevelCount();
+            AssignLevelCount(label);
 
         }
         
-        private async void AssignLevelCount()
+        private void AssignLevelCount(string label)
         {
-            int count = await GetAddressableGroupEntryCount(levelGroupName);
-            LevelManager.instance.SetTotalLevelCount(count);
+            Addressables.LoadResourceLocationsAsync(label).Completed += OnLocationsLoaded;
         }
 
-        private async Task<int> GetAddressableGroupEntryCount(string label)
+        void OnLocationsLoaded(AsyncOperationHandle<IList<UnityEngine.ResourceManagement.ResourceLocations.IResourceLocation>> handle)
         {
-            AsyncOperationHandle<IList<UnityEngine.ResourceManagement.ResourceLocations.IResourceLocation>> handle =
-                Addressables.LoadResourceLocationsAsync(label);
-
-            await handle.Task;
-
-            int count = handle.Status == AsyncOperationStatus.Succeeded ? handle.Result.Count : 0;
-
-            Addressables.Release(handle);
-            return count;
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                
+                LevelManager.instance.SetTotalLevelCount(handle.Result.Count);
+            }
+            else
+            {
+                Debug.LogError("Addressables yüklenirken hata oluştu.");
+            }
         }
 
         private void LoadPrefab(string prefabAddress)
@@ -77,7 +76,7 @@ namespace TemplateProject.Scripts.Utilities
             }
             else
             {
-                Debug.LogError($"Failed to load prefab from Addressables group: {levelGroupName}");
+                Debug.LogError($"Failed to load prefab from Addressables group: {label}");
             }
         }
 #if UNITY_EDITOR
