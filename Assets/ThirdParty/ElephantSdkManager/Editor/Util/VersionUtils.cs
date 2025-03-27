@@ -14,13 +14,57 @@ namespace ElephantSdkManager.Util
 {
     public static class VersionUtils
     {
+        private static bool IsLegacyVersion(string version)
+        {
+            version = version.TrimStart('v');
+            var parts = version.Split('.');
+            return parts.Length > 0 && int.TryParse(parts[0], out var firstPart) && firstPart < 2000;
+        }
+
+        private static bool IsNewVersion(string version)
+        {
+            version = version.TrimStart('v');
+            var parts = version.Split('.');
+            return parts.Length > 0 && int.TryParse(parts[0], out var firstPart) && firstPart >= 2024;
+        }
+
         public static int CompareVersions(string a, string b)
         {
             if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return 0;
 
-            var versionA = VersionStringToInts(a);
-            var versionB = VersionStringToInts(b);
-            for (var i = 0; i < Mathf.Max(versionA.Length, versionB.Length); i++)
+            a = a.TrimStart('v');
+            b = b.TrimStart('v');
+
+            var isALegacy = IsLegacyVersion(a);
+            var isBLegacy = IsLegacyVersion(b);
+            var isANew = IsNewVersion(a);
+            var isBNew = IsNewVersion(b);
+
+            if ((isALegacy && isBNew) || (isANew && isBLegacy))
+            {
+                return isANew ? 1 : -1;
+            }
+
+            if (isALegacy && isBLegacy)
+            {
+                return CompareLegacyVersions(a, b);
+            }
+
+            if (isANew && isBNew)
+            {
+                return CompareNewVersions(a, b);
+            }
+
+            Debug.LogWarning($"Unclear version format comparison: {a} vs {b}");
+            return string.Compare(a, b, StringComparison.Ordinal);
+        }
+
+        private static int CompareLegacyVersions(string a, string b)
+        {
+            var versionA = VersionStringToIntsLegacy(a);
+            var versionB = VersionStringToIntsLegacy(b);
+
+            for (var i = 0; i < Math.Max(versionA.Length, versionB.Length); i++)
             {
                 if (VersionPiece(versionA, i) < VersionPiece(versionB, i))
                     return -1;
@@ -31,60 +75,165 @@ namespace ElephantSdkManager.Util
             return 0;
         }
 
-        public static bool IsEqualVersion(string a, string b)
+        private static int[] VersionStringToIntsLegacy(string version)
         {
-            return a.Equals(b);
-        }
-
-
-        private static int VersionPiece(IList<int> versionInts, int pieceIndex)
-        {
-            return pieceIndex < versionInts.Count ? versionInts[pieceIndex] : 0;
-        }
-
-
-        private static int[] VersionStringToInts(string version)
-        {
-            int piece;
             if (version.Contains("_internal"))
             {
                 version = version.Replace("_internal", string.Empty);
             }
 
             return version.Split('.')
-                .Select(v => int.TryParse(v, NumberStyles.Any, CultureInfo.InvariantCulture, out piece) ? piece : 0)
+                .Select(v => int.TryParse(v, NumberStyles.Any, CultureInfo.InvariantCulture, out int piece) ? piece : 0)
                 .ToArray();
+        }
+
+        private static int CompareNewVersions(string a, string b)
+        {
+            var partsA = VersionStringToIntsNew(a);
+            var partsB = VersionStringToIntsNew(b);
+
+            if (partsA[0] != partsB[0])
+                return partsA[0].CompareTo(partsB[0]);
+
+            if (partsA[1] != partsB[1])
+                return partsA[1].CompareTo(partsB[1]);
+
+            return partsA[2].CompareTo(partsB[2]);
+        }
+
+        private static int[] VersionStringToIntsNew(string version)
+        {
+            var parts = version.Split('.');
+            if (parts.Length != 3)
+            {
+                Debug.LogError($"Invalid new version format: {version}. Expected format: YYYY.MM.BUILD");
+                return new[] { 2024, 1, 0 }; // Safe default
+            }
+
+            var result = new int[3];
+            for (var i = 0; i < 3; i++)
+            {
+                if (!int.TryParse(parts[i], NumberStyles.Any, CultureInfo.InvariantCulture, out result[i]))
+                {
+                    Debug.LogError($"Failed to parse version component: {parts[i]} in version: {version}");
+                    result[i] = 0;
+                }
+            }
+
+            return result;
+        }
+        
+        public static bool IsEqualVersion(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b))
+                return false;
+
+            a = a.TrimStart('v');
+            b = b.TrimStart('v');
+
+            return a.Equals(b);
+        }
+        private static int VersionPiece(IList<int> versionInts, int pieceIndex)
+        {
+            return pieceIndex < versionInts.Count ? versionInts[pieceIndex] : 0;
+        }
+
+        private static readonly Dictionary<string, List<string>> MediationPaths = new()
+        {
+            {
+                "max", new List<string>
+                {
+                    "/Elephant/ElephantAds/MAX/RollicApplovinIDs.cs",
+                    "/RollicGames/MAX/RollicApplovinIDs.cs",
+                    "/RollicGames/RollicApplovinIDs.cs"
+                }
+            },
+            {
+                "is", new List<string>
+                {
+                    "/Elephant/ElephantAds/IS/RollicIronSourceIDs.cs",
+                    "/RollicGames/IS/RollicIronSourceIDs.cs",
+                    "/RollicGames/RollicIronSourceIDs.cs"
+                }
+            }
+        };
+
+        private static readonly List<string> ElephantPaths = new()
+        {
+            "/Elephant/ElephantCore/Core/ElephantThirdPartyIds.cs",
+            "/Elephant/Core/ElephantThirdPartyIds.cs"
+        };
+
+        private static readonly Dictionary<string, List<string>> GameKitPaths = new()
+        {
+            {
+                "version", new List<string>
+                {
+                    "/Elephant/ElephantAds/Advertisements/VersionGameKit.cs",
+                    "/RollicGames/Advertisements/VersionGameKit.cs"
+                }
+            },
+            {
+                "editor_version", new List<string>
+                {
+                    "/Elephant/ElephantAds/Editor/GameKitVersion.cs",
+                    "/RollicGames/Editor/GameKitVersion.cs"
+                }
+            }
+        };
+
+        private static string GetVersionFromFile(List<string> paths,
+            string versionIdentifier = "internal static string GAMEKIT_VERSION =")
+        {
+            var fullPath = FindFirstExistingPath(paths);
+            if (string.IsNullOrEmpty(fullPath)) return "";
+
+            try
+            {
+                var lines = File.ReadAllLines(fullPath);
+                foreach (var line in lines)
+                {
+                    if (line.Trim().StartsWith(versionIdentifier))
+                    {
+                        var startIndex = line.IndexOf('\"') + 1;
+                        var endIndex = line.LastIndexOf('\"');
+                        if (startIndex > 0 && endIndex > startIndex)
+                        {
+                            return line.Substring(startIndex, endIndex - startIndex);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error reading GameKit version from {fullPath}: {e.Message}");
+            }
+
+            return "";
+        }
+
+        private static string FindFirstExistingPath(List<string> paths)
+        {
+            return paths
+                .Select(path => Application.dataPath + path)
+                .FirstOrDefault(File.Exists);
         }
 
         private static string CheckMediationPackageName(string packageName)
         {
-            var oldMaxPath = Application.dataPath + "/RollicGames/RollicApplovinIDs.cs";
-            var newMaxPath = Application.dataPath + "/RollicGames/MAX/RollicApplovinIDs.cs";
-            var oldIsPath = Application.dataPath + "/RollicGames/RollicIronSourceIDs.cs";
-            var newIsPath = Application.dataPath + "/RollicGames/IS/RollicIronSourceIDs.cs";
-    
-            if (packageName.ToLower().Contains("gamekit-max") || 
-                packageName.ToLower().Contains("gamekit-for"))
+            var packageLower = packageName.ToLower();
+
+            if (packageLower.Contains("gamekit-max") || packageLower.Contains("gamekit-for"))
             {
-                return File.Exists(newMaxPath) ? newMaxPath : oldMaxPath;
-            }
-            
-            if (packageName.ToLower().Contains("gamekit-is"))
-            {
-                return File.Exists(newIsPath) ? newIsPath : oldIsPath;
+                return FindFirstExistingPath(MediationPaths["max"]);
             }
 
-            return null;
+            return packageLower.Contains("gamekit-is") ? FindFirstExistingPath(MediationPaths["is"]) : null;
         }
 
         private static string GetElephantThirdParyIdsPath(string packageName)
         {
-            if (packageName.ToLower().Contains("gamekit"))
-            {
-                return Application.dataPath + "/Elephant/Core/ElephantThirdPartyIds.cs";
-            }
-
-            return null;
+            return !packageName.ToLower().Contains("gamekit") ? null : FindFirstExistingPath(ElephantPaths);
         }
 
         public static void SetupElephantThirdPartyIDs(GameKitManifest gameKitManifest, string packageName)
@@ -140,7 +289,7 @@ namespace ElephantSdkManager.Util
             }
 
             SetupAdjustTokens(gameKitManifest);
-
+            FacebookSettingsManager.SetupFacebookSettings(gameKitManifest.data.facebookAppId, gameKitManifest.data.facebookClientToken);
             Debug.Log(stringBuilder);
         }
 
@@ -157,10 +306,16 @@ namespace ElephantSdkManager.Util
             return line;
         }
 
-        public static void SetupAdjustTokens(GameKitManifest gameKitManifest)
+        private static readonly List<string> AdjustTokensPaths = new()
         {
-            var adjustTokenClassPath = Application.dataPath + "/Elephant/Core/AdjustTokens.cs";
-            if (!File.Exists(adjustTokenClassPath)) return;
+            "/Elephant/ElephantCore/Core/AdjustTokens.cs",
+            "/Elephant/Core/AdjustTokens.cs"
+        };
+
+        private static void SetupAdjustTokens(GameKitManifest gameKitManifest)
+        {
+            var adjustTokenClassPath = FindFirstExistingPath(AdjustTokensPaths);
+            if (string.IsNullOrEmpty(adjustTokenClassPath)) return;
 
             var lines = File.ReadAllLines(adjustTokenClassPath);
             File.Delete(adjustTokenClassPath);
@@ -172,19 +327,24 @@ namespace ElephantSdkManager.Util
                 { "FullScreenWatched_10", "Fs_watched_10" },
                 { "FullScreenWatched_25", "Fs_watched_25" },
                 { "FullScreenWatched_50", "Fs_watched_50" },
-                { "Level_10", "lvl10" },
                 { "Level_20", "lvl20" },
-                { "Level_30", "lvl30" },
                 { "Level_50", "lvl50" },
                 { "Level_100", "lvl100" },
+                { "Level_200", "lvl200" },
+                { "Level_300", "lvl300" },
+                { "Level_500", "lvl500" },
+                { "Level_1000", "lvl1000" },
                 { "RewardedWatched_10", "Rw_watched_10" },
                 { "RewardedWatched_25", "Rw_watched_25" },
                 { "RewardedWatched_50", "Rw_watched_50" },
-                { "Timespend_10", "Timespend_10" },
                 { "Timespend_30", "Timespend_30" },
                 { "Timespend_60", "Timespend_60" },
                 { "Timespend_120", "Timespend_120" },
-                { "SkanCvUpdate", "skan_cv_update" }
+                { "Timespend_210", "Timespend_210" },
+                { "Revenue_1", "rev_1" },
+                { "Revenue_2", "rev_2" },
+                { "Revenue_5", "rev_5" },
+                { "Revenue_10", "rev_10" }
             };
 
             using (var sw = File.AppendText(adjustTokenClassPath))

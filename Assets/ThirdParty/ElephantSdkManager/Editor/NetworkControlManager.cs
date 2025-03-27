@@ -30,14 +30,17 @@ namespace ElephantSdkManager
                 }
             }
 
-            var request = UnityWebRequest.Get(ManifestSource.ManifestURL + gameId +  "&version=" + ElephantSdkManagerVersion.SDK_VERSION);
+            var request = UnityWebRequest.Get(ManifestSource.ManifestURL + gameId + "&version=" +
+                                              ElephantSdkManagerVersion.SDK_VERSION);
             request.SendWebRequest();
-            while (!request.isDone && !request.isHttpError && !request.isNetworkError)
+            while (!request.isDone && request.result != UnityWebRequest.Result.ProtocolError &&
+                   request.result != UnityWebRequest.Result.ConnectionError)
             {
                 // no-op
             }
 
-            if (request.isHttpError || request.isNetworkError || !string.IsNullOrWhiteSpace(request.error))
+            if (request.result == UnityWebRequest.Result.ProtocolError ||
+                request.result == UnityWebRequest.Result.ConnectionError || !string.IsNullOrWhiteSpace(request.error))
             {
                 Debug.LogError("Couldn't finish opening request!");
                 return "";
@@ -73,14 +76,14 @@ namespace ElephantSdkManager
                     if (versionMethodInfo != null)
                     {
                         var classInstance = Activator.CreateInstance(packageConfigType, null);
-                        version = (string) versionMethodInfo.Invoke(classInstance, null);
+                        version = (string)versionMethodInfo.Invoke(classInstance, null);
                     }
 
                     var nameMethodInfo = packageConfigType.GetMethod("get_Name");
                     if (nameMethodInfo != null)
                     {
                         var classInstance = Activator.CreateInstance(packageConfigType, null);
-                        name = (string) nameMethodInfo.Invoke(classInstance, null);
+                        name = (string)nameMethodInfo.Invoke(classInstance, null);
                     }
 
                     var networkSdk = _sdkList.Find(sdk => sdk.sdkName.Equals(name));

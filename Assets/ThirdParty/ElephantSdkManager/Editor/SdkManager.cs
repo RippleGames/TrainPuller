@@ -74,7 +74,8 @@ namespace ElephantSdkManager
             "Usercentrics",
             "ElephantSocial",
             "ElephantDemo",
-            "LevelPlay"
+            "LevelPlay",
+            "GeneratedLocalRepo"
         };
 
         private GameData _gameData;
@@ -381,8 +382,74 @@ namespace ElephantSdkManager
         private void SetupIds(Sdk sdkInfo)
         {
             var packageName = sdkInfo.sdkName;
-            VersionUtils.SetupElephantThirdPartyIDs(_gameKitManifest, packageName);
-            VersionUtils.SetupGameKitIDs(_gameKitManifest, packageName);
+
+            if (_gameKitManifest == null || _gameKitManifest.data == null || _gameKitManifest.data.appKey == null)
+            {
+                EditorUtility.DisplayDialog("Error",
+                    "Unable to set IDs. GameKit configuration data is not available.\n" +
+                    "Please make sure you have a valid Game ID and try refreshing the SDK Manager.",
+                    "OK");
+                return;
+            }
+
+            var elephantThirdPartyPath =
+                Path.Combine(Application.dataPath, "Elephant/ElephantCore/Core/ElephantThirdPartyIds.cs");
+            var gamekitPath = "";
+
+            if (packageName.ToLower().Contains("gamekit-max"))
+            {
+                gamekitPath = Path.Combine(Application.dataPath, "Elephant/ElephantAds/MAX/RollicApplovinIDs.cs");
+            }
+            else if (packageName.ToLower().Contains("gamekit-is"))
+            {
+                gamekitPath = Path.Combine(Application.dataPath, "Elephant/ElephantAds/IS/RollicIronSourceIDs.cs");
+            }
+
+            var missingFiles = new List<string>();
+            if (!File.Exists(elephantThirdPartyPath))
+            {
+                missingFiles.Add("ElephantThirdPartyIds.cs");
+            }
+
+            if (!string.IsNullOrEmpty(gamekitPath) && !File.Exists(gamekitPath))
+            {
+                missingFiles.Add(Path.GetFileName(gamekitPath));
+            }
+
+            if (missingFiles.Count > 0)
+            {
+                EditorUtility.DisplayDialog("Error",
+                    "Following required files are missing:\n" + string.Join("\n", missingFiles) +
+                    "\n\nPlease reinstall the SDK and try again.",
+                    "OK");
+                return;
+            }
+
+            try
+            {
+                VersionUtils.SetupElephantThirdPartyIDs(_gameKitManifest, packageName);
+                VersionUtils.SetupGameKitIDs(_gameKitManifest, packageName);
+
+                var message = "IDs have been successfully set up!\n\n";
+                message += "Updated files:\n";
+                message += "- ElephantThirdPartyIds.cs\n";
+                message += "- AdjustTokens.cs\n";
+                if (!string.IsNullOrEmpty(gamekitPath))
+                {
+                    message += $"- {Path.GetFileName(gamekitPath)}\n";
+                }
+
+                EditorUtility.DisplayDialog("Success", message, "OK");
+
+                AssetDatabase.Refresh();
+            }
+            catch (Exception ex)
+            {
+                EditorUtility.DisplayDialog("Error",
+                    "An error occurred while setting up IDs:\n" + ex.Message,
+                    "OK");
+                Debug.LogError($"Error setting up IDs: {ex}");
+            }
         }
 
         private void DrawSdkNameLabel(string sdkName)
@@ -482,7 +549,6 @@ namespace ElephantSdkManager
             unityWebRequest.Dispose();
 
 
-
             if (selfUpdateSdk == null) yield break;
 
             var currentVersion = ElephantSdkManagerVersion.SDK_VERSION.Replace("v", string.Empty);
@@ -550,7 +616,7 @@ namespace ElephantSdkManager
 
             string descriptionURL;
 
-            if (_sdkList[0].sdkName.Equals("GameKit-IS"))
+            if (_sdkList[0].sdkName.ToLower().Contains("gamekit-is"))
             {
                 descriptionURL = ManifestSource.ISChangeLogURL;
             }
@@ -590,7 +656,10 @@ namespace ElephantSdkManager
 
         private string GetGameKitVersion()
         {
-            var gamekitPath = Application.dataPath + "/RollicGames/Editor/GameKitVersion.cs";
+            var oldPath = Application.dataPath + "/RollicGames/Editor/GameKitVersion.cs";
+            var newPath = Application.dataPath + "/Elephant/ElephantAds/Editor/GameKitVersion.cs";
+            var gamekitPath = File.Exists(newPath) ? newPath : oldPath;
+
             if (!File.Exists(gamekitPath)) return "";
 
             try
@@ -623,11 +692,10 @@ namespace ElephantSdkManager
             var path = Path.Combine(AssetsPathPrefix, sdkInfo.sdkName + "new");
             _activity = $"Downloading {sdkInfo.sdkName}...";
 
-            // Start the async download job.
             _downloader = new UnityWebRequest(sdkInfo.downloadUrl)
             {
                 downloadHandler = new DownloadHandlerFile(path),
-                timeout = 240, // seconds
+                timeout = 240,
             };
             _downloader.SendWebRequest();
 
@@ -636,19 +704,17 @@ namespace ElephantSdkManager
                 yield return null;
                 var progress = Mathf.FloorToInt(_downloader.downloadProgress * 100);
                 if (EditorUtility.DisplayCancelableProgressBar("Elephant SDK Manager", _activity, progress))
+                {
                     _downloader.Abort();
+                    FileUtil.DeleteFileOrDirectory(path);
+                    AssetDatabase.Refresh();
+                }
             }
 
             EditorUtility.ClearProgressBar();
 
             if (string.IsNullOrEmpty(_downloader.error))
             {
-                if (Directory.Exists(AssetsPathPrefix + sdkInfo.sdkName))
-                {
-                    FileUtil.DeleteFileOrDirectory(AssetsPathPrefix + sdkInfo.sdkName);
-                    AssetDatabase.Refresh();
-                }
-
                 AssetDatabase.ImportPackage(path, true);
                 FileUtil.DeleteFileOrDirectory(path);
                 AssetDatabase.Refresh();
@@ -761,21 +827,18 @@ namespace ElephantSdkManager
             {
                 if (Directory.Exists(AssetsPathPrefix + sdkInfo.sdkName))
                 {
-                    FileUtil.DeleteFileOrDirectory(AssetsPathPrefix + sdkInfo.sdkName);
-                    AssetDatabase.Refresh();
+                    DeleteDirectoryAndMeta(AssetsPathPrefix + sdkInfo.sdkName);
                 }
 
                 if (sdkInfo.sdkName.ToLower().Contains("gamekit"))
                 {
                     foreach (var subpackage in _fileNames)
                     {
-                        if (Directory.Exists(AssetsPathPrefix + subpackage))
-                        {
-                            FileUtil.DeleteFileOrDirectory(AssetsPathPrefix + subpackage);
-                            AssetDatabase.Refresh();
-                        }
+                        DeleteDirectoryAndMeta(AssetsPathPrefix + subpackage);
                     }
                 }
+
+                AssetDatabase.Refresh();
 
                 if (!path.Contains("xml"))
                 {
@@ -795,6 +858,27 @@ namespace ElephantSdkManager
             _editorCoroutineIds = null;
 
             yield return null;
+        }
+
+        private void DeleteDirectoryAndMeta(string directoryPath)
+        {
+            try
+            {
+                if (Directory.Exists(directoryPath))
+                {
+                    Directory.Delete(directoryPath, true);
+                }
+
+                var metaFile = directoryPath + ".meta";
+                if (File.Exists(metaFile))
+                {
+                    File.Delete(metaFile);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error during deletion for path {directoryPath}: {e.Message}");
+            }
         }
 
         private void OnImportPackageCompleted(string packageName)

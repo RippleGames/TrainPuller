@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace ElephantSdkManager.Util
 {
@@ -85,13 +86,13 @@ namespace ElephantSdkManager.Util
 			}
 		}
 
-		struct YieldWWW : EditorCoroutines.ICoroutineYield
+		struct YieldWebRequest : ICoroutineYield
 		{
-			public WWW Www;
+			public UnityWebRequest WebRequest;
 
 			public bool IsDone(float deltaTime)
 			{
-				return Www.isDone;
+				return WebRequest.isDone;
 			}
 		}
 
@@ -371,9 +372,9 @@ namespace ElephantSdkManager.Util
 					customYield = current as CustomYieldInstruction
 				};
 			}
-			else if (current is WWW)
+			else if (current is UnityWebRequest)
 			{
-				coroutine.currentYield = new EditorCoroutines.YieldWWW {Www = (WWW) current};
+				coroutine.currentYield = new YieldWebRequest { WebRequest = (UnityWebRequest)current };
 			}
 			else if (current is WaitForFixedUpdate || current is WaitForEndOfFrame)
 			{

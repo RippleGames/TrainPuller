@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using ElephantSDK;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Data.Config;
 using TemplateProject.Scripts.Runtime.Managers;
@@ -165,7 +166,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             if (!LevelManager.instance.isGamePlayable || LevelManager.instance.isLevelFailed) return;
             LevelManager.instance.isGamePlayable = false;
             LevelManager.instance.isLevelFailed = true;
-
+            Elephant.LevelFailed(LevelManager.instance.GetLevelIndex());
             onGameLost?.Invoke();
             TimeManager.instance.PauseTimer();
 #if UNITY_EDITOR

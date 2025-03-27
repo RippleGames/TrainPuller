@@ -1,4 +1,5 @@
 using DG.Tweening;
+using ElephantSDK;
 using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
 using TMPro;
@@ -71,12 +72,15 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void FetchPlayerPrefs()
         {
+            
             levelIndex = PlayerPrefs.GetInt("CurrentLevel", 0);
             totalPlayedLevelCount = PlayerPrefs.GetInt("TotalPlayedLevel", 1);
+            Elephant.LevelStarted(levelIndex);
         }
 
         public void LevelIncrease()
         {
+            Elephant.LevelCompleted(levelIndex);
             IncreaseLevelIndex();
             LoadLevel();
         }

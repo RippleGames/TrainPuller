@@ -2,6 +2,6 @@ namespace ElephantSdkManager
 {
     public class ElephantSdkManagerVersion
     {
-        internal static string SDK_VERSION = "v5.4.5";
+        internal static string SDK_VERSION = "2025.02.8";
     }
 }
