@@ -51,6 +51,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void SetupCarts()
         {
+            speed = 50f;
             var levelContainer = FindObjectOfType<LevelContainer>();
             interactionManager = FindObjectOfType<InteractionManager>();
             foreach (var cart in carts)
@@ -152,8 +153,9 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (_isLeaderChanging) return;
             if (!currentLeader || carts.Count < 2) return;
             if (trainPath.Count < 2) return;
-
-            var targetPosition = interactionManager.GetProjectedMousePositionOnTrail(false);
+            if(!interactionManager) return;
+            
+            var targetPosition = interactionManager.GetProjectedMousePositionOnTrail(true);
             var movementDirection = (targetPosition - currentLeader.transform.position).normalized;
 
             if (movementDirection.magnitude < 0.01f) return;
@@ -335,6 +337,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 currentLastCart = carts[^1];
                 // backwardsEndObject.transform.position = currentLastCart.transform.position;
                 _isLeaderChanging = false;
+                interactionManager.dragPath.Clear();
                 return;
             }
 
@@ -345,7 +348,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                 currentLeader = carts[0];
                 currentLastCart = carts[^1];
                 trainPath.Clear();
-                HandlePathInitial();
+                HandlePathInitial();             
+                interactionManager.dragPath.Clear();
                 // backwardsEndObject.transform.position = currentLastCart.transform.position;
                 _isLeaderChanging = false;
                 return;
@@ -359,6 +363,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             currentLastCart = carts[^1];
             trainPath.Clear();
             HandlePathInitial();
+            interactionManager.dragPath.Clear();
             // backwardsEndObject.transform.position = currentLastCart.transform.position;
             _isLeaderChanged = !_isLeaderChanged;
             _isLeaderChanging = false;

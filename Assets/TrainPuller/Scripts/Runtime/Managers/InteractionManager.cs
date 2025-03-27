@@ -17,6 +17,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
         public HashSet<Vector2Int> trailPositions;
         public HashSet<Vector2Int> gridPositions;
         private GridBase[,] _gridBases;
+        [SerializeField] public List<Vector3> dragPath = new List<Vector3>();
 
         [Header("Flags")] public bool isHolding;
 
@@ -65,6 +66,8 @@ namespace TrainPuller.Scripts.Runtime.Managers
                 }
 
                 lineRenderer.enabled = false;
+
+                dragPath.Clear();
             }
 
 
@@ -102,34 +105,55 @@ namespace TrainPuller.Scripts.Runtime.Managers
             }
         }
 
-        public Vector3 GetProjectedMousePositionOnTrail(bool isTooFar)
+        public Vector3 GetProjectedMousePositionOnTrail(bool onlyCheck)
         {
             var mouseWorldPos = GetMouseWorldPosition();
 
             var nearestGridPos = GetNearestGridCell(mouseWorldPos, true);
-            if (isTooFar)
-            {
-                var newMouseWorldPos = mouseWorldPos;
-                var gridWorldPos = GetWorldPositionFromGrid(nearestGridPos);
-                var dir = gridWorldPos - newMouseWorldPos;
-                var distance = Vector3.Distance(newMouseWorldPos, gridWorldPos);
-                newMouseWorldPos += dir.normalized * (distance / 2);
-                var futureGridCell = GetNearestGridCell(newMouseWorldPos, true);
-                if (currentlySelectedCart.IsAdjacent(futureGridCell))
-                {
-                    mouseWorldPos = newMouseWorldPos;
-                }
-            }
 
             if (!trailPositions.Contains(nearestGridPos)) return GetNearestTrailPosition(mouseWorldPos);
             var projectedPos =
                 ProjectPositionOnTrail(mouseWorldPos, nearestGridPos);
+            
             if (currentlySelectedCart)
             {
                 currentlySelectedCart.AddToPath(nearestGridPos);
             }
 
+            if (Vector3.Distance(transform.position, projectedPos) > 1.75f)
+            {
+                if (!onlyCheck)
+                {
+                    UpdateDragPath(projectedPos);
+
+                }
+
+                return projectedPos;
+            }
+
             return projectedPos;
+        }
+
+        public void UpdateDragPath(Vector3 newPoint)
+        {
+            if (dragPath.Count == 0 || Vector3.Distance(dragPath[^1], newPoint) > 1f)
+            {
+                var trainPosition = currentlySelectedCart.transform.position;
+
+                var movementDirection = (newPoint - trainPosition).normalized;
+
+                if (dragPath.Count > 1)
+                {
+
+                    if (Vector3.Dot(currentlySelectedCart.transform.forward, movementDirection) < 0f)
+                    {
+                        return;
+                    }
+                }
+
+                newPoint = ProjectPositionOnTrail(newPoint, GetNearestGridCell(newPoint, true));
+                dragPath.Add(newPoint);
+            }
         }
 
         private Vector3 GetNearestTrailPosition(Vector3 position)
@@ -367,6 +391,41 @@ namespace TrainPuller.Scripts.Runtime.Managers
             lineRenderer.enabled = false;
             currentlySelectedCart = null;
             isHolding = false;
+        }
+
+        public Vector3 GetPointFromPath(Vector3 cartPos)
+        {
+            if (dragPath.Count <= 0) return cartPos;
+
+            var pos = dragPath[0];
+            var maxIterations = 100;
+            var iteration = 0;
+
+            while (Vector3.Distance(pos, cartPos) > 1.75f && iteration < maxIterations)
+            {
+                var closerPoint = (pos + cartPos) / 2f;
+                closerPoint = ProjectPositionOnTrail(closerPoint, GetNearestGridCell(closerPoint, true));
+
+                var direction = (closerPoint - cartPos).normalized;
+
+                dragPath.Remove(dragPath[0]);
+                if (Vector3.Dot(direction, currentlySelectedCart.transform.forward) < 0f)
+                {
+                    if (dragPath.Count > 0)
+                    {
+                        pos = dragPath[0];
+                        continue;
+                    }
+                }
+
+                dragPath.Insert(0, closerPoint);
+                pos = dragPath[0];
+
+                iteration++;
+            }
+
+            dragPath.RemoveAt(0);
+            return pos;
         }
     }
 }

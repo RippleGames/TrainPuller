@@ -58,15 +58,15 @@ namespace TrainPuller.Scripts.Runtime.Models
                 }
             }
 
-            if (!(Vector3.Distance(transform.position, targetPos) <= 1.75f))
+            if (Vector3.Distance(transform.position, targetPos) > 1.75f)
             {
-                targetPos = interactionManager.GetProjectedMousePositionOnTrail(true);
+                targetPos = interactionManager.GetPointFromPath(transform.position);
             }
 
-
-            if (!(Vector3.Distance(transform.position, targetPos) <= 1.75f)) return;
+            if (Vector3.Distance(transform.position, targetPos) > 1.75f) return;
             if (interactionManager.IsPositionOnTrail(targetPos))
             {
+                
                 UpdateRotation(this, targetPos);
 
                 if ((trainMovement.isMovingBackwards && trainMovement.canMoveBackwards) ||
@@ -321,7 +321,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
             cartCover.transform.DOScale(Vector3.one, 0.15f).OnComplete(() =>
             {
-                cartCover.transform.DOLocalRotate(new Vector3(0f, -90f, 0f), 0.15f).SetEase(Ease.OutBounce);
+                cartCover.transform.DOLocalRotate(Vector3.zero, 0.15f).SetEase(Ease.OutBounce);
             });
         }
     }
