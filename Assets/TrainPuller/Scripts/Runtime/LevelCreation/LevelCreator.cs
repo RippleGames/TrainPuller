@@ -228,6 +228,8 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
             foreach (var train in trainParentList)
             {
                 train.HandleCartPositioning();
+                train.trainContainer.SetCartSlots(train.carts);
+                EditorUtility.SetDirty(train.gameObject);
             }
         }
 
@@ -395,12 +397,6 @@ namespace TrainPuller.Scripts.Runtime.LevelCreation
                         roadBarrier.SetColorType(stackDataColorTypes[1]);
                     }
                 }
-            }
-
-            foreach (var trainMovement in trainParentList)
-            {
-                trainMovement.trainContainer.SetCartSlots(trainMovement.carts);
-                EditorUtility.SetDirty(trainMovement.gameObject);
             }
         }
 

@@ -217,7 +217,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   barrierObject: {fileID: 8930103278280380096}
   colorType: 0
-  barrierCloseTime: 2
+  barrierCloseTime: 1
   barrierRenderers:
   - {fileID: 2095814128644558163}
   colors: {fileID: 11400000, guid: b45f196236397b644a94dfc47598c364, type: 2}
