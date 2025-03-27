@@ -20,6 +20,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
         [Header("Flags")] public bool isGamePlayable;
         public bool isLevelFailed;
         public bool isTestScene;
+        public bool isTutorialOn;
 
         [Header("Parameters")] [SerializeField]
         private int levelIndex;
@@ -75,6 +76,10 @@ namespace TrainPuller.Scripts.Runtime.Managers
             
             levelIndex = PlayerPrefs.GetInt("CurrentLevel", 0);
             totalPlayedLevelCount = PlayerPrefs.GetInt("TotalPlayedLevel", 1);
+            if (levelIndex == 0 && totalPlayedLevelCount == 1)
+            {
+                isTutorialOn = true;
+            }
             Elephant.LevelStarted(levelIndex);
         }
 

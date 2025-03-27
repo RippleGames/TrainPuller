@@ -19,6 +19,8 @@ namespace TrainPuller.Scripts.Runtime.Managers
         [SerializeField] private GameObject loseScreen;
         [SerializeField] private GameObject levelCompleteConfetti;
         [SerializeField] private GameObject youWinObject;
+        [SerializeField] private GameObject tutorialParent;
+        [SerializeField] private GameObject tutorialHand;
 
         [Header("Timer References")] [SerializeField]
         private GameObject timerParent;
@@ -53,6 +55,14 @@ namespace TrainPuller.Scripts.Runtime.Managers
         private void Awake()
         {
             InitializeSingleton();
+        }
+
+        private void Start()
+        {
+            if (LevelManager.instance.isTutorialOn)
+            {
+                OpenTutorial();
+            }
         }
 
         private void InitializeSingleton()
@@ -136,6 +146,11 @@ namespace TrainPuller.Scripts.Runtime.Managers
         {
             levelCompleteConfetti.SetActive(true);
             youWinObject.SetActive(true);
+            if (LevelManager.instance.isTutorialOn)
+            {
+                CloseTutorial();
+                LevelManager.instance.isTutorialOn = false;
+            }
         }
 
         public void OpenTimer()
@@ -287,6 +302,21 @@ namespace TrainPuller.Scripts.Runtime.Managers
         {
             _debugClickCounter = 0;
             debugPanel.SetActive(false);
+        }
+
+        public void OpenTutorial()
+        {
+            tutorialParent.SetActive(true);
+        }
+
+        public void CloseTutorialHand()
+        {
+            tutorialHand.SetActive(false);
+        }
+
+        public void CloseTutorial()
+        {
+            
         }
     }
 }

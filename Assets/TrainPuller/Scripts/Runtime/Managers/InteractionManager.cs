@@ -99,6 +99,11 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void HandleTimerStart()
         {
+            if (LevelManager.instance.isTutorialOn)
+            {
+                UIManager.instance.CloseTutorialHand();
+            }
+
             if (!TimeManager.instance.GetIsTimerActive())
             {
                 TimeManager.instance.StartTimer();
@@ -114,7 +119,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             if (!trailPositions.Contains(nearestGridPos)) return GetNearestTrailPosition(mouseWorldPos);
             var projectedPos =
                 ProjectPositionOnTrail(mouseWorldPos, nearestGridPos);
-            
+
             if (currentlySelectedCart)
             {
                 currentlySelectedCart.AddToPath(nearestGridPos);
@@ -125,7 +130,6 @@ namespace TrainPuller.Scripts.Runtime.Managers
                 if (!onlyCheck)
                 {
                     UpdateDragPath(projectedPos);
-
                 }
 
                 return projectedPos;
@@ -144,7 +148,6 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
                 if (dragPath.Count > 1)
                 {
-
                     if (Vector3.Dot(currentlySelectedCart.transform.forward, movementDirection) < 0f)
                     {
                         return;
