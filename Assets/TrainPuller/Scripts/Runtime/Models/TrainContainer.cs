@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using TemplateProject.Scripts.Data;
+using TemplateProject.Scripts.Runtime.Managers;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
 
@@ -73,7 +74,11 @@ namespace TrainPuller.Scripts.Runtime.Models
                     {
                         trainMovement.TryBlastConfetti();
                         DOVirtual.DelayedCall(trainMovement.carts.Count * 0.2f,
-                            () => { trainMovement.TryDoScaleEffect(); });
+                            () =>
+                            {
+                                VibrationManager.instance.Medium();
+                                trainMovement.TryDoScaleEffect();
+                            });
                     });
                 }
 
