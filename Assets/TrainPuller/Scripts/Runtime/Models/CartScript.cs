@@ -277,6 +277,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                     }
                 }
             }
+
+            
         }
 
         private void HandleCrashParticle(Vector3 closestPoint)
@@ -298,6 +300,26 @@ namespace TrainPuller.Scripts.Runtime.Models
                         var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor);
                         if (!card) return;
                         trainContainer.TakeCardWithDelay(card);
+                    }
+                }
+            }
+            
+            if (other.CompareTag("Exit"))
+            {
+                if (other.TryGetComponent(out ExitBarrierScript exitBarrierScript) && trainMovement.currentLeader == this)
+                {
+                    if (trainMovement.trainContainer.isAllFull && !trainMovement.isMovingToExit)
+                    {
+                        trainMovement.GetOutFromExit(exitBarrierScript);
+                    }
+                    else
+                    {
+                        if (trainMovement.isTrainMoving && trainMovement.canMoveForward)
+                        {
+                            trainMovement.HandleFrontCollision();
+                            HandleCrashParticle(other.ClosestPoint(transform.position));
+                        }
+                    
                     }
                 }
             }
