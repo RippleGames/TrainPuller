@@ -10,6 +10,7 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private GameColors gameColors;
         [SerializeField] private LevelData.GridColorType cardColor;
         [SerializeField] private Outline outline;
+        public bool isTaken;
         public void SetCardProperties(LevelData.GridColorType colorType)
         {
             foreach (var cardRenderer in renderers)

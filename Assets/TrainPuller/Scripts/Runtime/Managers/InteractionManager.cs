@@ -339,7 +339,20 @@ namespace TrainPuller.Scripts.Runtime.Managers
         {
             if (!hitInfo.transform.gameObject.TryGetComponent(out CartScript cartScript)) return;
             var trainMovement = cartScript.GetTrainMovement();
-            if (trainMovement.carts[0] != cartScript && trainMovement.carts[^1] != cartScript) return;
+            if (trainMovement.carts[0] != cartScript && trainMovement.carts[^1] != cartScript)
+            {
+                var mousePos = GetMouseWorldPosition();
+                if (Vector3.Distance(trainMovement.carts[0].transform.position, mousePos) <
+                    Vector3.Distance(trainMovement.carts[^1].transform.position, mousePos))
+                {
+                    cartScript = trainMovement.carts[0];
+                }
+                else
+                {
+                    cartScript = trainMovement.carts[^1];
+                }
+            }
+
             trainMovement.MakeLeader(cartScript);
             currentlySelectedCart = cartScript;
             currentlySelectedCart.isMoving = true;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using TemplateProject.Scripts.Data;
@@ -18,15 +19,16 @@ namespace TrainPuller.Scripts.Runtime.Models
         [SerializeField] private GameObject confettiObject;
         [SerializeField] private GameObject cartCover;
         [SerializeField] private GameObject crashParticle;
+        [SerializeField] private GameObject crashObject;
         [SerializeField] private GameObject onlyOneDirectionSign;
         [AudioClipName] public string cardPlaceSound;
         [AudioClipName] public string cartCompleteSound;
-
 
         [SerializeField] private Queue<Vector2Int> pathQueue = new();
         private Vector3 _movementTarget;
         [SerializeField] private float moveSpeed = 10f;
         private Vector3 _movementDirection;
+        public bool isCrashed;
         public bool isMoving;
         public bool isOnlyOneDirection;
         public bool isHorizontalLocked;
@@ -54,6 +56,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void MoveTowardsTarget()
         {
+            if (crashObject && isCrashed) return;
             var targetPos = interactionManager.GetProjectedMousePositionOnTrail(false);
 
             if (!trainMovement.isTrainMoving)
@@ -201,7 +204,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                     var trainContainer = trainMovement.trainContainer;
                     if (!trainContainer.isAllFull)
                     {
-                        var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor);
+                        var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor, trainContainer);
                         if (!card) return;
                         trainContainer.TakeCardWithDelay(card);
                     }
@@ -223,6 +226,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                             if (!interactionManager) return;
                             if (interactionManager.GetCurrentlySelectedCart() == this)
                             {
+                                isCrashed = true;
+                                crashObject = other.gameObject;
                                 trainMovement.HandleFrontCollision();
                                 HandleCrashParticle(other.ClosestPoint(transform.position));
                             }
@@ -238,6 +243,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                     }
                     else
                     {
+                        isCrashed = true;
+                        crashObject = other.gameObject;
                         trainMovement.HandleFrontCollision();
                         HandleCrashParticle(other.ClosestPoint(transform.position));
                     }
@@ -265,20 +272,22 @@ namespace TrainPuller.Scripts.Runtime.Models
                         {
                             if (!roadBarrierScript.TryOpenBarrier(trainMovement.cartsColor))
                             {
+                                isCrashed = true;
+                                crashObject = other.gameObject;
                                 trainMovement.HandleFrontCollision();
                                 HandleCrashParticle(other.ClosestPoint(transform.position));
                             }
                         }
                         else
                         {
+                            isCrashed = true;
+                            crashObject = other.gameObject;
                             trainMovement.HandleFrontCollision();
                             HandleCrashParticle(other.ClosestPoint(transform.position));
                         }
                     }
                 }
             }
-
-            
         }
 
         private void HandleCrashParticle(Vector3 closestPoint)
@@ -290,6 +299,29 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private void OnTriggerStay(Collider other)
         {
+            if (other.TryGetComponent(out CartScript cart))
+            {
+                if (cart.trainMovement != trainMovement)
+                {
+                    if (trainMovement.isTrainMoving && trainMovement.canMoveForward &&
+                        trainMovement.currentLeader == this)
+                    {
+                        if (!interactionManager) return;
+                        if (interactionManager.GetCurrentlySelectedCart() == this)
+                        {
+                            isCrashed = true;
+                            crashObject = other.gameObject;
+                            trainMovement.HandleFrontCollision();
+                            HandleCrashParticle(other.ClosestPoint(transform.position));
+                        }
+                    }
+                    else
+                    {
+                        trainMovement.HandleMovement();
+                    }
+                }
+            }
+
             if (other.gameObject.CompareTag("CardBase"))
             {
                 if (other.TryGetComponent(out CardBase cardBase))
@@ -297,16 +329,17 @@ namespace TrainPuller.Scripts.Runtime.Models
                     var trainContainer = trainMovement.trainContainer;
                     if (!trainContainer.isAllFull)
                     {
-                        var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor);
+                        var card = cardBase.TryGetCardFromStack(trainMovement.cartsColor, trainMovement.trainContainer);
                         if (!card) return;
                         trainContainer.TakeCardWithDelay(card);
                     }
                 }
             }
-            
+
             if (other.CompareTag("Exit"))
             {
-                if (other.TryGetComponent(out ExitBarrierScript exitBarrierScript) && trainMovement.currentLeader == this)
+                if (other.TryGetComponent(out ExitBarrierScript exitBarrierScript) &&
+                    trainMovement.currentLeader == this)
                 {
                     if (trainMovement.trainContainer.isAllFull && !trainMovement.isMovingToExit)
                     {
@@ -316,10 +349,11 @@ namespace TrainPuller.Scripts.Runtime.Models
                     {
                         if (trainMovement.isTrainMoving && trainMovement.canMoveForward)
                         {
+                            isCrashed = true;
+                            crashObject = other.gameObject;
                             trainMovement.HandleFrontCollision();
                             HandleCrashParticle(other.ClosestPoint(transform.position));
                         }
-                    
                     }
                 }
             }
@@ -341,6 +375,13 @@ namespace TrainPuller.Scripts.Runtime.Models
             //         }
             //     }
             // }
+        }
+
+        private void OnTriggerExit(Collider other)
+        {
+            if (other.gameObject != crashObject) return;
+            isCrashed = false;
+            crashObject = null;
         }
 
         public List<CardSlot> GetCardSlots()
@@ -370,7 +411,7 @@ namespace TrainPuller.Scripts.Runtime.Models
             {
                 cartCover.transform.DOLocalRotate(Vector3.zero, 0.15f).SetEase(Ease.OutBounce).OnComplete(() =>
                 {
-                    AudioManager.instance.PlaySound(cartCompleteSound,true,false,1f,1f);
+                    AudioManager.instance.PlaySound(cartCompleteSound, true, false, 1f, 1f);
                 });
             });
         }

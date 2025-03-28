@@ -6,17 +6,19 @@ using TemplateProject.Scripts.Data;
 using TemplateProject.Scripts.Runtime.Managers;
 using TrainPuller.Scripts.Runtime.Managers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace TrainPuller.Scripts.Runtime.Models
 {
     public class TrainContainer : MonoBehaviour
     {
         [SerializeField] private List<CardSlot> cardSlots = new List<CardSlot>();
-        [SerializeField] private List<CardSlot> fullCarSlots = new List<CardSlot>();
+        [SerializeField] private List<CardSlot> fullCardSlots = new List<CardSlot>();
         public TrainMovement trainMovement;
         public bool isAllFull;
         private Queue<CardScript> _cardQueue = new Queue<CardScript>();
         [SerializeField] private List<CardScript> takenCards;
+        [SerializeField] private List<CardScript> comingCards = new List<CardScript>();
         private Coroutine _cardTakeCoroutine;
         [Header("Parameters")] [AudioClipName] public string cardPlaceSound;
         private float _pitch = 1f;
@@ -64,12 +66,13 @@ namespace TrainPuller.Scripts.Runtime.Models
             if (cardSlots.Count > 0)
             {
                 var nearestSlot = cardSlots.FirstOrDefault(x => x.isEmpty);
-                fullCarSlots.Add(nearestSlot);
+                fullCardSlots.Add(nearestSlot);
                 cardSlots.Remove(nearestSlot);
 
                 if (cardSlots.Count <= 0)
                 {
                     isAllFull = true;
+                    // _cardQueue.Clear();
                     DOVirtual.DelayedCall(_cardQueue.Count * 0.4f, () =>
                     {
                         trainMovement.TryBlastConfetti();
@@ -102,7 +105,6 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         private IEnumerator MoveCardToSlot(CardScript takenCard, CardSlot targetSlot)
         {
-            
             if (!_isGlissandoActive)
             {
                 _isGlissandoActive = true;
@@ -144,12 +146,13 @@ namespace TrainPuller.Scripts.Runtime.Models
             cardTransform.localRotation = Quaternion.Euler(0f, 90f, 90f);
             cardTransform.localPosition = Vector3.zero;
             _pitch *= 1.12246f;
-            AudioManager.instance.PlaySound(cardPlaceSound,true,false,1f,_pitch);
+            AudioManager.instance.PlaySound(cardPlaceSound, true, false, 1f, _pitch);
         }
 
         public void TakeCardWithDelay(CardScript takenCard)
         {
-            if (_cardQueue.Contains(takenCard)) return;
+            if (_cardQueue.Contains(takenCard) || comingCards.Contains(takenCard)) return;
+            comingCards.Add(takenCard);
             _cardQueue.Enqueue(takenCard);
             if (_cardQueue.Count == 1 && _cardTakeCoroutine == null)
             {
@@ -173,6 +176,16 @@ namespace TrainPuller.Scripts.Runtime.Models
         public List<CardScript> GetTakenCards()
         {
             return takenCards;
+        }
+
+        public List<CardScript> GetComingCards()
+        {
+            return comingCards;
+        }
+
+        public List<CardSlot> GetFullCardSlots()
+        {
+            return fullCardSlots;
         }
     }
 

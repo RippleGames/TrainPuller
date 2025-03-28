@@ -16,14 +16,14 @@ namespace TrainPuller.Scripts.Runtime.Models
             }
         }
 
-        public CardScript TryGetCardFromStack(LevelData.GridColorType trainColor)
+        public CardScript TryGetCardFromStack(LevelData.GridColorType trainColor, TrainContainer trainContainer)
         {
             if (cardStack.Count <= 0) return null;
             if (cardStack[^1].GetCardColor() != trainColor) return null;
             var card = cardStack[^1];
+            if (trainContainer.GetComingCards().Contains(card) || trainContainer.GetComingCards().Count > trainContainer.GetFullCardSlots().Count) return null;
             cardStack.RemoveAt(cardStack.Count - 1);
             return card;
-
         }
     }
 }

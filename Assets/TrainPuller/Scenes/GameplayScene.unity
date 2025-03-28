@@ -437,7 +437,7 @@ MonoBehaviour:
   settingsButton: {fileID: 9216957986410545757}
   audioSlider: {fileID: 4201546099607900458}
   vibrationSlider: {fileID: 8883937508120488325}
-  isDebug: 1
+  isDebug: 0
   debugPanel: {fileID: 630174941}
 --- !u!1 &470688868
 GameObject:

@@ -219,27 +219,11 @@ namespace TrainPuller.Scripts.Runtime.Models
                 {
                     cart.isMoving = false;
                 }
+
+                return;
             }
 
-            if (!canMoveForward && isMovingBackwards)
-            {
-                canMoveForward = true;
-                isTrainMoving = true;
-                foreach (var cart in carts)
-                {
-                    cart.isMoving = true;
-                }
-            }
-
-            if (!canMoveBackwards && !isMovingBackwards)
-            {
-                canMoveBackwards = true;
-                isTrainMoving = true;
-                foreach (var cart in carts)
-                {
-                    cart.isMoving = true;
-                }
-            }
+            HandleMovement();
         }
 
 
@@ -312,12 +296,9 @@ namespace TrainPuller.Scripts.Runtime.Models
                 }
             }
 
-            if (currentLeader.isOnlyOneDirection)
-            {
-                if (Vector3.Distance(targetPosition, leader.transform.position) <= cartSpacing*0.9f) return;
-                follower.transform.position = targetPosition;
-                return;
-            }
+
+            if (Vector3.Distance(targetPosition, leader.transform.position) <= cartSpacing * 0.5f) return;
+
 
             follower.transform.position = targetPosition;
             UpdateFollowerRotation(follower, leader.transform.position);
@@ -356,6 +337,8 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             _isLeaderChanging = true;
             if (!carts.Contains(selectedCart)) return;
+
+
             if (selectedCart == carts[0])
             {
                 currentLeader = carts[0];
@@ -364,6 +347,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                 // backwardsEndObject.transform.position = currentLastCart.transform.position;
                 _isLeaderChanging = false;
                 interactionManager.dragPath.Clear();
+
+                HandleMovement();
                 return;
             }
 
@@ -375,6 +360,8 @@ namespace TrainPuller.Scripts.Runtime.Models
                 currentLastCart = carts[^1];
                 trainPath.Clear();
                 HandlePathInitial();
+                HandleMovement();
+
                 interactionManager.dragPath.Clear();
                 // backwardsEndObject.transform.position = currentLastCart.transform.position;
                 _isLeaderChanging = false;
@@ -389,10 +376,33 @@ namespace TrainPuller.Scripts.Runtime.Models
             currentLastCart = carts[^1];
             trainPath.Clear();
             HandlePathInitial();
+            HandleMovement();
             interactionManager.dragPath.Clear();
             // backwardsEndObject.transform.position = currentLastCart.transform.position;
             _isLeaderChanged = !_isLeaderChanged;
             _isLeaderChanging = false;
+        }
+
+        public void HandleMovement()
+        {
+            isTrainMoving = true;
+            if (!canMoveForward && isMovingBackwards)
+            {
+                canMoveForward = true;
+                foreach (var cart in carts)
+                {
+                    cart.isMoving = true;
+                }
+            }
+
+            if (!canMoveBackwards && !isMovingBackwards)
+            {
+                canMoveBackwards = true;
+                foreach (var cart in carts)
+                {
+                    cart.isMoving = true;
+                }
+            }
         }
 
         public void GetOutFromExit(ExitBarrierScript exitBarrierScript)
@@ -463,8 +473,11 @@ namespace TrainPuller.Scripts.Runtime.Models
             newList.AddRange(carts);
             foreach (var cart in newList)
             {
-                cart.transform.DOShakeRotation(0.15f, new Vector3(0f, 0f, 15f), 4, 90f, true,
-                    ShakeRandomnessMode.Harmonic);
+                if (!DOTween.IsTweening(cart.transform))
+                {
+                    cart.transform.DOShakeRotation(0.15f, new Vector3(0f, 0f, 15f), 4, 90f, true,
+                        ShakeRandomnessMode.Harmonic);
+                }
                 yield return new WaitForSeconds(0.05f);
             }
         }
