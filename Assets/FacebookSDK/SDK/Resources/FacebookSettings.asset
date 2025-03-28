@@ -18,7 +18,7 @@ MonoBehaviour:
   appIds:
   - 672632592117528
   appLabels:
-  - App Name
+  - Train Puller
   cookie: 1
   logging: 1
   status: 1
