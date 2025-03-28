@@ -349,10 +349,15 @@ namespace TrainPuller.Scripts.Runtime.Models
                     {
                         if (trainMovement.isTrainMoving && trainMovement.canMoveForward)
                         {
-                            isCrashed = true;
-                            crashObject = other.gameObject;
-                            trainMovement.HandleFrontCollision();
-                            HandleCrashParticle(other.ClosestPoint(transform.position));
+                            Debug.Log(
+                                $"HERERERE2 isALlFull = {trainMovement.trainContainer.isAllFull} movingToexit = {trainMovement.isMovingToExit}");
+                            if (!trainMovement.trainContainer.isAllFull && !trainMovement.isMovingToExit)
+                            {
+                                isCrashed = true;
+                                crashObject = other.gameObject;
+                                trainMovement.HandleFrontCollision();
+                                HandleCrashParticle(other.ClosestPoint(transform.position));
+                            }
                         }
                     }
                 }

@@ -324,6 +324,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
         private void ProcessInteraction()
         {
             if (currentlySelectedCart) return;
+            if(!_mainCam) return;
             var ray = _mainCam.ScreenPointToRay(Input.mousePosition);
             if (!TryRayCast(ray, out var hitInfo, trainCartLayer)) return;
             if (!hitInfo.transform || !hitInfo.transform.CompareTag("TrainCart")) return;

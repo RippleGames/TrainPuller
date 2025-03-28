@@ -151,7 +151,7 @@ namespace TrainPuller.Scripts.Runtime.Models
 
         public void TakeCardWithDelay(CardScript takenCard)
         {
-            if (_cardQueue.Contains(takenCard) || comingCards.Contains(takenCard)) return;
+            if (_cardQueue.Contains(takenCard) && comingCards.Contains(takenCard)) return;
             comingCards.Add(takenCard);
             _cardQueue.Enqueue(takenCard);
             if (_cardQueue.Count == 1 && _cardTakeCoroutine == null)
