@@ -73,19 +73,19 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void FetchPlayerPrefs()
         {
-            
             levelIndex = PlayerPrefs.GetInt("CurrentLevel", 0);
             totalPlayedLevelCount = PlayerPrefs.GetInt("TotalPlayedLevel", 1);
             if (levelIndex == 0 && totalPlayedLevelCount == 1)
             {
                 isTutorialOn = true;
             }
-            Elephant.LevelStarted(levelIndex);
+
+            Elephant.LevelStarted(totalPlayedLevelCount - 1);
         }
 
         public void LevelIncrease()
         {
-            Elephant.LevelCompleted(levelIndex);
+            Elephant.LevelCompleted(totalPlayedLevelCount - 1);
             IncreaseLevelIndex();
             LoadLevel();
         }
@@ -138,6 +138,12 @@ namespace TrainPuller.Scripts.Runtime.Managers
         {
             return levelIndex;
         }
+
+        public int GetTotalLevelPlayed()
+        {
+            return totalPlayedLevelCount;
+        }
+
 
         public void SetTotalLevelCount(int levelCount)
         {

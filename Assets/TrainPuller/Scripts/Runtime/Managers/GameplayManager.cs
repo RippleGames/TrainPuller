@@ -166,7 +166,7 @@ namespace TrainPuller.Scripts.Runtime.Managers
             if (!LevelManager.instance.isGamePlayable || LevelManager.instance.isLevelFailed) return;
             LevelManager.instance.isGamePlayable = false;
             LevelManager.instance.isLevelFailed = true;
-            Elephant.LevelFailed(LevelManager.instance.GetLevelIndex());
+            Elephant.LevelFailed(LevelManager.instance.GetTotalLevelPlayed()-1);
             onGameLost?.Invoke();
             TimeManager.instance.PauseTimer();
 #if UNITY_EDITOR
