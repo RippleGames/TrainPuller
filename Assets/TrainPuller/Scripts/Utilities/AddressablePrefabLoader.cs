@@ -19,6 +19,7 @@ namespace TrainPuller.Scripts.Utilities
         [SerializeField] private TimeManager timeManager;
         [SerializeField] private CinemachineVirtualCamera virtualCamera;
         private GameObject loadedPrefabInstance;
+        [SerializeField] private int levelIndex;
 
         [Header("Variables")] public string label = "Level";
 
@@ -30,7 +31,7 @@ namespace TrainPuller.Scripts.Utilities
         private async void Start()
         {
             await Addressables.InitializeAsync().Task;
-            var prefabAddress = $"Level_{LevelManager.instance.GetLevelIndex()}";
+            var prefabAddress = $"Level_{levelIndex}";
             LoadPrefab(prefabAddress);
             AssignLevelCount(label);
 
