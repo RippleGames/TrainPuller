@@ -38,9 +38,9 @@ namespace TrainPuller.Scripts.Runtime.Managers
 
         private void HandleFPS()
         {
-            if (Application.targetFrameRate != 120)
+            if (Application.targetFrameRate != 60)
             {
-                Application.targetFrameRate = 120;
+                Application.targetFrameRate = 60;
             }
 
             DOTween.SetTweensCapacity(500, 50);

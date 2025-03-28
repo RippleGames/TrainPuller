@@ -116,26 +116,26 @@ namespace TrainPuller.Scripts.Runtime.Models
         {
             if (carts.Count == 0) return;
             if (!currentLeader) return;
-            if (!trainContainer.isAllFull && !isMovingToExit)
-            {
-                if (!interactionManager) return;
-                if (!interactionManager.GetCurrentlySelectedCart()) return;
-                if (interactionManager.GetCurrentlySelectedCart() != currentLeader)
-                {
-                    if (isTrainMoving)
-                    {
-                        isTrainMoving = false;
-                        canMoveForward = true;
-                        canMoveBackwards = true;
-                        foreach (var cart in carts)
-                        {
-                            cart.isMoving = false;
-                        }
-                    }
-
-                    return;
-                }
-            }
+            // if (!trainContainer.isAllFull && !isMovingToExit)
+            // {
+            //     if (!interactionManager) return;
+            //     if (!interactionManager.GetCurrentlySelectedCart()) return;
+            //     if (interactionManager.GetCurrentlySelectedCart() != currentLeader)
+            //     {
+            //         if (isTrainMoving)
+            //         {
+            //             isTrainMoving = false;
+            //             canMoveForward = true;
+            //             canMoveBackwards = true;
+            //             foreach (var cart in carts)
+            //             {
+            //                 cart.isMoving = false;
+            //             }
+            //         }
+            //
+            //         return;
+            //     }
+            // }
 
 
             if (_isLeaderChanging) return;
@@ -296,9 +296,7 @@ namespace TrainPuller.Scripts.Runtime.Models
                 }
             }
 
-
-            if (Vector3.Distance(targetPosition, leader.transform.position) <= cartSpacing * 0.5f) return;
-
+            // if (Vector3.Distance(targetPosition, leader.transform.position) < cartSpacing * 0.5f) return;
 
             follower.transform.position = targetPosition;
             UpdateFollowerRotation(follower, leader.transform.position);

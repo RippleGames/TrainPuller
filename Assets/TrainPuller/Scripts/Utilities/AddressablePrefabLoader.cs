@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace TemplateProject.Scripts.Utilities
+namespace TrainPuller.Scripts.Utilities
 {
     public class AddressablePrefabLoader : MonoBehaviour
     {
